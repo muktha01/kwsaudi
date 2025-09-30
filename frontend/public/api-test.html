@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Properties Integration</title>
+</head>
+<body>
+    <h1>Testing Combined API Integration</h1>
+    <button onclick="testAPI()">Test Combined API</button>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/agents/kw/combined-data');
+                const data = await response.json();
+                
+                console.log('Full API Response:', data);
+                
+                let output = `<h2>API Results:</h2>`;
+                output += `<p><strong>Success:</strong> ${data.success}</p>`;
+                output += `<p><strong>Total Results:</strong> ${data.results?.length}</p>`;
+                
+                if (data.results) {
+                    data.results.forEach((result, index) => {
+                        output += `<h3>Result ${index + 1}: ${result.type}</h3>`;
+                        output += `<p>Success: ${result.success}</p>`;
+                        output += `<p>Total Items: ${result.total}</p>`;
+                        output += `<p>Count: ${result.count}</p>`;
+                        
+                        // Check data structure
+                        if (result.data) {
+                            output += `<p>Data Structure: `;
+                            if (result.data.hits?.hits) {
+                                output += `Elasticsearch format (${result.data.hits.hits.length} items)`;
+                            } else if (result.data.data) {
+                                output += `Data array format (${result.data.data.length} items)`;
+                            } else if (Array.isArray(result.data)) {
+                                output += `Direct array format (${result.data.length} items)`;
+                            } else {
+                                output += `Unknown format`;
+                            }
+                            output += `</p>`;
+                        }
+                        
+                        // Show sample property if it's listings
+                        if (result.type.includes('listings_region') && result.data) {
+                            let sampleProperty = null;
+                            if (result.data.hits?.hits?.[0]) {
+                                sampleProperty = result.data.hits.hits[0]._source;
+                            } else if (result.data.data?.[0]) {
+                                sampleProperty = result.data.data[0];
+                            } else if (Array.isArray(result.data) && result.data[0]) {
+                                sampleProperty = result.data[0];
+                            }
+                            
+                            if (sampleProperty) {
+                                output += `<h4>Sample Property:</h4>`;
+                                output += `<p>ID: ${sampleProperty.id || 'N/A'}</p>`;
+                                output += `<p>Address: ${sampleProperty.list_address?.address || 'N/A'}</p>`;
+                                output += `<p>KW UID: ${sampleProperty.list_kw_uid || 'N/A'}</p>`;
+                                output += `<p>Property Type: ${sampleProperty.prop_type || 'N/A'}</p>`;
+                            }
+                        }
+                        
+                        // Show sample agent if it's people
+                        if (result.type.includes('people_org') && result.data?.data?.[0]) {
+                            const sampleAgent = result.data.data[0];
+                            output += `<h4>Sample Agent:</h4>`;
+                            output += `<p>Name: ${sampleAgent.full_name || sampleAgent.first_name + ' ' + sampleAgent.last_name}</p>`;
+                            output += `<p>KW UID: ${sampleAgent.kw_uid || 'N/A'}</p>`;
+                            output += `<p>Email: ${sampleAgent.email || 'N/A'}</p>`;
+                        }
+                        
+                        output += `<hr>`;
+                    });
+                }
+                
+                resultsDiv.innerHTML = output;
+                
+            } catch (error) {
+                console.error('API Test Error:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run test when page loads
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

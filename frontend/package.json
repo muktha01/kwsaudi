@@ -1,0 +1,45 @@
+{
+  "name": "newapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "migrate-translations": "node src/scripts/migrateTranslations.mjs"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@fortawesome/react-fontawesome": "^3.0.2",
+    "@heroicons/react": "^2.2.0",
+    "@react-google-maps/api": "^2.20.7",
+    "@react-oauth/google": "^0.12.2",
+    "axios": "^1.10.0",
+    "framer-motion": "^12.19.2",
+    "google-auth-library": "^10.3.0",
+    "i18next": "^25.2.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.522.0",
+    "next": "15.3.3",
+    "next-auth": "^5.0.0-beta.29",
+    "next-i18next": "^15.4.2",
+    "postcss": "^8.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-i18next": "^15.5.3",
+    "react-icons": "^5.5.0",
+    "react-leaflet": "^5.0.0",
+    "react-phone-input-2": "^2.15.1",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "tailwindcss": "^4.1.8",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.1.13",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3"
+  }
+}
