@@ -269,7 +269,7 @@ const [buyEmail, setBuyEmail] = useState("");
   const handleDownload = async (pdfName) => {
     setLoading(true);
     try {
-      const res = await fetch(`https://kwbackend.vercel.app/api/pdf/download/${pdfName}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`);
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -346,7 +346,7 @@ useEffect(() => {
       }, 5001); // Reduced to 5 seconds
 
       const response = await fetch(
-        `https://kwbackend.vercel.app/api/agents/kw/agents/property-counts?offset=0&limit=100`,
+        `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`,
         {
           signal: enhancedApiAbortController.current.signal,
           headers: {
@@ -540,7 +540,7 @@ useEffect(() => {
         }, 7000); // Reduced to 7 seconds
         
         // If no stored data or no match, fetch from API
-        const agentRes = await fetch(`http://192.168.1.44/api/agents/kw/combined-data?offset=0&limit=100`, {
+        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=100`, {
           signal: agentAbortController.current.signal,
           headers: {
             'Accept': 'application/json',
