@@ -19,7 +19,10 @@ const nextConfig = {
       'avatar.kwconnect.com',
       'kwsaudi.x-360.ai' ,
       'kwlast-j4yv.vercel.app',
-      'res.cloudinary.com'
+      'res.cloudinary.com',
+      'https://www.kwsaudiarabia.com/',
+      'http://31.97.62.135:5001/api',
+      'http://31.97.62.135:5001',
     ],
   },
 };

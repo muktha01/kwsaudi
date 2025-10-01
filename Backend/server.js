@@ -39,8 +39,8 @@ app.use(cors({
     'http://localhost:3002',
     'http://localhost:3001',
     'http://localhost:3000',
-    'https://kwsaudi-admin.vercel.app',
-    'https://www.kwsaudiarabia.com'
+    'https://www.kwsaudiarabia.com',
+    'kw-saudiarabia.com',
      // <-- add your production frontend domain if needed
   ],
   credentials: true,
