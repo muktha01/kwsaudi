@@ -73,7 +73,7 @@ const Appointment = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('http://localhost:5001/api/leads');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`);
         const data = await res.json();
       
       if (Array.isArray(data)) {
@@ -96,7 +96,7 @@ const Appointment = () => {
   const fetchAppointments = async () => {
     try {
       // Fetch appointments from the leads API
-      const res = await fetch('http://localhost:5001/api/leads');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`);
       const data = await res.json();
       
       if (Array.isArray(data)) {
@@ -123,8 +123,8 @@ const Appointment = () => {
         return;
       }
 
-      // Submit to real API
-      const res = await fetch('http://localhost:5001/api/leads', {
+            // Submit to real API
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ const Appointment = () => {
       }
 
       // Update via API
-      const res = await fetch(`http://localhost:5001/api/leads/${selectedAppointment._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/leads/${selectedAppointment._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ const Appointment = () => {
   const handleDelete = async () => {
     try {
       // Delete via API
-      const res = await fetch(`http://localhost:5001/api/leads/${selectedAppointment._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/leads/${selectedAppointment._id}`, {
         method: 'DELETE',
       });
 

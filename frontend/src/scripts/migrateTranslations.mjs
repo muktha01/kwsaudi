@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // Configuration
 const CONFIG = {
-  BACKEND_URL: 'http://localhost:5001/api',
+  BACKEND_URL: process.env.NEXT_PUBLIC_API_URL,
   AR_JSON_PATH: '../src/translations/ar.json',
   BATCH_SIZE: 50,
   RETRY_ATTEMPTS: 3,

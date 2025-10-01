@@ -396,7 +396,7 @@ const EventManagement = () => {
                         src={
                           event.coverImage.startsWith('http')
                             ? event.coverImage
-                            : `http://localhost:5001/${event.coverImage}`
+                            : `${import.meta.env.VITE_BASE_URL}/${event.coverImage}`
                         }
                         alt={event.title}
                         style={{ width: '50px', height: '50px', objectFit: 'cover' }}

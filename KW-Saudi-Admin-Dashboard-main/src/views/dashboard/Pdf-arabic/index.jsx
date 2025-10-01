@@ -22,7 +22,7 @@ export default function PdfManager() {
   const fetchEmails = async () => {
     setEmailsLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/emails-arabic");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/emails-arabic`);
       const data = await res.json();
       setEmails(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -42,7 +42,7 @@ export default function PdfManager() {
   // Fetch list of PDFs from backend
   const fetchPdfs = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/pdf-arabic");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/pdf-arabic`);
       const data = await res.json();
       setPdfs(Array.isArray(data) ? data : []); // fallback to []
     } catch (err) {
@@ -73,7 +73,7 @@ export default function PdfManager() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/uploads", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/uploads`, {
         method: "POST",
         body: formData,
       });
@@ -92,7 +92,7 @@ export default function PdfManager() {
   const handleDownload = async (pdfName) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5001/api/downloads/${pdfName}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/downloads/${pdfName}`);
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -239,7 +239,7 @@ export default function PdfManager() {
                         setLoading(true);
                         try {
                           const res = await fetch(
-                            "http://localhost:5001/api/emails-arabic",
+                            `${import.meta.env.VITE_API_URL}/emails-arabic`,
                             {
                               method: "DELETE",
                               headers: { "Content-Type": "application/json" },

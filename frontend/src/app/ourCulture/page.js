@@ -64,7 +64,7 @@ SUCCESS: RESULTS THROUGH PEOPLE`
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/our-culture');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/our-culture`);
         if (!res.ok) return;
         console.log(res);
         

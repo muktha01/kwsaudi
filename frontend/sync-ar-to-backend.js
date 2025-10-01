@@ -4,7 +4,7 @@
 import fs from 'fs';
 import fetch from 'node-fetch';
 
-const API_URL = 'http://localhost:5001/api/translations';
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/translations`;
 const AR_JSON_PATH = './src/translations/ar.json';
 
 async function syncTranslations() {

@@ -17,7 +17,7 @@ export default function Training() {
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/kw-training');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/kw-training`);
         if (!res.ok) return;
         const page = await res.json();
         setPage(page)
@@ -26,7 +26,7 @@ export default function Training() {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {

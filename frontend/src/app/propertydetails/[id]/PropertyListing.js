@@ -29,6 +29,19 @@ export default function PropertyListing() {
   const params = useParams();
   const id = params.id;
   const router = useRouter();
+  // Redirect to home if id is not found after hydration (handles browser back edge case)
+  useEffect(() => {
+    let timeoutId;
+    if (!id) {
+      // Wait 200ms to allow id to be set after hydration
+      timeoutId = setTimeout(() => {
+        if (!id) {
+          router.replace('/');
+        }
+      }, 200);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [id, router]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);  
   const [isAtTop, setIsAtTop] = useState(true);  
@@ -115,7 +128,7 @@ export default function PropertyListing() {
         similarAbortController.current?.abort();
       }, 8000); // 8 second timeout for similar properties
 
-      const response = await fetch('http://localhost:5001/api/listings/list/properties', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -354,6 +367,13 @@ const [activeTab, setActiveTab] = useState('overview');
     return () => window.removeEventListener('scroll', handleScroll);  
   }, []);
 
+  // Ensure loading state is set immediately on id change to prevent flicker
+  useEffect(() => {
+    setPageLoading(true);
+    // Reset property to null so loading spinner shows, not 'not found'
+    setProperty(null);
+  }, [id]);
+
   // Cleanup effect for component unmount
   useEffect(() => {
     return () => {
@@ -398,7 +418,7 @@ const [activeTab, setActiveTab] = useState('overview');
         }, 10000); // 10 second timeout
         
         // Fetch property by ID from backend with optimized fields
-        const response = await fetch(`http://localhost:5001/api/listings/property/${id}?fields=basic,photos,address,agent,pricing`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/property/${id}?fields=basic,photos,address,agent,pricing`, {
           signal: propertyAbortController.current.signal,
           headers: {
             'Accept': 'application/json',
@@ -592,19 +612,16 @@ const [activeTab, setActiveTab] = useState('overview');
   }, [activeTab]);
   
 
-  if (pageLoading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600"></div>
-      </div>
-    );
-  }
 
-  if (!id) {
+  // Always show loader while loading or if property is null
+  if (pageLoading || property === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">{t("Error: Property ID not found")}</h1>
-        <p className="text-gray-700">{t("The property you are looking for does not exist or the link is invalid.")}</p>
+      <div className="min-h-screen">
+        <Header />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(179,4,4)]"></div>
+          <p className="text-gray-600 text-lg">{t("Loading property details...")}</p>
+        </div>
       </div>
     );
   }
@@ -618,22 +635,6 @@ const [activeTab, setActiveTab] = useState('overview');
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(179,4,4)]"></div>
           <p className="text-gray-600 text-lg">{t("Loading property details...")}</p>
         </div>
-      </div>
-    );
-  }
-
-  // Only show 'Property Not Found' if loading is done and property is still null
-  if (!pageLoading && !property) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">{t("Property Not Found")}</h1>
-        <p className="text-gray-700 mb-4">{t(`The property with ID \"${id}\" could not be found.`)}</p>
-        <button
-          onClick={() => router.back()}
-          className="bg-[rgb(179,4,4)] text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-        >
-          {t("Go Back")}
-        </button>
       </div>
     );
   }
@@ -1159,16 +1160,24 @@ const [activeTab, setActiveTab] = useState('overview');
                   <span className="text-[0.6rem] md:text-xs mt-1">{t("Call")}</span>
                 </a>
 
-                {/* WhatsApp */}
-                <a
-  href={`https://wa.me/${property.list_agent_office?.list_office_phone|| "12067392150"}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
->
-  <FaWhatsapp  className="w-6 h-6 text-gray-700" />
-  <span className="text-[0.6rem] md:text-xs mt-1">{t("WhatsApp")}</span>
-</a>
+             {/* WhatsApp */}
+{(() => {
+  const phone = property.list_agent_office?.list_office_phone || "";
+  const formattedPhone = phone.replace(/\D/g, ""); // strip non-digits
+  return (
+    <a
+      href={`https://wa.me/${formattedPhone}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat on WhatsApp"
+      className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
+    >
+      <FaWhatsapp className="w-6 h-6 text-gray-700 " />
+      <span className="text-[0.6rem] md:text-xs mt-1">{t("WhatsApp")}</span>
+    </a>
+  );
+})()}
+
 
 
                 {/* Mail */}

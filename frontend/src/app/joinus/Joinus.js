@@ -28,7 +28,7 @@ const Joinus = (props) => {
     setIsSubmitting(true);
     setSubmitMessage('');
     try {
-      const response = await fetch('http://localhost:5001/api/leads', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, formType: 'join-us' })
@@ -60,7 +60,7 @@ const Joinus = (props) => {
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/join-us');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/join-us`);
         if (!res.ok) return;
         // console.log(res);
         
@@ -71,7 +71,7 @@ const Joinus = (props) => {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {
@@ -84,7 +84,7 @@ const Joinus = (props) => {
     const fetchCities = async () => {
       setLoadingCities(true);
       try {
-        const res = await fetch('http://localhost:5001/api/listings/filters');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
         const data = await res.json();
         const apiCities = Array.isArray(data?.data?.cities) ? data.data.cities : [];
         setCities(apiCities);

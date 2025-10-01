@@ -309,7 +309,7 @@ const EmployeeManagement = () => {
                       <TableRow key={emp._id}>
                         <TableCell>
                           <Avatar
-                            src={emp.profileImage ? (emp.profileImage.startsWith('http') ? emp.profileImage : `http://localhost:5001/${emp.profileImage}`) : ""}
+                            src={emp.profileImage ? (emp.profileImage.startsWith('http') ? emp.profileImage : `${import.meta.env.VITE_BASE_URL}/${emp.profileImage}`) : ""}
                             alt={emp.name}
                           >
                             {emp.name?.charAt(0)}
@@ -557,7 +557,7 @@ const EmployeeManagement = () => {
             <Box sx={{ mt: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                 <Avatar
-                  src={selectedEmployee.profileImage ? `http://localhost:5001/${selectedEmployee.profileImage}` : ""}
+                  src={selectedEmployee.profileImage ? `${import.meta.env.VITE_BASE_URL}/${selectedEmployee.profileImage}` : ""}
                   alt={selectedEmployee.name}
                   sx={{ width: 100, height: 100, fontSize: '2rem' }}
                 >

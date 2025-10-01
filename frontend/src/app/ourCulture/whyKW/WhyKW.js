@@ -12,7 +12,7 @@ const WhyKW = () => {
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/why-kw');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/why-kw`);
         if (!res.ok) return;
         // console.log(res);
         
@@ -23,7 +23,7 @@ const WhyKW = () => {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {

@@ -9,6 +9,7 @@ import { FaPhoneAlt,FaChevronRight, FaEnvelope, FaSearch } from 'react-icons/fa'
 import { MdPhone } from "react-icons/md";
 import Footer from '@/components/newfooter';
 import { useTranslation } from '@/contexts/TranslationContext';
+import Spinner from '@/components/Spinner';
 
 // Skeleton component for loading state
 const AgentSkeleton = () => (
@@ -33,6 +34,7 @@ const AgentContent = () => {
   const [filter, setFilter] = useState("agent");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const agentsPerPage = 10;
@@ -42,10 +44,10 @@ const AgentContent = () => {
   const [filterMarket, setFilterMarket] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const searchTimeoutRef = useRef(null);
-  const [searchTrigger, setSearchTrigger] = useState(0);
 
-  // Cache for API responses
+  // Cache for API responses with localStorage persistence
   const cacheRef = useRef(new Map());
+  const [cacheInitialized, setCacheInitialized] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -75,23 +77,61 @@ const AgentContent = () => {
     'taif': { lat: 21.4373, lng: 40.5127 },
     // Add more cities as needed
   };
-  // Cached API fetch function
+  // Initialize cache from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !cacheInitialized) {
+      try {
+        const savedCache = localStorage.getItem('agents-cache');
+        const savedTimestamp = localStorage.getItem('agents-cache-timestamp');
+        const now = Date.now();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        
+        if (savedCache && savedTimestamp && (now - parseInt(savedTimestamp)) < CACHE_DURATION) {
+          const parsedCache = JSON.parse(savedCache);
+          cacheRef.current = new Map(parsedCache);
+        }
+      } catch (error) {
+        console.warn('Failed to load cache from localStorage:', error);
+      }
+      setCacheInitialized(true);
+    }
+  }, [cacheInitialized]);
+
+  // Cached API fetch function with localStorage persistence
   const fetchAgentsWithCache = useCallback(async (page = 1, pageSize = 20) => {
     const cacheKey = `agents-page-${page}-size-${pageSize}`;
-    // Check cache first
+    
+    // Check memory cache first
     if (cacheRef.current.has(cacheKey)) {
       return cacheRef.current.get(cacheKey);
     }
 
-    // The new backend endpoint for combined KW data
-    const res = await fetch(`http://localhost:5001/api/agents/kw/combined-data`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    // Cache the response
-    cacheRef.current.set(cacheKey, data);
-    return data;
+    try {
+      // The new backend endpoint for combined KW data
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      
+      // Cache the response in memory
+      cacheRef.current.set(cacheKey, data);
+      
+      // Save to localStorage with timestamp
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('agents-cache', JSON.stringify([...cacheRef.current.entries()]));
+          localStorage.setItem('agents-cache-timestamp', Date.now().toString());
+        } catch (error) {
+          console.warn('Failed to save cache to localStorage:', error);
+        }
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
+      throw error;
+    }
   }, []);
 
   // Memoized filtered agents
@@ -120,28 +160,30 @@ const AgentContent = () => {
       (center.city && center.city.toLowerCase().includes(searchTerm))
     );
   }, [allMarketCenters, filterName, filter]);
+
+  // Handle URL search parameters
   useEffect(() => {
     const searchParam = searchParams.get('search');
     if (searchParam && searchParam !== filterName) {
-      // Ensure filter is set to "agent" for search to work
       setFilter("agent");
       setFilterName(searchParam);
-      // Force search to trigger by incrementing search trigger
-      setSearchTrigger(prev => prev + 1);
     }
   }, [searchParams, filterName]);
 
-  // Simple timeout-based search when user stops typing
+  // Optimized debounced search - removed search trigger complexity
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
     
+    // Only show loading for manual searches, not initial load
     const timeout = setTimeout(() => {
-      if (filterName.trim()) {
-        setSearchTrigger(prev => prev + 1);
+      if (filterName.trim() && allAgents.length > 0) {
+        setSearchLoading(true);
+        // Clear loading state quickly since filtering is instant
+        setTimeout(() => setSearchLoading(false), 100);
       }
-    }, 500); // Wait 500ms after user stops typing
+    }, 300); // Reduced timeout for faster response
     
     searchTimeoutRef.current = timeout;
     
@@ -150,92 +192,89 @@ const AgentContent = () => {
     };
   }, [filterName]);
 
-  // Read URL parameters and pre-fill search fields
-  useEffect(() => {
-    const searchParam = searchParams.get('search');
-    if (searchParam && searchParam !== filterName) {
-      // Ensure filter is set to "agent" for search to work
-      setFilter("agent");
-      setFilterName(searchParam);
-      // Force search to trigger by incrementing search trigger
-      setSearchTrigger(prev => prev + 1);
+  // Optimized agent processing function
+  const processAgentData = useCallback((data) => {
+    if (!data.success || !Array.isArray(data.results)) {
+      throw new Error(data.message || 'Invalid response format');
     }
-  }, [searchParams, filterName]);
 
-  // Simple timeout-based search when user stops typing
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    const timeout = setTimeout(() => {
-      if (filterName.trim()) {
-        setSearchTrigger(prev => prev + 1);
+    let fetchedAgents = [];
+    data.results.forEach(result => {
+      if (result.success && result.type && result.type.startsWith('people_org')) {
+        const agentData = result.data || [];
+        fetchedAgents = fetchedAgents.concat(agentData);
       }
-    }, 500); // Wait 500ms after user stops typing
-    
-    searchTimeoutRef.current = timeout;
-    
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [filterName]);
+    });
 
+    return fetchedAgents.map(item => ({
+      _id: item.kw_uid || item.id || item._id,
+      name: item.first_name && item.last_name 
+        ? `${item.first_name} ${item.last_name}`.trim()
+        : item.first_name || item.last_name || item.name || 'Unknown Agent',
+      surname: item.last_name || '',
+      phone: item.phone || item.mobile_phone || item.work_phone || 'N/A',
+      email: item.email || item.work_email || 'N/A',
+      image: item.photo || item.profile_image || '/avtar.jpg',
+      office: item.office_name || item.market_center || '',
+      city: item.city || item.work_city || item.office_city || item.address_city || '',
+      license: item.license_number || '',
+      mls_id: item.kw_uid || item.mls_id || '',
+      active: item.active !== false,
+      marketCenter: item.office_name || item.market_center || ''
+    }));
+  }, []);
+
+  // Fetch initial agents with improved caching
   useEffect(() => {
-    async function fetchAgents(page = 1, append = false) {
-      if (!append) setLoading(true);
+    if (!cacheInitialized) return; // Wait for cache to initialize
+    
+    async function fetchAgents() {
+      setLoading(true);
       setError(null);
 
       try {
-        const data = await fetchAgentsWithCache(page, 20);
-        // console.log('API Response:', data);
-
-        if (data.success && Array.isArray(data.results)) {
-          // Combine agents from both orgs
-          let fetchedAgents = [];
-          data.results.forEach(result => {
-            if (result.success && result.type && result.type.startsWith('people_org')) {
-              const agentData = result.data || [];
-              fetchedAgents = fetchedAgents.concat(agentData);
-            }
-          });
-          // Map the API response to agent format
-          const mappedAgents = fetchedAgents.map(item => ({
-            _id: item.kw_uid || item.id || item._id,
-            name: item.first_name && item.last_name 
-              ? `${item.first_name} ${item.last_name}`.trim()
-              : item.first_name || item.last_name || item.name || 'Unknown Agent',
-            surname: item.last_name || '',
-            phone: item.phone || item.mobile_phone || item.work_phone || 'N/A',
-            email: item.email || item.work_email || 'N/A',
-            image: item.photo || item.profile_image || '/avtar.jpg',
-            office: item.office_name || item.market_center || '',
-            city: item.city || item.work_city || item.office_city || item.address_city || '',
-            license: item.license_number || '',
-            mls_id: item.kw_uid || item.mls_id || '',
-            active: item.active !== false,
-            marketCenter: item.office_name || item.market_center || ''
-          }));
-          if (append) {
-            setAllAgents(prev => [...prev, ...mappedAgents]);
-          } else {
-            setAllAgents(mappedAgents);
+        const data = await fetchAgentsWithCache(1, 20);
+        const mappedAgents = processAgentData(data);
+        
+        // Immediately update state for faster UI response
+        setAllAgents(mappedAgents);
+        
+        // Store in localStorage for persistence
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('agents-local-data', JSON.stringify(mappedAgents));
+            localStorage.setItem('agents-local-timestamp', Date.now().toString());
+          } catch (error) {
+            console.warn('Failed to save agents to localStorage:', error);
           }
-        } else {
-          setError(data.message || 'Failed to load agents');
         }
       } catch (err) {
-        setError('Failed to load agents');
-        // console.error('Error fetching agents:', err);
+        setError(err.message || 'Failed to load agents');
+        
+        // Try to load from localStorage as fallback
+        if (typeof window !== 'undefined') {
+          try {
+            const savedAgents = localStorage.getItem('agents-local-data');
+            const savedTimestamp = localStorage.getItem('agents-local-timestamp');
+            const now = Date.now();
+            const FALLBACK_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (savedAgents && savedTimestamp && (now - parseInt(savedTimestamp)) < FALLBACK_DURATION) {
+              const parsedAgents = JSON.parse(savedAgents);
+              setAllAgents(parsedAgents);
+              setError(null); // Clear error since we have fallback data
+            }
+          } catch (fallbackError) {
+            console.warn('Failed to load fallback agents:', fallbackError);
+          }
+        }
       } finally {
         setLoading(false);
-        setLoadingMore(false);
       }
     }
 
-    // Fetch initial agents
-    fetchAgents(1, false);
-  }, [fetchAgentsWithCache]); // Only run once on mount
+    fetchAgents();
+  }, [fetchAgentsWithCache, processAgentData, cacheInitialized]);
 
   // Initialize market centers data
   useEffect(() => {
@@ -262,88 +301,71 @@ const AgentContent = () => {
     setAllMarketCenters(mockMarketCenters);
   }, [t]);
 
-  // Separate effect for filtering and pagination
+  // Optimized filtering and pagination with immediate updates
   useEffect(() => {
+    // Immediate state updates without delays
     if (filter === "agent") {
-      // Use memoized filtered agents
       const totalFiltered = filteredAgents.length;
-      const startIndex = 0; // Always start from beginning
-      const endIndex = currentPage * agentsPerPage; // Show more items with each page
-      const paginatedAgents = filteredAgents.slice(startIndex, endIndex);
+      const endIndex = currentPage * agentsPerPage;
+      const paginatedAgents = filteredAgents.slice(0, endIndex);
 
       setAgents(paginatedAgents);
       setTotalAgents(totalFiltered);
-      setMarketCenters([]); // Clear market centers when showing agents
+      setMarketCenters([]);
     } else if (filter === "market") {
-      // Use memoized filtered market centers
       const totalFiltered = filteredMarketCenters.length;
-      const startIndex = 0;
       const endIndex = currentPage * agentsPerPage;
-      const paginatedMarketCenters = filteredMarketCenters.slice(startIndex, endIndex);
+      const paginatedMarketCenters = filteredMarketCenters.slice(0, endIndex);
 
       setMarketCenters(paginatedMarketCenters);
-      setTotalAgents(totalFiltered); // Reuse totalAgents for pagination logic
-      setAgents([]); // Clear agents when showing market centers
+      setTotalAgents(totalFiltered);
+      setAgents([]);
     }
-  }, [filteredAgents, filteredMarketCenters, filter, currentPage, agentsPerPage]);
+    
+    // Clear search loading immediately after state update
+    if (searchLoading) {
+      setSearchLoading(false);
+    }
+  }, [filteredAgents, filteredMarketCenters, filter, currentPage, agentsPerPage, searchLoading]);
 
+  // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filterName, filter]);
 
-  // Handle search trigger changes
-  useEffect(() => {
-    if (searchTrigger > 0) {
-      // Reset to page 1 when search changes
-      setCurrentPage(1);
-    }
-  }, [searchTrigger]);
-
-  // Function to load more agents
+  // Optimized load more function
   const loadMoreAgents = useCallback(async () => {
-    if (loadingMore) return;
+    if (loadingMore || !allAgents.length) return;
     
     setLoadingMore(true);
     const nextPage = Math.floor(allAgents.length / 20) + 1;
     
     try {
       const data = await fetchAgentsWithCache(nextPage, 20);
-
-      if (data.success && data.results) {
-        let fetchedAgents = [];
+      const newAgents = processAgentData(data);
+      
+      // Immediate state update
+      setAllAgents(prev => {
+        const updated = [...prev, ...newAgents];
         
-        data.results.forEach(result => {
-          if (result.success && result.type.includes('people_org')) {
-            const agentData = result.data?.data || [];
-            fetchedAgents = fetchedAgents.concat(agentData);
+        // Update localStorage with new data
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('agents-local-data', JSON.stringify(updated));
+            localStorage.setItem('agents-local-timestamp', Date.now().toString());
+          } catch (error) {
+            console.warn('Failed to update agents in localStorage:', error);
           }
-        });
+        }
         
-        const mappedAgents = fetchedAgents.map(item => ({
-          _id: item.kw_uid || item.id || item._id,
-          name: item.first_name && item.last_name 
-            ? `${item.first_name} ${item.last_name}`.trim()
-            : item.first_name || item.last_name || item.name || 'Unknown Agent',
-          surname: item.last_name || '',
-          phone: item.phone || item.mobile_phone || item.work_phone || 'N/A',
-          email: item.email || item.work_email || 'N/A',
-          image: item.photo || item.profile_image || '/avtar.jpg',
-          office: item.office_name || item.market_center || '',
-          city: item.city || item.work_city || item.office_city || item.address_city || '',
-          license: item.license_number || '',
-          mls_id: item.kw_uid || item.mls_id || '',
-          active: item.active !== false,
-          marketCenter: item.office_name || item.market_center || ''
-        }));
-
-        setAllAgents(prev => [...prev, ...mappedAgents]);
-      }
+        return updated;
+      });
     } catch (err) {
-      // console.error('Error loading more agents:', err);
+      console.warn('Error loading more agents:', err);
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, allAgents.length, fetchAgentsWithCache]);
+  }, [loadingMore, allAgents.length, fetchAgentsWithCache, processAgentData]);
 
   const handleAgentClick = (agent) => {
     if (typeof window !== 'undefined') {
@@ -459,25 +481,29 @@ const AgentContent = () => {
                           clearTimeout(searchTimeoutRef.current);
                         }
                         
-                        // Set up new timeout for debounced search
-                        searchTimeoutRef.current = setTimeout(() => {
-                          if (searchValue.trim()) {
-                            setSearchTrigger(prev => prev + 1);
-                          }
-                        }, 300); // Shorter delay for immediate feedback
+                        // Immediate filtering without delays for better UX
+                        // No need for search trigger - filtering happens automatically via useMemo
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          // Trigger search immediately on Enter key
-                          setSearchTrigger(prev => prev + 1);
+                          // No need for search trigger - filtering is immediate
+                          // Just clear timeout for instant response
+                          if (searchTimeoutRef.current) {
+                            clearTimeout(searchTimeoutRef.current);
+                          }
                         }
                       }}
                     />
                     <button 
                       className="bg-[rgb(206,32,39,255)] text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center"
                       onClick={() => {
-                        // Force search by incrementing search trigger
-                        setSearchTrigger(prev => prev + 1);
+                        // Clear timeout for immediate search response
+                        if (searchTimeoutRef.current) {
+                          clearTimeout(searchTimeoutRef.current);
+                        }
+                        // Focus back to input for better UX
+                        const input = document.querySelector('input[type="text"]');
+                        if (input) input.focus();
                       }}
                     >
                       <FaSearch size={20} className="sm:w-6 sm:h-6" />
@@ -491,7 +517,10 @@ const AgentContent = () => {
                         setFilterName("");
                         setFilterMarket("");
                         setFilterCity("");
-                        setSearchTrigger(prev => prev + 1);
+                        // Clear any pending timeouts
+                        if (searchTimeoutRef.current) {
+                          clearTimeout(searchTimeoutRef.current);
+                        }
                       }}
                       data-translate
                     >
@@ -502,25 +531,56 @@ const AgentContent = () => {
 
                 {/* Conditional Rendering - Show agents or market centers */}
                 <>
+                  {/* Initial Loading State */}
                   {loading && currentPage === 1 && (
-                    <div className="space-y-2">
-                      {[...Array(5)].map((_, idx) => (
-                        <AgentSkeleton key={idx} />
-                      ))}
+                    <Spinner 
+                      size="lg" 
+                      color="red" 
+                      text={t('Loading agents...')}
+                      className="py-20"
+                    />
+                  )}
+                  
+                  {/* Search Loading State */}
+                  {searchLoading && !loading && (
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-white bg-opacity-80 z-10 flex items-center justify-center">
+                        <Spinner 
+                          size="md" 
+                          color="red" 
+                          text={t('Searching...')}
+                        />
+                      </div>
+                      {/* Show existing results with opacity while searching */}
+                      <div className="opacity-30">
+                        {filter === "agent" && agents.map((agent, idx) => (
+                          <div key={`search-${agent._id}-${idx}`} className="p-4 border-b border-gray-300">
+                            <div className="flex gap-4">
+                              <div className="w-24 h-24 bg-gray-300 rounded"></div>
+                              <div className="flex-1">
+                                <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                                <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                                <div className="h-4 bg-gray-300 rounded"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+                  
                   {error && <div className="text-red-500 p-4 text-center">{error}</div>}
 
-                  {!loading && !error && filter === "agent" && agents.length === 0 && (
-                    <div>{t('No agents found.')}</div>
+                  {!loading && !searchLoading && !error && filter === "agent" && agents.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">{t('No agents found.')}</div>
                   )}
 
-                  {!loading && !error && filter === "market" && marketCenters.length === 0 && (
-                    <div>{t('No market centers found.')}</div>
+                  {!loading && !searchLoading && !error && filter === "market" && marketCenters.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">{t('No market centers found.')}</div>
                   )}
 
                   {/* Show Agents when filter is "agent" */}
-                  {!loading && !error && filter === "agent" && agents.map((agent, idx) => {
+                  {!loading && !searchLoading && !error && filter === "agent" && agents.map((agent, idx) => {
                     // Try to get coordinates from agent object (customize field names as per your API)
                     let lat = null, lng = null;
                     if (agent.latitude && agent.longitude) {
@@ -596,7 +656,7 @@ const AgentContent = () => {
                   })}
 
                   {/* Show Market Centers when filter is "market" */}
-                  {!loading && !error && filter === "market" && marketCenters.map((center, idx) => (
+                  {!loading && !searchLoading && !error && filter === "market" && marketCenters.map((center, idx) => (
                     <article key={center._id || idx} className={`p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 relative ${
                       idx !== marketCenters.length - 1 ? 'border-b border-gray-300' : ''
                     }`}>
@@ -639,8 +699,8 @@ const AgentContent = () => {
                       >
                         {loadingMore ? (
                           <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                            {t('Loading...')}
+                            <Spinner size="sm" color="white" />
+                            {t('Loading more...')}
                           </div>
                         ) : (
                           t(filter === "agent" ? "Show More Agents" : "Show More Market Centers")
@@ -737,9 +797,12 @@ const AgentContent = () => {
 const Agent = () => {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-[rgb(206,32,39,255)]"></div>
-      </div>
+      <Spinner 
+        overlay={true}
+        size="xl" 
+        color="red"
+        text="Initializing agents page..."
+      />
     }>
       <AgentContent />
     </Suspense>

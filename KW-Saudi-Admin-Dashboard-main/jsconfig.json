@@ -3,11 +3,11 @@
         "target": "ESNext",
         "useDefineForClassFields": true,
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "allowJs": false,
+        "allowJs": true,
         "skipLibCheck": true,
         "esModuleInterop": false,
         "allowSyntheticDefaultImports": true,
-        "strict": true,
+        "strict": false,
         "forceConsistentCasingInFileNames": true,
         "module": "ESNext",
         "moduleResolution": "Node",
@@ -17,7 +17,6 @@
         "jsx": "react-jsx",
         "baseUrl": "src"
     },
-    "exclude": ["node_modules"],
-    "include": ["src", "**/*.js", "**/*.jsx", "src/**/*"],
-    
+    "exclude": ["node_modules", "dist", "build"],
+    "include": ["src/**/*"]
 }

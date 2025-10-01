@@ -30,7 +30,7 @@ export default function News(){
         setLoading(true);
         setError(null);
         // Use local backend for development
-        const res = await fetch('http://localhost:5001/api/news');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`);
         
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -60,7 +60,7 @@ export default function News(){
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/news');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/news`);
         if (!res.ok) return;
         console.log(res);
         
@@ -71,7 +71,7 @@ export default function News(){
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {
@@ -129,7 +129,7 @@ export default function News(){
           const cleanPath = post.coverImage.replace(/\\/g, "/");
           return cleanPath.startsWith("http")
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`;
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
         })()
       : "/event.png"
   }

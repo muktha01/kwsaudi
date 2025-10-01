@@ -1,7 +1,7 @@
 // Frontend Translation API Service
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5001/api'||process.env.NEXT_PUBLIC_API_URL ;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Create axios instance with default config
 const api = axios.create({
@@ -19,7 +19,7 @@ export const frontendTranslationService = {
   getAllTranslations: async () => {
     try {
       // console.log('🌐 Fetching translations from:', `${API_BASE_URL}/translations`);
-      const response = await api.get('http://localhost:5001/api/translations');
+      const response = await api.get(`${API_BASE_URL}/translations`);
       // console.log('✅ Translation response:', response.status, response.data?.length || 0, 'items');
       return response.data;
     } catch (error) {
@@ -50,7 +50,7 @@ export const frontendTranslationService = {
     for (let i = 0; i < retries; i++) {
       try {
   
-        const response = await api.get('http://localhost:5001/api/translations', {
+        const response = await api.get(`${API_BASE_URL}/translations`, {
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
@@ -80,7 +80,7 @@ export const frontendTranslationService = {
   // Test backend connectivity
   testConnection: async () => {
     try {
-      const response = await api.get('http://localhost:5001/api/test', { timeout: 10000 });
+      const response = await api.get(`${API_BASE_URL}/test`, { timeout: 10000 });
       // console.log('✅ Backend connection test successful:', response.data);
       return true;
     } catch (error) {

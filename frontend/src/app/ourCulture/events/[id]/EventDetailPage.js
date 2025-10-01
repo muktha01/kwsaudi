@@ -32,7 +32,7 @@ export default function EventDetailPage() {
 
         // Fetch fresh data from API
         console.log('Fetching event with ID:', id);
-        const res = await fetch(`http://localhost:5001/api/event/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/event/${id}`);
         
         console.log('Response status:', res.status);
         console.log('Response headers:', res.headers);
@@ -111,7 +111,7 @@ export default function EventDetailPage() {
           const cleanPath = blog.coverImage.replace(/\\/g, "/");
           return cleanPath.startsWith("http")
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`;
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
         })()
       : "/event.png"
   }

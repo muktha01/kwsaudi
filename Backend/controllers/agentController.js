@@ -554,7 +554,7 @@ export const getKWCombinedData = async (req, res) => {
     ];
 
       const fetchAllPages = async (api) => {
-        const limit = 100; // batch size per request
+        const limit = 1000; // Maximum batch size per request for better performance
         let allData = [];
         let offset = 0;
         let total = 0;
@@ -597,17 +597,6 @@ export const getKWCombinedData = async (req, res) => {
       };
 
     const results = await Promise.all(apis.map(fetchAllPages));
-
-      // Check for any quota/TOO_MANY_REQUESTS errors in the results
-      const quotaError = results.find(r => r.success === false && (r.errorCode === 'TOO_MANY_REQUESTS' || (r.error && r.error.toLowerCase().includes('quota'))));
-      if (quotaError) {
-        return res.status(429).json({
-          success: false,
-          message: quotaError.error || 'KW API quota exceeded or too many requests',
-          errorCode: quotaError.errorCode || 'TOO_MANY_REQUESTS',
-          results
-        });
-      }
 
       // Calculate total agents and total listings
       let totalAgents = 0;

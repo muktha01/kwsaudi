@@ -238,9 +238,9 @@ const Footer = () => {
               <div className="w-px h-4 bg-gray-500/50  mt-1"></div>
               <a href="#" className="hover:underline ml-2 mr-4">{t('KW Saudi Arabia')}</a>
               <div className="w-px h-4 bg-gray-500/50 mt-1"></div>
-              <a href="http://localhost:5001/privacypolicy		" className="hover:underline ml-2 mr-4">{t('Privacy Policy')}</a>
+              <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/privacypolicy`} className="hover:underline ml-2 mr-4">{t('Privacy Policy')}</a>
               <div className="w-px h-4 bg-gray-500/50 mt-1"></div>
-              <a href="http://localhost:5001/termsofuse		" className="hover:underline ml-2">{t('Terms Of Use')}</a>
+              <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/termsofuse`} className="hover:underline ml-2">{t('Terms Of Usesetga')}</a>
             </div>
           </div>
         </div>

@@ -46,7 +46,7 @@ export default function Aboutus() {
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/about-us');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/about-us`);
         if (!res.ok) return;
         // console.log(res);
         
@@ -57,7 +57,7 @@ export default function Aboutus() {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {
@@ -293,7 +293,7 @@ export default function Aboutus() {
                                      agent.profileImage && agent.profileImage.startsWith('http')
                                        ? agent.profileImage
                                        : agent.profileImage
-                                         ? `http://localhost:5001/${agent.profileImage.replace(/\\/g, '/')}`
+                                         ? `${process.env.NEXT_PUBLIC_BASE_URL}/${agent.profileImage.replace(/\\/g, '/')}`
                                          : '/avtar.png'
                                    }
                                    alt={t(`Portrait of ${agent.name}`)}

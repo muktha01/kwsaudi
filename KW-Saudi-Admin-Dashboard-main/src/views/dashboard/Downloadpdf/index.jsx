@@ -22,7 +22,7 @@ export default function PdfManager() {
   const fetchEmails = async () => {
     setEmailsLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/emails");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/emails`);
       const data = await res.json();
       setEmails(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -46,7 +46,7 @@ export default function PdfManager() {
   // Fetch list of PDFs from backend
   const fetchPdfs = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/pdf");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/pdf`);
       const data = await res.json();
       setPdfs(Array.isArray(data) ? data : []); // fallback to []
     } catch (err) {
@@ -77,7 +77,7 @@ export default function PdfManager() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/pdf/upload", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/pdf/upload`, {
         method: "POST",
         body: formData,
       });
@@ -96,7 +96,7 @@ export default function PdfManager() {
   const handleDownload = async (pdfName) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5001/api/pdf/download/${pdfName}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/pdf/download/${pdfName}`);
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -242,7 +242,7 @@ export default function PdfManager() {
                         if (!window.confirm("Delete this email?")) return;
                         setLoading(true);
                         try {
-                          const res = await fetch("http://localhost:5001/api/emails", {
+                          const res = await fetch(`${import.meta.env.VITE_API_URL}/emails`, {
                             method: "DELETE",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({

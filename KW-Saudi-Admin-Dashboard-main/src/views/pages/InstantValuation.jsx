@@ -11,7 +11,7 @@ const InstantValuation = () => {
       setLoading(true);npm
       setError(null);
       try {
-        const res = await fetch('http://localhost:5001/api/leads');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`);
         const data = await res.json();
         const filtered = Array.isArray(data) ? data.filter(lead => lead.formType === 'instant-valuation') : [];
         setValuations(filtered);

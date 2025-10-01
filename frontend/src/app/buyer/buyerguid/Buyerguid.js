@@ -78,7 +78,7 @@ const { language, isRTL, t } = useTranslation();
 useEffect(() => {
   const fetchPageHero = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/page/slug/buyer-guide');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/buyer-guide`);
       if (!res.ok) return;
       // console.log(res);
       
@@ -89,7 +89,7 @@ useEffect(() => {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
     } catch (e) {

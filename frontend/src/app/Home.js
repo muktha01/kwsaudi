@@ -239,7 +239,7 @@ const [pdfs, setPdfs] = useState([]);
   // Fetch list of PDFs from backend
    const fetchPdfs = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/pdf"); // call backend API
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pdf`); // call backend API
       if (!res.ok) throw new Error("Failed to fetch PDFs");
       const data = await res.json();
       setPdfs(Array.isArray(data) ? data : []);
@@ -265,14 +265,14 @@ const [pdfs, setPdfs] = useState([]);
       let url, downloadName;
       if (language === 'ar') {
         if (pdfName === 'How to Buy a Home-Arabic') {
-          url = `http://localhost:5001/api/downloads/How to Buy a Home-Arabic`;
+          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Buy a Home-Arabic`;
           downloadName = 'How to Buy a Home-Arabic.pdf';
         } else {
-          url = `http://localhost:5001/api/downloads/How to Sell Your Home-Arabic`;
+          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Sell Your Home-Arabic`;
           downloadName = 'How to Sell Your Home-Arabic.pdf';
         }
       } else {
-        url = `http://localhost:5001/api/pdf/download/${pdfName}`;
+        url = `${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`;
         downloadName = `${pdfName}.pdf`;
       }
       const res = await fetch(url);
@@ -299,7 +299,7 @@ const [pdfs, setPdfs] = useState([]);
       setLoadingProperties(true);
       try {
         const res = await fetch(
-          "http://localhost:5001/api/listings/list/properties",
+          `${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -481,7 +481,7 @@ const [pdfs, setPdfs] = useState([]);
   const fetchPageHero = async () => {
     try {
       setLoadingPageData(true);
-      const res = await fetch('http://localhost:5001/api/home-pages');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/home-pages`);
       
       if (!res.ok) {
         // console.warn('API not available, no fallback used');
@@ -504,7 +504,7 @@ const [pdfs, setPdfs] = useState([]);
           const imageUrls = activePage.backgroundImage.map(imagePath =>
             imagePath.startsWith('http')
               ? imagePath
-              : `http://localhost:5001/${imagePath.replace(/\\/g, '/')}`
+              : `${process.env.NEXT_PUBLIC_BASE_URL}/${imagePath.replace(/\\/g, '/')}`
           );
 
           // console.log('✅ Using API images:', imageUrls);
@@ -1472,10 +1472,10 @@ const [pdfs, setPdfs] = useState([]);
               setSellEmailError("");
               try {
                 let pdfName = "pdf1";
-                let emailApi = "http://localhost:5001/api/save-email";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                 if (language === "ar") {
                   pdfName = "How to Sell Your Home-Arabic";
-                  emailApi = "http://localhost:5001/api/emails-arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                 }
                 const res = await fetch(
                   emailApi,
@@ -1524,10 +1524,10 @@ const [pdfs, setPdfs] = useState([]);
               setSellEmailError("");
               try {
                 let pdfName = "pdf1";
-                let emailApi = "http://localhost:5001/api/save-email";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                 if (language === "ar") {
                   pdfName = "How to Sell Your Home-Arabic";
-                  emailApi = "http://localhost:5001/api/emails-arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                 }
                 const res = await fetch(
                   emailApi,
@@ -1615,10 +1615,10 @@ const [pdfs, setPdfs] = useState([]);
                 setBuyEmailError("");
                 try {
                   let pdfName = "pdf2";
-                  let emailApi = "http://localhost:5001/api/save-email";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                   if (language === "ar") {
                     pdfName = "How to Buy a Home-Arabic";
-                    emailApi = "http://localhost:5001/api/emails-arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                   }
                   const res = await fetch(
                     emailApi,
@@ -1666,10 +1666,10 @@ const [pdfs, setPdfs] = useState([]);
                 setBuyEmailError("");
                 try {
                   let pdfName = "pdf2";
-                  let emailApi = "http://localhost:5001/api/save-email";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                   if (language === "ar") {
                     pdfName = "How to Buy a Home-Arabic";
-                    emailApi = "http://localhost:5001/api/emails-arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                   }
                   const res = await fetch(
                     emailApi,

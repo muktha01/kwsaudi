@@ -42,7 +42,7 @@ const PropertyCard = memo(({ property, index, iconUrls, formatPrice, generatePro
               (Array.isArray(property.photos) && property.photos[0]?.ph_url) ||
               "/properysmallfalback.jpg";
             if (typeof img === 'string' && img.startsWith('http')) return img;
-            if (typeof img === 'string') return `http://localhost:5001/${img.replace(/\\/g, '/')}`;
+            if (typeof img === 'string') return `${process.env.NEXT_PUBLIC_BASE_URL}/${img.replace(/\\/g, '/')}`;
             return "/properysmallfalback.jpg";
           })()}
           alt={t(property.title || property.prop_type || "property")}
@@ -371,7 +371,7 @@ const PropertiesContent = () => {
       // Remove undefined values
       Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
 
-      const res = await fetch('http://localhost:5001/api/listings/list/newproperties', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/newproperties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -498,8 +498,8 @@ const PropertiesContent = () => {
       try {
         // Fetch both filter options and page hero in parallel
         const [filtersRes, pageRes] = await Promise.all([
-          fetch('http://localhost:5001/api/listings/filters'),
-          fetch('http://localhost:5001/api/page/slug/rental-search')
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`)
         ]);
 
         // Handle filters response
@@ -525,7 +525,7 @@ const PropertiesContent = () => {
             setHeroSrc(
               cleanPath.startsWith('http')
                 ? cleanPath
-                : `http://localhost:5001/${cleanPath}`
+                : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
             );
           }
         }

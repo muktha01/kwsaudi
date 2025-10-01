@@ -35,7 +35,7 @@ export default function PageManagement() {
   const fetchPages = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5001/api/pages');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/pages`);
       setPages(res.data);
     } catch (e) {
       setPages([]);
@@ -101,11 +101,11 @@ export default function PageManagement() {
         }
       });
       if (editId) {
-        await axios.put(`http://localhost:5001/api/page/${editId}`, formData, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/page/${editId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       } else {
-        await axios.post('http://localhost:5001/api/page', formData, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/page`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
@@ -124,7 +124,7 @@ export default function PageManagement() {
   // Delete a page
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5001/api/page/${deleteId}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/page/${deleteId}`);
       await fetchPages();
       setDeleteDialog(false);
       setDeleteId(null);

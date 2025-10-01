@@ -32,7 +32,7 @@ export default function NewsDetailPage() {
 
         // Fetch fresh data from API
         console.log('Fetching news with ID:', id);
-        const res = await fetch(`http://localhost:5001/api/News/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/News/${id}`);
         
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -96,7 +96,7 @@ export default function NewsDetailPage() {
           const cleanPath = blog.coverImage.replace(/\\/g, "/");
           return cleanPath.startsWith("http")
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`;
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
         })()
       : "/event.png"
   }

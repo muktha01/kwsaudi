@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 // project imports
 import MainLayout from 'layout/MainLayout';
 import Loadable from 'ui-component/Loadable';
+import ErrorBoundary from './ErrorBoundary';
 
 // import BannerDetails from '../views/dashboard/BannerDetails';
 // import BlogManagement from 'views/dashboard/BlogManagement';
@@ -65,6 +66,7 @@ const ProtectedRoute = ({ children }) => {
 const MainRoutes = {
   path: '/',
   element: <MainLayout />,
+  errorElement: <ErrorBoundary />,
   children: [
     {
       path: '/',

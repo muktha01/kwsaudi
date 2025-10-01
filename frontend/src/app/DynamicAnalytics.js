@@ -6,7 +6,7 @@ export default function DynamicAnalytics() {
 //   const [footerScript, setFooterScript] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5001/api/api-management/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api-management/`)
       .then((res) => res.json())
       .then((data) => {
         setHeaderScript(data.header || "");

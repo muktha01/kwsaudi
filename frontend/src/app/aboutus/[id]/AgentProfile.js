@@ -93,7 +93,7 @@ const [buyEmail, setBuyEmail] = useState("");
        
         
         // If no stored data or no match, fetch from API
-        const agentRes = await fetch(`http://localhost:5001/api/agents/merge?name=&page=1&limit=100`);
+        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/merge?name=&page=1&limit=100`);
         
         if (agentRes.ok) {
           const agentData = await agentRes.json();
@@ -161,7 +161,7 @@ const [buyEmail, setBuyEmail] = useState("");
         console.log('Agent kw_id:', agent.kw_id || agent.kwId);
         
         // First try the main properties API endpoint
-        let res = await fetch('http://localhost:5001/api/properties', {
+        let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/properties`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -258,14 +258,14 @@ const [buyEmail, setBuyEmail] = useState("");
       let url, downloadName;
       if (language === 'ar') {
         if (pdfName === 'How to Buy a Home-Arabic') {
-          url = `http://localhost:5001/api/downloads/How to Buy a Home-Arabic`;
+          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Buy a Home-Arabic`;
           downloadName = 'How to Buy a Home-Arabic.pdf';
         } else {
-          url = `http://localhost:5001/api/downloads/How to Sell Your Home-Arabic`;
+          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Sell Your Home-Arabic`;
           downloadName = 'How to Sell Your Home-Arabic.pdf';
         }
       } else {
-        url = `http://localhost:5001/api/pdf/download/${pdfName}`;
+        url = `${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`;
         downloadName = `${pdfName}.pdf`;
       }
       const res = await fetch(url);
@@ -353,7 +353,7 @@ const [buyEmail, setBuyEmail] = useState("");
                                      agent.profileImage && agent.profileImage.startsWith('http')
                                        ? agent.profileImage
                                        : agent.profileImage
-                                         ? `http://localhost:5001/${agent.profileImage.replace(/\\/g, '/')}`
+                                         ? `${process.env.NEXT_PUBLIC_BASE_URL}/${agent.profileImage.replace(/\\/g, '/')}`
                                          : '/avtar.png'
                                    }
                                    alt={t(`Portrait of ${agent.name}`)}
@@ -377,7 +377,7 @@ const [buyEmail, setBuyEmail] = useState("");
                                      agent.profileImage && agent.profileImage.startsWith('http')
                                        ? agent.profileImage
                                        : agent.profileImage
-                                         ? `http://localhost:5001/${agent.profileImage.replace(/\\/g, '/')}`
+                                         ? `${process.env.NEXT_PUBLIC_BASE_URL}/${agent.profileImage.replace(/\\/g, '/')}`
                                          : '/avtar.png'
                                    }
                                    alt={t(`Portrait of ${agent.name}`)}
@@ -516,10 +516,10 @@ const [buyEmail, setBuyEmail] = useState("");
                setSellEmailError("");
                try {
                  let pdfName = "pdf1";
-                 let emailApi = "http://localhost:5001/api/save-email";
+                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                  if (language === "ar") {
                    pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = "http://localhost:5001/api/emails-arabic";
+                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                  }
                  const res = await fetch(
                    emailApi,
@@ -568,10 +568,10 @@ const [buyEmail, setBuyEmail] = useState("");
                setSellEmailError("");
                try {
                  let pdfName = "pdf1";
-                 let emailApi = "http://localhost:5001/api/save-email";
+                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                  if (language === "ar") {
                    pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = "http://localhost:5001/api/emails-arabic";
+                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                  }
                  const res = await fetch(
                    emailApi,
@@ -659,10 +659,10 @@ const [buyEmail, setBuyEmail] = useState("");
                  setBuyEmailError("");
                  try {
                    let pdfName = "pdf2";
-                   let emailApi = "http://localhost:5001/api/save-email";
+                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                    if (language === "ar") {
                      pdfName = "How to Buy a Home-Arabic";
-                     emailApi = "http://localhost:5001/api/emails-arabic";
+                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                    }
                    const res = await fetch(
                      emailApi,
@@ -710,10 +710,10 @@ const [buyEmail, setBuyEmail] = useState("");
                  setBuyEmailError("");
                  try {
                    let pdfName = "pdf2";
-                   let emailApi = "http://localhost:5001/api/save-email";
+                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                    if (language === "ar") {
                      pdfName = "How to Buy a Home-Arabic";
-                     emailApi = "http://localhost:5001/api/emails-arabic";
+                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
                    }
                    const res = await fetch(
                      emailApi,

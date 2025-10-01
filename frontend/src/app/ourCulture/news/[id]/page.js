@@ -4,7 +4,7 @@
 // Server-side dynamic metadata
 export async function generateMetadata() {
   try {
-    const res = await fetch('http://localhost:5001/api/seo/slug/news-details', { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seo/slug/news-details`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch SEO');
     const data = await res.json();
 

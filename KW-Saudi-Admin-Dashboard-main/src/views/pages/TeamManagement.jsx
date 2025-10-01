@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 
-const API_URL = 'http://localhost:5001/api/employee';
+const API_URL = `${import.meta.env.VITE_API_URL}/employee`;
 
 const emptyForm = {
   name: '',
@@ -42,7 +42,7 @@ const TeamManagement = () => {
 
   const handleOpen = (team = emptyForm) => {
     setForm({ ...team, profileImage: null });
-    setPreview(team.profileImage ? `${process.env.VITE_API_BASE_URL || 'http://localhost:5001/'}${team.profileImage}` : null);
+    setPreview(team.profileImage ? `${import.meta.env.VITE_BASE_URL}/${team.profileImage}` : null);
     setEditId(team._id || null);
     setOpen(true);
   };
@@ -139,7 +139,7 @@ const TeamManagement = () => {
                   <TableRow key={item._id}>
                     <TableCell>
                       {item.profileImage ? (
-                        <Avatar src={`http://localhost:5001/${item.profileImage.replace('uploads', 'uploads')}`} alt={item.name} />
+                        <Avatar src={`${import.meta.env.VITE_BASE_URL}/${item.profileImage.replace('uploads', 'uploads')}`} alt={item.name} />
                       ) : (
                         <Avatar>{item.name?.[0]}</Avatar>
                       )}

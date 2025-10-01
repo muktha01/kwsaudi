@@ -8,6 +8,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { useTranslation } from '@/contexts/TranslationContext';
 import { GoogleOAuthProvider, useGoogleLogin  } from '@react-oauth/google';
 import { useRouter } from "next/navigation";
+import { Space_Mono } from "next/font/google";
 
 export default function Home() {
   const { language,isRTL, t } = useTranslation();
@@ -29,7 +30,7 @@ export default function Home() {
 
   // Fetch analytics footer content
   useEffect(() => {
-    fetch("http://localhost:5001/api/api-management/")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api-management/`)
       .then((res) => res.json())
       .then((data) => {
         setFooterContent(data.footer || "");
@@ -72,7 +73,7 @@ export default function Home() {
     }
 
     // Fetch agents and validate email
-    fetch('http://localhost:5001/api/agents/kw/combined-data?offset=0&limit=1000')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=1000`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.results) {
@@ -131,7 +132,7 @@ export default function Home() {
 
     try {
       // Fetch agents from the combined API
-      const res = await fetch('http://localhost:5001/api/agents/kw/combined-data?offset=0&limit=1000');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=1000`);
       const data = await res.json();
 
       if (data.success && data.results) {
@@ -220,7 +221,7 @@ export default function Home() {
           limit: '1000', // Get all agents
         });
 
-        const res = await fetch(`http://localhost:5001/api/agents/kw/combined-data?${queryParams}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?${queryParams}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json',
             'Authorization': `Bearer ${googleIdToken}` 
@@ -432,10 +433,8 @@ export default function Home() {
       {/* Left Text */}
       <div className="flex flex-col space-y-1 md:space-y-0 md:mr-4">
         <div>
-          <a href="http://localhost:5001/termsofuse" className="">{t('Terms of Use')}</a> | 
-          <a href="http://localhost:5001/privacypolicy" className="mx-2">{t('Privacy Policy')}</a>| 
-        
-        
+          <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/termsofuse">{t('Terms of Use')}</a> | 
+          <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/privacypolicy" className="mx-2">{t('Privacy Policy')}</a> | 
           <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
           <span className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</span>
        </div>
@@ -659,8 +658,8 @@ export default function Home() {
 
   {/* Footer Links */}
   <div className="flex flex-wrap justify-center gap-1 text-gray-600 text-sm mt-6 ">
-    <a href="http://localhost:5001/termsofuse">{t('Terms of Use')}  | </a>
-    <a href="http://localhost:5001/privacypolicy">{t('Privacy Policy')}  | </a>
+    <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/termsofuse">{t('Terms of Use')} | </a>
+    <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/privacypolicy">{t('Privacy Policy')} | </a>
     <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
                   <a href='#' className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</a>
   </div>

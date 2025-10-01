@@ -33,7 +33,7 @@ export default function Events(){
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch('http://localhost:5001/api/events');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`);
        
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -57,7 +57,7 @@ export default function Events(){
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/events');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/events`);
         if (!res.ok) return;
         const page = await res.json();
         setPage(page)
@@ -66,7 +66,7 @@ export default function Events(){
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       
@@ -134,7 +134,7 @@ export default function Events(){
           const cleanPath = post.coverImage.replace(/\\/g, "/");
           return cleanPath.startsWith("http")
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`;
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
         })()
       : "/event.png"
   }

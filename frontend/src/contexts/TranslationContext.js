@@ -20,7 +20,7 @@ export const TranslationProvider = ({ children }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const BASE_API = API_URL.replace(/\/+$/, '');
   const REFRESH_MS = Number(process.env.NEXT_PUBLIC_TRANSLATION_REFRESH_MS || 30000);
   const isFetchingRef = useRef(false);

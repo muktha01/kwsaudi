@@ -261,7 +261,7 @@ const PropertiesContent = () => {
       return cacheRef.current.get(cacheKey);
     }
 
-    const res = await fetch('http://localhost:5001/api/listings/list/properties', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
@@ -290,7 +290,7 @@ const PropertiesContent = () => {
       return filtersCache.current;
     }
 
-    const res = await fetch('http://localhost:5001/api/listings/filters');
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
     if (!res.ok) {
       throw new Error('Failed to fetch filter options');
     }
@@ -562,7 +562,7 @@ const PropertiesContent = () => {
   useEffect(() => {
     const fetchPageHero = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/page/slug/rental-search');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`);
         if (!res.ok) return;
        
         
@@ -574,7 +574,7 @@ const PropertiesContent = () => {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
       } catch (e) {

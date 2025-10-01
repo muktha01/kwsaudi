@@ -215,7 +215,7 @@ const AgentProfile = () => {
         console.log("Fetching enhanced agents with properties data...");
         setPropertiesLoading(true);
         const response = await fetch(
-          `http://localhost:5001/api/agents/kw/agents/property-counts?offset=0&limit=100`
+          `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`
         );
 
         if (response.ok) {
@@ -353,7 +353,7 @@ const AgentProfile = () => {
           }
           
           // If no stored data or no match, fetch from API
-          const agentRes = await fetch(`http://localhost:5001/api/agents/kw/combined-data?offset=0&limit=100`);
+          const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=100`);
           
           if (agentRes.ok) {
             const agentData = await agentRes.json();
@@ -523,7 +523,7 @@ const AgentProfile = () => {
           try {
             setLoading(true);
             setError(null);
-            const res = await fetch('http://localhost:5001/api/events');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`);
             
             if (!res.ok) {
               throw new Error(`HTTP error! status: ${res.status}`);
@@ -553,7 +553,7 @@ const AgentProfile = () => {
         try {
           // Fetch links
           // console.log('Fetching links from API...');
-          const linksResponse = await fetch('http://localhost:5001/api/links');
+          const linksResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/links`);
           if (linksResponse.ok) {
             const linksData = await linksResponse.json();
             console.log('Links data received:', linksData);
@@ -1127,7 +1127,7 @@ const AgentProfile = () => {
                          const cleanPath = post.coverImage.replace(/\\/g, "/");
                          return cleanPath.startsWith("http")
                            ? cleanPath
-                           : `http://localhost:5001/${cleanPath}`;
+                           : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
                        })()
                      : "/event.png"
                  }

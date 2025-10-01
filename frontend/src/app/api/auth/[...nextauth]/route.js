@@ -13,7 +13,7 @@ const handler = NextAuth({
             if (account.provider === 'google') {
                 try {
                     // Send user data to your backend
-                    const response = await fetch('http://localhost:5001/api/agent-auth/google', {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agent-auth/google`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -412,7 +412,7 @@ PropertyCard.displayName = "PropertyCard";
             requestBody.location = debouncedLocation;
           }
 
-          const response = await axios.post('http://localhost:5001/api/listings/list/properties', requestBody);
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, requestBody);
           
           if (response.data.success) {
             let fetched = [];

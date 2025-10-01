@@ -32,7 +32,7 @@ export default function LinksPage() {
   // Function to fetch links from backend
   const fetchLinks = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/links");
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/links`);
       setLinks(res.data || []);
       console.log("Links loaded from backend:", res.data);
       return true;
@@ -52,7 +52,7 @@ export default function LinksPage() {
   const handleSave = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:5001/api/links/${selectedLink._id}`,
+        `${import.meta.env.VITE_API_URL}/links/${selectedLink._id}`,
         selectedLink
       );
       
@@ -96,7 +96,7 @@ export default function LinksPage() {
         return;
       }
 
-      const res = await axios.post("http://localhost:5001/api/links", newLink);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/links`, newLink);
       
       console.log("Link added successfully:", res.data);
       

@@ -113,7 +113,7 @@ const Jeddah = () => {
     useEffect(() => {
       const fetchAgents = async () => {
         try {
-          const response = await fetch('http://localhost:5001/api/employee/team/Jeddah');
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employee/team/Jeddah`);
           if (!response.ok) throw new Error('Failed to fetch agents');
           const data = await response.json();
           // Map backend fields to UI fields
@@ -128,7 +128,7 @@ const Jeddah = () => {
             image: agent.profileImage
               ? (agent.profileImage.startsWith('http')
                   ? agent.profileImage
-                  : `http://localhost:5001/${agent.profileImage.replace(/\\/g, '/')}`)
+                  : `${process.env.NEXT_PUBLIC_BASE_URL}/${agent.profileImage.replace(/\\/g, '/')}`)
               : null,
             title: agent.jobTitle || '',
             _id: agent._id,
@@ -153,7 +153,7 @@ const Jeddah = () => {
     useEffect(() => {
       const fetchPageHero = async () => {
         try {
-          const res = await fetch('http://localhost:5001/api/page/slug/jeddah');
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/jeddah`);
           if (!res.ok) return;
           // console.log(res);
           
@@ -164,7 +164,7 @@ const Jeddah = () => {
         setHeroSrc(
           cleanPath.startsWith('http')
             ? cleanPath
-            : `http://localhost:5001/${cleanPath}`
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         );
         }
         } catch (e) {
@@ -356,7 +356,7 @@ const Jeddah = () => {
                 agent.image && agent.image.startsWith('http')
                   ? agent.image
                   : agent.image
-                    ? `http://localhost:5001/${agent.image.replace(/\\/g, '/')}`
+                    ? `${process.env.NEXT_PUBLIC_BASE_URL}/${agent.image.replace(/\\/g, '/')}`
                     : '/avtar.png'
               }
               alt={t(`Portrait of ${agent.name}`)}

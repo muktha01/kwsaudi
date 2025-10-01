@@ -59,7 +59,7 @@ const Dashboard = () => {
       setLoading(true);
       try {
         const requestBody = {};
-        const res = await fetch('http://localhost:5001/api/listings/list/properties', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/listings/list/properties`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody)
@@ -77,7 +77,7 @@ const Dashboard = () => {
     const fetchAgents = async () => {
       try {
         const queryParams = new URLSearchParams({ offset: 0, limit: 1000 }).toString();
-        const res = await fetch(`http://localhost:5001/api/agents/kw/combined-data?${queryParams}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/agents/kw/combined-data?${queryParams}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });

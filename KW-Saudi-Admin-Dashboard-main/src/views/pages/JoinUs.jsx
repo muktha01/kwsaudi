@@ -53,7 +53,7 @@ const JoinUs = () => {
       setError(null);
       try {
       // Fetch all data from leads API
-        const res = await fetch('http://localhost:5001/api/leads');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`);
         const data = await res.json();
       
       if (Array.isArray(data)) {
@@ -93,7 +93,7 @@ const JoinUs = () => {
       }
 
       // Submit to real API
-      const res = await fetch('http://localhost:5001/api/leads', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/leads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

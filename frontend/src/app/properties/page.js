@@ -99,7 +99,7 @@ const Properties = () => {
       setLoadingListings(true);
       setListingsError(null);
       try {
-        const res = await fetch('http://localhost:5001/api/listings/list/properties', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -464,7 +464,7 @@ const Properties = () => {
       setLoadingTypes(true);
       setTypesError(null);
       try {
-        const res = await fetch('http://localhost:5001/api/listings/list/properties', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

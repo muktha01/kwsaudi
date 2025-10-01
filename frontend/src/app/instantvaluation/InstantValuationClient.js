@@ -30,7 +30,7 @@ const InstantValuationClient = () => {
   const fetchProperties = async () => {
     setLoadingProperties(true);
     try {
-      const res = await fetch('http://localhost:5001/api/listings/filters');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
       const data = await res.json();
 
       // ✅ propertyTypes is already an array

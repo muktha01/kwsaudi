@@ -185,7 +185,7 @@ useEffect(() => {
       console.log("Fetching enhanced agents with properties data...");
       setPropertiesLoading(true);
       const response = await fetch(
-        `http://localhost:5001/api/agents/kw/agents/property-counts?offset=0&limit=100`
+        `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`
       );
 
       if (response.ok) {
@@ -325,7 +325,7 @@ useEffect(() => {
         }
         
         // If no stored data or no match, fetch from API
-        const agentRes = await fetch(`http://localhost:5001/api/agents/kw/combined-data?offset=0&limit=100`);
+        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=100`);
         
         if (agentRes.ok) {
           const agentData = await agentRes.json();

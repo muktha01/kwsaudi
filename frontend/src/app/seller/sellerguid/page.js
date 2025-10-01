@@ -5,7 +5,7 @@ import Sellerguid from './Sellerguid'; // client component
 // Server-side dynamic metadata
 export async function generateMetadata() {
   try {
-    const res = await fetch('http://localhost:5001/api/seo/slug/seller-guide', { next: { revalidate: 60 } });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seo/slug/seller-guide`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('Failed to fetch SEO');
     const data = await res.json();
 
