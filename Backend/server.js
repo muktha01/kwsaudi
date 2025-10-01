@@ -37,9 +37,10 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3002',
+    'http://localhost:3001',
     'http://localhost:3000',
     'https://kwsaudi-admin.vercel.app',
-    'https://www.kwsaudiarabia.com/',
+    'https://www.kwsaudiarabia.com'
      // <-- add your production frontend domain if needed
   ],
   credentials: true,
