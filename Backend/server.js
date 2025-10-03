@@ -36,12 +36,14 @@ const app = express();
 // Configure CORS to allow requests from specific origins
 app.use(cors({
   origin: [
-    'http://localhost:3002',
-    'http://localhost:3001',
-    'http://localhost:3000',
-    'https://www.kwsaudiarabia.com',
-    'kw-saudiarabia.com',
-     // <-- add your production frontend domain if needed
+    'http://localhost:3000',           // Frontend local
+    'http://localhost:3001',           // Local admin development  
+    'http://localhost:3002',           // Additional local port
+    'http://31.97.62.135:3000',       // Frontend server
+    'http://31.97.62.135:3001',       // Admin Dashboard server
+    'https://www.kwsaudiarabia.com',   // Production domain
+    'https://kw-saudiarabia.com',      // Production domain
+    'kw-saudiarabia.com',              // Production domain without https
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
