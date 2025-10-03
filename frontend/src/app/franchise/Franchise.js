@@ -15,6 +15,7 @@ const Franchise = () => {
   // Add state to track screen size
   const [isMobile, setIsMobile] = useState(false);
   const [phone, setPhone] = useState('');
+   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     fullName: '',
     mobileNumber: '',

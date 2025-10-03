@@ -8,6 +8,7 @@ import { useTranslation } from '@/contexts/TranslationContext';
 
 const Contact = () => {
   const { t, isRTL, language } = useTranslation();
+   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNumber: '',

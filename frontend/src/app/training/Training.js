@@ -12,6 +12,7 @@ import { useTranslation } from '@/contexts/TranslationContext';
 export default function Training() {
   const [heroSrc, setHeroSrc] = useState('/');
   const[page,setPage]=useState('');
+   const [loading, setLoading] = useState(true);
   const router=useRouter()
   const { t, language, isRTL } = useTranslation();
   useEffect(() => {

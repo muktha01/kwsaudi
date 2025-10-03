@@ -5,7 +5,7 @@ import Header from '@/components/header';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaPhoneAlt,FaChevronRight, FaEnvelope, FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaPhoneAlt,FaChevronRight, FaEnvelope, FaSearch, FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 import { MdPhone } from "react-icons/md";
 import Footer from '@/components/newfooter';
 import { useTranslation } from '@/contexts/TranslationContext';
@@ -36,9 +36,59 @@ const AgentMap = React.memo(({
   mapProjection,
   getOffsetCoords,
   handleAgentClick,
-  t 
+  t,
+  filterName // Add filterName prop to determine map center
 }) => {
   
+  // Function to determine map center based on search term or agents
+  const getMapCenter = () => {
+    // City coordinates for major Saudi cities
+    const cityCoordinates = {
+      'riyadh': { lat: 24.7136, lng: 46.6753, zoom: 10 },
+      'jeddah': { lat: 21.4225, lng: 39.8262, zoom: 10 },
+      'mecca': { lat: 21.3891, lng: 39.8579, zoom: 10 },
+      'medina': { lat: 24.5247, lng: 39.5692, zoom: 10 },
+      'dammam': { lat: 26.4282, lng: 50.1020, zoom: 10 },
+      'khobar': { lat: 26.2172, lng: 50.1971, zoom: 10 },
+      'dhahran': { lat: 26.2361, lng: 50.1455, zoom: 10 },
+      'tabuk': { lat: 28.3998, lng: 36.5700, zoom: 10 }
+    };
+
+    // If there's a search term, check if it matches a city
+    if (filterName && filterName.trim()) {
+      const searchTerm = filterName.trim().toLowerCase();
+      if (cityCoordinates[searchTerm]) {
+        return cityCoordinates[searchTerm];
+      }
+    }
+
+    // If agents are available, try to center based on their locations
+    if (agents && agents.length > 0) {
+      // Check if most agents are from a specific city
+      const cityCounts = {};
+      agents.forEach(agent => {
+        if (agent.city) {
+          const cityKey = agent.city.toLowerCase().trim();
+          cityCounts[cityKey] = (cityCounts[cityKey] || 0) + 1;
+        }
+      });
+
+      // Find the city with most agents
+      const dominantCity = Object.keys(cityCounts).reduce((a, b) => 
+        cityCounts[a] > cityCounts[b] ? a : b, null
+      );
+
+      if (dominantCity && cityCoordinates[dominantCity]) {
+        return cityCoordinates[dominantCity];
+      }
+    }
+
+    // Default to Saudi Arabia center view
+    return { lat: 24.7136, lng: 46.6753, zoom: 6 };
+  };
+
+  const mapCenter = getMapCenter();
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -58,8 +108,8 @@ const AgentMap = React.memo(({
     <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-gray-100"><Spinner size="lg" color="red" text={t('Loading map...')} /></div>}>
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={{ lat: 24.7136, lng: 46.6753 }} // Fixed center like property page
-        zoom={6} // Fixed zoom like property page
+        center={{ lat: mapCenter.lat, lng: mapCenter.lng }} // Dynamic center based on search or agents
+        zoom={mapCenter.zoom} // Dynamic zoom level
         onLoad={(map) => {
           setDesktopMap(map);
           setMapProjection(map.getProjection());
@@ -386,6 +436,7 @@ const arePropsEqual = (prevProps, nextProps) => {
   if (prevProps.t !== nextProps.t) return false;
   if (prevProps.desktopMap !== nextProps.desktopMap) return false;
   if (prevProps.mapProjection !== nextProps.mapProjection) return false;
+  if (prevProps.filterName !== nextProps.filterName) return false; // Check filterName for map center changes
   
   // Check if agents array changed
   if (prevProps.agents.length !== nextProps.agents.length) return false;
@@ -1213,11 +1264,11 @@ const AgentContent = () => {
                     </label>
                   </div>
 
-                  <div className="flex items-center border border-gray-300">
+                  <div className="flex items-center border border-gray-300 relative">
                     <input
                       type="text"
                       placeholder={t(filter === "agent" ? "Enter Name" : "Enter City")}
-                      className="flex-1 px-2 sm:px-3 py-2 sm:py-3 outline-none text-sm sm:text-base"
+                      className="flex-1 px-2 sm:px-3 py-2 sm:py-3 outline-none text-sm sm:text-base pr-10"
                       value={filterName}
                       onChange={(e) => {
                         const searchValue = e.target.value;
@@ -1230,6 +1281,25 @@ const AgentContent = () => {
                         // }
                       }}
                     />
+                    {filterName && (
+                      <button
+                        className="absolute right-12 sm:right-16 text-gray-400 hover:text-gray-600"
+                        onClick={() => {
+                          setFilterName("");
+                          setFilterMarket("");
+                          setFilterCity("");
+                          setCurrentPage(1);
+                          
+                          // Clear URL search parameters as well
+                          const url = new URL(window.location);
+                          url.searchParams.delete('search');
+                          router.replace(url.pathname, { scroll: false });
+                        }}
+                        title={t('Clear search')}
+                      >
+                        {/* <FaTimes size={14} /> */}
+                      </button>
+                    )}
                     <button 
                       className="bg-[rgb(206,32,39,255)] text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center"
                       onClick={() => {
@@ -1250,6 +1320,11 @@ const AgentContent = () => {
                         setFilterMarket("");
                         setFilterCity("");
                         setCurrentPage(1); // Reset page when clearing search
+                        
+                        // Clear URL search parameters as well
+                        const url = new URL(window.location);
+                        url.searchParams.delete('search');
+                        router.replace(url.pathname, { scroll: false });
                       }}
                       data-translate
                     >
@@ -1257,6 +1332,35 @@ const AgentContent = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Search notification banner */}
+                {/* {(filterName || searchParams.get('search')) && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaSearch className="text-blue-600" size={16} />
+                      <span className="text-blue-800 text-sm">
+                        {t('Showing results for')}: "<strong>{filterName || searchParams.get('search')}</strong>"
+                      </span>
+                    </div>
+                    <button
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                      onClick={() => {
+                        setFilterName("");
+                        setFilterMarket("");
+                        setFilterCity("");
+                        setCurrentPage(1);
+                        
+                        // Clear URL search parameters as well
+                        const url = new URL(window.location);
+                        url.searchParams.delete('search');
+                        router.replace(url.pathname, { scroll: false });
+                      }}
+                    >
+                      <FaTimes size={12} />
+                      {t('Clear')}
+                    </button>
+                  </div>
+                )} */}
 
                 {/* Conditional Rendering - Show agents or market centers */}
                 <>
@@ -1497,6 +1601,7 @@ const AgentContent = () => {
                   mapProjection={mapProjection}
                   getOffsetCoords={getOffsetCoords}
                   handleAgentClick={handleAgentClick}
+                  filterName={filterName} // Pass filterName for dynamic map centering
                   t={t}
                 />
               </div>
