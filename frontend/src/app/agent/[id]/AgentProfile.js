@@ -13,23 +13,15 @@ const AgentProfile = (props) => {
   const params = useParams();
   const router = useRouter();
   const agentId = params?.id;
-  const { t, isRTL,language } = useTranslation();
+  const { t, isRTL, language } = useTranslation();
   
   const [agent, setAgent] = useState(null);
-  const [properties, setProperties] = useState(() => {
-    // Try to get cached properties immediately on component initialization
-    if (typeof window !== 'undefined' && agentId) {
-      const cache = new Map();
-      const propertiesCacheKey = `properties_${agentId}`;
-      // This will be empty on first load, but instant on subsequent loads
-      return [];
-    }
-    return [];
-  });
+  const [properties, setProperties] = useState([]);
   const [combinedApiData, setCombinedApiData] = useState(null); // Cache combined API response
   const [agentsWithPropertiesData, setAgentsWithPropertiesData] = useState(null); // Cache new API response
   const [loading, setLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
@@ -78,20 +70,38 @@ const [buyEmail, setBuyEmail] = useState("");
   }, [retryCount, agentId, agent?.kw_uid,t]);
 
   // Cleanup effect for component unmount
+  // useEffect(() => {
+  //   return () => {
+  //     // Cancel all pending requests on unmount
+  //     if (agentAbortController.current) {
+  //       agentAbortController.current.abort();
+  //     }
+  //     if (propertiesAbortController.current) {
+  //       propertiesAbortController.current.abort();
+  //     }
+  //     if (enhancedApiAbortController.current) {
+  //       enhancedApiAbortController.current.abort();
+  //     }
+  //   };
+  // }, []);
+
+  // Initialize component when agentId changes
   useEffect(() => {
-    return () => {
-      // Cancel all pending requests on unmount
-      if (agentAbortController.current) {
-        agentAbortController.current.abort();
+    if (agentId) {
+      // Reset loading states for new agent
+      setLoading(true);
+      setPropertiesLoading(true);
+      setInitialLoadComplete(false);
+      setError(null);
+      
+      // Clear previous agent data if it's for a different agent
+      if (agent && (agent.kw_uid !== agentId && agent._id !== agentId)) {
+        setAgent(null);
+        // Don't immediately clear properties - let the data fetching effect handle this
+        // This prevents the brief "no properties found" flash
       }
-      if (propertiesAbortController.current) {
-        propertiesAbortController.current.abort();
-      }
-      if (enhancedApiAbortController.current) {
-        enhancedApiAbortController.current.abort();
-      }
-    };
-  }, []);
+    }
+  }, [agentId]); // This will run when navigating to a new agent
   const agentBios = {
     1: {
       text: `
@@ -251,190 +261,146 @@ const [buyEmail, setBuyEmail] = useState("");
     return t(bioTexts[bioIndex] || bioTexts[1]);
   };
 
-  // Immediate cache check on component mount
+  // Single effect to handle all data fetching for the agent
   useEffect(() => {
-    if (agentId && properties.length === 0) {
+    if (!agentId) return;
+
+    const fetchAgentAndProperties = async () => {
+      // Check if we have cached properties first
       const propertiesCacheKey = `properties_${agentId}`;
       if (cacheRef.current.has(propertiesCacheKey)) {
         const cachedProperties = cacheRef.current.get(propertiesCacheKey);
         if (cachedProperties && cachedProperties.length > 0) {
-          // console.log(`Instant cache hit: ${cachedProperties.length} properties for agent ${agentId}`);
           setAgentProperties(cachedProperties);
           setProperties(cachedProperties);
+          setFilteredProperties(cachedProperties);
           setPropertiesLoading(false);
-        }
-      }
-    }
-  }, [agentId,properties.length]); // Run only once on mount
-  const handleDownload = async (pdfName) => {
-    setLoading(true);
-    try {
-      let url, downloadName;
-      if (language === 'ar') {
-        if (pdfName === 'How to Buy a Home-Arabic') {
-          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Buy a Home-Arabic`;
-          downloadName = 'How to Buy a Home-Arabic.pdf';
-        } else {
-          url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Sell Your Home-Arabic`;
-          downloadName = 'How to Sell Your Home-Arabic.pdf';
-        }
-      } else {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`;
-        downloadName = `${pdfName}.pdf`;
-      }
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Download failed");
-
-      const blob = await res.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = downloadName;
-      link.click();
-
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      alert("Download failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-useEffect(() => {
-  // Immediate cache check - if properties exist, skip everything
-  if (properties.length > 0) {
-    // console.log(`Properties already loaded for agent ${agentId}, skipping all processing`);
-    return;
-  }
-
-  // Quick synchronous cache check
-  const propertiesCacheKey = `properties_${agentId}`;
-  if (cacheRef.current.has(propertiesCacheKey)) {
-    const cachedProperties = cacheRef.current.get(propertiesCacheKey);
-    if (cachedProperties && cachedProperties.length > 0) {
-      // console.log(`Using cached properties for agent ${agentId} - ${cachedProperties.length} properties`);
-      setAgentProperties(cachedProperties);
-      setProperties(cachedProperties);
-      setPropertiesLoading(false);
-      return;
-    }
-  }
-
-  const fetchAgentsWithPropertiesData = async () => {
-    if (!agentId) return;
-
-    // console.log(`Fetching properties for agent ${agentId}...`);
-    
-    // Cancel any previous request
-    if (enhancedApiAbortController.current) {
-      enhancedApiAbortController.current.abort();
-    }
-
-    // Create new abort controller
-    enhancedApiAbortController.current = new AbortController();
-
-    try {
-      setPropertiesLoading(true);
-
-      // Check enhanced API cache
-      const cacheKey = `enhanced_agent_${agentId}`;
-      if (cacheRef.current.has(cacheKey)) {
-        const cachedData = cacheRef.current.get(cacheKey);
-        const properties = cachedData.properties || [];
-        
-        if (properties.length > 0) {
-          setAgentProperties(properties);
-          setProperties(properties);
-          setAgentsWithPropertiesData(cachedData.fullData);
-          setPropertiesLoading(false);
-          // console.log("Using cached enhanced API data");
+          setInitialLoadComplete(true);
           return;
         }
       }
 
-      // Add timeout - shorter for faster feedback
-      const timeoutId = setTimeout(() => {
-        enhancedApiAbortController.current?.abort();
-      }, 5001); // Reduced to 5 seconds
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`,
-        {
-          signal: enhancedApiAbortController.current.signal,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+      // Start fresh fetch
+      setPropertiesLoading(true);
+      
+      try {
+        // console.log(`Starting to fetch properties for agent ${agentId}`);
+        
+        // Cancel any previous request
+        if (enhancedApiAbortController.current) {
+          enhancedApiAbortController.current.abort();
         }
-      );
 
-      clearTimeout(timeoutId);
+        // Create new abort controller
+        enhancedApiAbortController.current = new AbortController();
 
-      if (response.ok) {
-        const data = await response.json();
-
-        // Find the agent that matches the current agentId
-        const selectedAgent = data.agentsWithProperties.find(
-          (agent) => agent.kw_uid?.toString() === agentId?.toString()
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`,
+          {
+            signal: enhancedApiAbortController.current.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          }
         );
 
-        if (selectedAgent) {
-          const properties = selectedAgent.properties || [];
-          setAgentProperties(properties);
-          setProperties(properties); // Set both states immediately
-          // console.log("Selected Agent:", selectedAgent.name);
-          // console.log("Properties loaded:", properties.length);
+        if (response.ok) {
+          const data = await response.json();
 
-          // Cache the enhanced API data
-          cacheRef.current.set(cacheKey, {
-            properties: properties,
-            fullData: data
-          });
+          // Find the agent that matches the current agentId
+          const selectedAgent = data.agentsWithProperties?.find(
+            (agent) => agent.kw_uid?.toString() === agentId?.toString()
+          );
 
-          // Cache properties separately for instant access
-          if (properties.length > 0) {
-            cacheRef.current.set(propertiesCacheKey, properties);
-            // console.log(`Cached ${properties.length} properties for agent ${agentId}`);
+          if (selectedAgent) {
+            const properties = selectedAgent.properties || [];
+            
+            setAgentProperties(properties);
+            setProperties(properties);
+            setFilteredProperties(properties);
+
+            // Cache the properties
+            if (properties.length > 0) {
+              cacheRef.current.set(propertiesCacheKey, properties);
+              // console.log(`Cached ${properties.length} properties for agent ${agentId}`);
+            }
+
+            // Limit cache size
+            if (cacheRef.current.size > 50) {
+              const firstKey = cacheRef.current.keys().next().value;
+              cacheRef.current.delete(firstKey);
+            }
+          } else {
+            setAgentProperties([]);
+            setProperties([]);
+            setFilteredProperties([]);
           }
 
-          // Limit cache size
-          if (cacheRef.current.size > 50) {
-            const firstKey = cacheRef.current.keys().next().value;
-            cacheRef.current.delete(firstKey);
-          }
+          // Store full agents data for agent details
+          setAgentsWithPropertiesData(data);
         } else {
-          // console.warn("No agent found with this ID in enhanced API");
-          setAgentProperties([]);
-          setProperties([]);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        // Store full agents data
-        setAgentsWithPropertiesData(data);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          // console.log('Enhanced API fetch aborted');
+          return;
+        }
+        // console.error("Error fetching properties:", error);
+        setAgentProperties([]);
+        setProperties([]);
+        setFilteredProperties([]);
+      } finally {
         setPropertiesLoading(false);
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        setInitialLoadComplete(true);
       }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        // console.log('Enhanced API fetch aborted');
-        return;
+    };
+
+    fetchAgentAndProperties();
+
+    // Cleanup function
+    return () => {
+      if (enhancedApiAbortController.current) {
+        enhancedApiAbortController.current.abort();
       }
-      // console.log("Enhanced API error, will try fallback:", error);
-      setPropertiesLoading(false);
-      // Don't set error here, let fallback handle it
-    }
-  };
-
-  fetchAgentsWithPropertiesData();
-
-  // Cleanup function
-  return () => {
-    if (enhancedApiAbortController.current) {
-      enhancedApiAbortController.current.abort();
-    }
-  };
-}, [agentId,properties.length,]); // Simplified dependencies - only agentId
-
+    };
+  }, [agentId]); // Only depend on agentId
+  const handleDownload = async (pdfName) => {
+     setLoading(true);
+     try {
+       let url, downloadName;
+       if (language === 'ar') {
+         if (pdfName === 'How to Buy a Home-Arabic') {
+           url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Buy a Home-Arabic`;
+           downloadName = 'How to Buy a Home-Arabic.pdf';
+         } else {
+           url = `${process.env.NEXT_PUBLIC_API_URL}/downloads/How to Sell Your Home-Arabic`;
+           downloadName = 'How to Sell Your Home-Arabic.pdf';
+         }
+       } else {
+         url = `${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`;
+         downloadName = `${pdfName}.pdf`;
+       }
+       const res = await fetch(url);
+       if (!res.ok) throw new Error("Download failed");
+ 
+       const blob = await res.blob();
+       const blobUrl = window.URL.createObjectURL(blob);
+ 
+       const link = document.createElement("a");
+       link.href = blobUrl;
+       link.download = downloadName;
+       link.click();
+ 
+       window.URL.revokeObjectURL(blobUrl);
+     } catch (err) {
+       alert("Download failed");
+     } finally {
+       setLoading(false);
+     }
+   };
+  // Removed redundant properties fetching effect - now consolidated into main effect above
 
   useEffect(() => {
     // Fetch agent data using ID from URL params
@@ -643,146 +609,30 @@ useEffect(() => {
         agentAbortController.current.abort();
       }
     };
-  }, [agentId, agentsWithPropertiesData,t]);
+  }, [agentId, agentsWithPropertiesData, t]);
   
-  // Update filteredProperties when properties change
-  useEffect(() => {
-    setFilteredProperties(properties);
-  }, [properties]);
+  // Update filteredProperties when properties change - consolidated into main effects above
 
-  useEffect(() => {
-    // Skip if we already have properties from enhanced API
-    if (properties.length > 0) {
-      return;
-    }
-
-    // Only extract properties from combined API if enhanced API didn't provide them
-    const extractAndFilterProperties = async () => {
-      // Skip if missing required data
-      if (!agent || !combinedApiData) {
-        return;
-      }
-
-      // console.log('Extracting properties from combined API for agent:', agent.kw_uid);
-
-      // Cancel any previous request
-      if (propertiesAbortController.current) {
-        propertiesAbortController.current.abort();
-      }
-
-      // Create new abort controller
-      propertiesAbortController.current = new AbortController();
-
-      setPropertiesLoading(true);
-      
-      try {
-        // Quick cache check
-        const propertiesCacheKey = `properties_${agentId}`;
-        if (cacheRef.current.has(propertiesCacheKey)) {
-          const cachedProperties = cacheRef.current.get(propertiesCacheKey);
-          setProperties(cachedProperties);
-          setPropertiesLoading(false);
-          // console.log('Using cached properties from combined API:', cachedProperties.length);
-          return;
-        }
-
-        // Check legacy cache key for combined API
-        const legacyCacheKey = `combined_properties_${agent.kw_uid}`;
-        if (cacheRef.current.has(legacyCacheKey)) {
-          const legacyCachedProperties = cacheRef.current.get(legacyCacheKey);
-          setProperties(legacyCachedProperties);
-          setPropertiesLoading(false);
-          // console.log('Using legacy cached combined API properties:', legacyCachedProperties.length);
-          // Also cache with new key format
-          cacheRef.current.set(propertiesCacheKey, legacyCachedProperties);
-          return;
-        }
-        
-        if (combinedApiData.success && combinedApiData.results) {
-          // Extract properties more efficiently
-          let allProperties = [];
-          
-          combinedApiData.results.forEach(result => {
-            if (result.success && result.type.includes('listings_region') && result.data) {
-              // Handle different data structures more efficiently
-              let properties = [];
-              
-              if (result.data.hits?.hits) {
-                properties = result.data.hits.hits.map(hit => hit._source);
-              } else if (result.data.data) {
-                properties = result.data.data;
-              } else if (Array.isArray(result.data)) {
-                properties = result.data;
-              }
-              
-              allProperties = allProperties.concat(properties);
-            }
-          });
-          
-          // Filter properties by agent's kw_uid more efficiently
-          const agentProperties = allProperties.filter(property => {
-            const agentId = property.list_kw_uid || property.listing_agent_kw_uid || property.agent_kw_uid;
-            return agentId && String(agentId) === String(agent.kw_uid);
-          });
-          
-          // console.log(`Found ${agentProperties.length} properties for agent from combined API`);
-          
-          // Fallback: if no agent-specific properties found, show sample for testing
-          const finalProperties = agentProperties.length > 0 ? agentProperties : allProperties.slice(0, 6);
-          
-          setProperties(finalProperties);
-
-          // Cache the results
-          cacheRef.current.set(legacyCacheKey, finalProperties);
-          cacheRef.current.set(propertiesCacheKey, finalProperties);
-          // console.log(`Cached ${finalProperties.length} properties from combined API for agent ${agentId}`);
-        } else {
-          // console.log('No valid data in combined API response');
-          setProperties([]);
-        }
-        
-      } catch (e) {
-        if (e.name === 'AbortError') {
-          // console.log('Properties extraction aborted');
-          return;
-        }
-        // console.error('Error extracting properties from combined API:', e);
-        setProperties([]);
-      } finally {
-        setPropertiesLoading(false);
-      }
-    };
-    
-    // Only run if we have agent and combined API data
-    if (agent && combinedApiData) {
-      extractAndFilterProperties();
-    }
-
-    // Cleanup function
-    return () => {
-      if (propertiesAbortController.current) {
-        propertiesAbortController.current.abort();
-      }
-    };
-  }, [agent, combinedApiData, agentId,properties.length]); // Simplified dependencies
+  // Removed redundant combined API extraction effect - all data fetching is now consolidated in the main effect above
 
   // Add a failsafe timeout to ensure propertiesLoading is always set to false
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (propertiesLoading) {
-        // console.log('Timeout: Setting propertiesLoading to false after 10 seconds');
+        // console.log('Timeout: Setting propertiesLoading to false after 8 seconds');
         setPropertiesLoading(false);
         // If no properties were loaded, set empty array to avoid infinite loading
         if (properties.length === 0) {
           // console.log('No properties found after timeout, setting empty array');
           setProperties([]);
           setAgentProperties([]);
+          setFilteredProperties([]);
         }
       }
-    }, 10000); // 10 second timeout
+    }, 8000); // Reduced to 8 second timeout for better UX
 
     return () => clearTimeout(timeoutId);
-  }, [propertiesLoading, properties.length]);
+  }, [propertiesLoading, properties.length, initialLoadComplete]);
 
   if (error) {
     return (
@@ -1018,287 +868,287 @@ useEffect(() => {
   
 
 </div>
-  <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
-   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
-     {/* Left Red Box - Sell Home */}
-     <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
-       {/* Content */}
-       <div className="pb-24">
-         <p
-           className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
-             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
-           } border-white`}
-         >
-           {t("Download guide")}
-         </p>
-         <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
-           {t("How to sell your home")}
-         </h2>
-         <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
-           {t(
-             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
-           )}
-         </p>
-       </div>
-       {/* Input Group - Responsive */}
-   <div
-   className={`absolute md:bottom-18 bottom-6 w-full ${
-     isRTL
-       ? "md:right-14 md:left-auto right-2 left-auto text-right"
-       : "md:left-14 md:right-6 left-2 right-auto text-left"
-   }`}
- >
- 
-         <div className="hidden md:flex w-full  md:max-w-lg items-center">
-           <input
-             type="text"
-             value={sellEmail}
-             onChange={(e) => setSellEmail(e.target.value)}
-             placeholder={t("Email Address")}
-             className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
-           />
-           <button
-             onClick={async () => {
-               if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
-                 setSellEmailError(t("Please enter a valid email."));
-                 return;
-               }
-               setLoading(true);
-               setSellEmailError("");
-               try {
-                 let pdfName = "pdf1";
-                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                 if (language === "ar") {
-                   pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                 }
-                 const res = await fetch(
-                   emailApi,
-                   {
-                     method: "POST",
-                     headers: { "Content-Type": "application/json" },
-                     body: JSON.stringify({ email: sellEmail, pdfName }),
-                   }
-                 );
-                 if (res.ok) {
-                   handleDownload(pdfName);
-                 } else {
-                   setSellEmailError(t("Failed to save email."));
-                 }
-               } catch (e) {
-                 setSellEmailError(t("Failed to save email."));
-               } finally {
-                 setLoading(false);
-               }
-             }}
-             disabled={loading}
-             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
-           >
-             {loading ? t("Downloading...") : t("Download")}
-           </button>
-         </div>
-       <div
-   className={`flex md:hidden w-65 flex-col gap-2 ${
-     isRTL ? "mr-2 text-right" : " text-left ml-2 "
-   }`}
- >
-           <input
-             type="text"
-             value={sellEmail}
-             onChange={(e) => setSellEmail(e.target.value)}
-             placeholder={t("Email Address")}
-             className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
-           />
-           <button
-             onClick={async () => {
-               if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
-                 setSellEmailError(t("Please enter a valid email."));
-                 return;
-               }
-               setLoading(true);
-               setSellEmailError("");
-               try {
-                 let pdfName = "pdf1";
-                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                 if (language === "ar") {
-                   pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                 }
-                 const res = await fetch(
-                   emailApi,
-                   {
-                     method: "POST",
-                     headers: { "Content-Type": "application/json" },
-                     body: JSON.stringify({ email: sellEmail, pdfName }),
-                   }
-                 );
-                 if (res.ok) {
-                   handleDownload(pdfName);
-                 } else {
-                   setSellEmailError(t("Failed to save email."));
-                 }
-               } catch (e) {
-                 setSellEmailError(t("Failed to save email."));
-               } finally {
-                 setLoading(false);
-               }
-             }}
-             disabled={loading}
-             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-           >
-             {loading ? t("Downloading...") : t("Download")}
-           </button>
-         </div>
-         {sellEmailError && (
-           <div className="text-white text-sm mt-1">{sellEmailError}</div>
-         )}
-       </div>
-     </div>
- 
-     {/* Right Image Box - Buy Home */}
-     <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
-       <Image
-         src="/3.jpg"
-         alt={t("Home")}
-         fill
-         className="object-cover grayscale"
-       />
-       <div className="absolute inset-0 bg-gray-500/50"></div>
-       <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
-         {/* Content */}
-         <div className="pb-24">
-           <p
-             className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
-               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
-             } border-white`}
-           >
-             {t("Download guide")}
-           </p>
-           <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
-             {t("How to buy a home")}
-           </h2>
-           <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
-             {t(
-               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
-             )}
-           </p>
-         </div>
-         {/* Input Group - Responsive */}
-       <div
-   className={`absolute md:bottom-18 bottom-6 w-full ${
-     isRTL
-       ? "md:right-14 md:left-auto right-2 left-auto text-right"
-       : "md:left-14 md:right-6 left-2 right-auto text-left"
-   }`}
- >
- 
-           <div className="hidden md:flex w-full  md:max-w-lg items-center">
-             <input
-               type="text"
-               value={buyEmail}
-               onChange={(e) => setBuyEmail(e.target.value)}
-               placeholder={t("Email Address")}
-               className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
-             />
-             <button
-               onClick={async () => {
-                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
-                   setBuyEmailError(t("Please enter a valid email."));
-                   return;
-                 }
-                 setLoading(true);
-                 setBuyEmailError("");
-                 try {
-                   let pdfName = "pdf2";
-                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                   if (language === "ar") {
-                     pdfName = "How to Buy a Home-Arabic";
-                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                   }
-                   const res = await fetch(
-                     emailApi,
-                     {
-                       method: "POST",
-                       headers: { "Content-Type": "application/json" },
-                       body: JSON.stringify({ email: buyEmail, pdfName }),
-                     }
-                   );
-                   if (res.ok) {
-                     handleDownload(pdfName);
-                   } else {
-                     setBuyEmailError(t("Failed to save email."));
-                   }
-                 } catch (e) {
-                   setBuyEmailError(t("Failed to save email."));
-                 } finally {
-                   setLoading(false);
-                 }
-               }}
-               disabled={loading}
-               className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
-             >
-               {loading ? t("Downloading...") : t("Download")}
-             </button>
-           </div>
-           <div className={`flex md:hidden w-65 flex-col gap-2 ${
-     isRTL ? "mr-2  text-right" : " text-left ml-2 "
-   }`}
- >
-             <input
-               type="text"
-               value={buyEmail}
-               onChange={(e) => setBuyEmail(e.target.value)}
-               placeholder={t("Email Address")}
-               className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
-             />
-             <button
-               onClick={async () => {
-                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
-                   setBuyEmailError(t("Please enter a valid email."));
-                   return;
-                 }
-                 setLoading(true);
-                 setBuyEmailError("");
-                 try {
-                   let pdfName = "pdf2";
-                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                   if (language === "ar") {
-                     pdfName = "How to Buy a Home-Arabic";
-                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                   }
-                   const res = await fetch(
-                     emailApi,
-                     {
-                       method: "POST",
-                       headers: { "Content-Type": "application/json" },
-                       body: JSON.stringify({ email: buyEmail, pdfName }),
-                     }
-                   );
-                   if (res.ok) {
-                     handleDownload(pdfName);
-                   } else {
-                     setBuyEmailError(t("Failed to save email."));
-                   }
-                 } catch (e) {
-                   setBuyEmailError(t("Failed to save email."));
-                 } finally {
-                   setLoading(false);
-                 }
-               }}
-               disabled={loading}
-               className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-             >
-               {loading ? t("Downloading...") : t("Download")}
-             </button>
-           </div>
-           {buyEmailError && (
-             <div className="text-white text-sm mt-1">{buyEmailError}</div>
-           )}
-         </div>
-       </div>
-     </div>
-   </div>
- </div>
+   <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
+  <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
+    {/* Left Red Box - Sell Home */}
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
+      {/* Content */}
+      <div className="pb-24">
+        <p
+          className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+            isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
+          } border-white`}
+        >
+          {t("Download guide")}
+        </p>
+        <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+          {t("How to sell your home")}
+        </h2>
+        <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+          {t(
+            "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
+          )}
+        </p>
+      </div>
+      {/* Input Group - Responsive */}
+  <div
+  className={`absolute md:bottom-18 bottom-6 w-full ${
+    isRTL
+      ? "md:right-14 md:left-auto right-2 left-auto text-right"
+      : "md:left-14 md:right-6 left-2 right-auto text-left"
+  }`}
+>
+
+        <div className="hidden md:flex w-full  md:max-w-lg items-center">
+          <input
+            type="text"
+            value={sellEmail}
+            onChange={(e) => setSellEmail(e.target.value)}
+            placeholder={t("Email Address")}
+            className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+          />
+          <button
+            onClick={async () => {
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
+                setSellEmailError(t("Please enter a valid email."));
+                return;
+              }
+              setLoading(true);
+              setSellEmailError("");
+              try {
+                let pdfName = "pdf1";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                if (language === "ar") {
+                  pdfName = "How to Sell Your Home-Arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                }
+                const res = await fetch(
+                  emailApi,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: sellEmail, pdfName }),
+                  }
+                );
+                if (res.ok) {
+                  handleDownload(pdfName);
+                } else {
+                  setSellEmailError(t("Failed to save email."));
+                }
+              } catch (e) {
+                setSellEmailError(t("Failed to save email."));
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+          >
+            {loading ? t("Downloading...") : t("Download")}
+          </button>
+        </div>
+      <div
+  className={`flex md:hidden w-65 flex-col gap-2 ${
+    isRTL ? "mr-2 text-right" : " text-left ml-2 "
+  }`}
+>
+          <input
+            type="text"
+            value={sellEmail}
+            onChange={(e) => setSellEmail(e.target.value)}
+            placeholder={t("Email Address")}
+            className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
+          />
+          <button
+            onClick={async () => {
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
+                setSellEmailError(t("Please enter a valid email."));
+                return;
+              }
+              setLoading(true);
+              setSellEmailError("");
+              try {
+                let pdfName = "pdf1";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                if (language === "ar") {
+                  pdfName = "How to Sell Your Home-Arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                }
+                const res = await fetch(
+                  emailApi,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: sellEmail, pdfName }),
+                  }
+                );
+                if (res.ok) {
+                  handleDownload(pdfName);
+                } else {
+                  setSellEmailError(t("Failed to save email."));
+                }
+              } catch (e) {
+                setSellEmailError(t("Failed to save email."));
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+          >
+            {loading ? t("Downloading...") : t("Download")}
+          </button>
+        </div>
+        {sellEmailError && (
+          <div className="text-white text-sm mt-1">{sellEmailError}</div>
+        )}
+      </div>
+    </div>
+
+    {/* Right Image Box - Buy Home */}
+    <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
+      <Image
+        src="/3.jpg"
+        alt={t("Home")}
+        fill
+        className="object-cover grayscale"
+      />
+      <div className="absolute inset-0 bg-gray-500/50"></div>
+      <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
+        {/* Content */}
+        <div className="pb-24">
+          <p
+            className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+              isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
+            } border-white`}
+          >
+            {t("Download guide")}
+          </p>
+          <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+            {t("How to buy a home")}
+          </h2>
+          <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+            {t(
+              "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
+            )}
+          </p>
+        </div>
+        {/* Input Group - Responsive */}
+      <div
+  className={`absolute md:bottom-18 bottom-6 w-full ${
+    isRTL
+      ? "md:right-14 md:left-auto right-2 left-auto text-right"
+      : "md:left-14 md:right-6 left-2 right-auto text-left"
+  }`}
+>
+
+          <div className="hidden md:flex w-full  md:max-w-lg items-center">
+            <input
+              type="text"
+              value={buyEmail}
+              onChange={(e) => setBuyEmail(e.target.value)}
+              placeholder={t("Email Address")}
+              className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+            />
+            <button
+              onClick={async () => {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
+                  setBuyEmailError(t("Please enter a valid email."));
+                  return;
+                }
+                setLoading(true);
+                setBuyEmailError("");
+                try {
+                  let pdfName = "pdf2";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                  if (language === "ar") {
+                    pdfName = "How to Buy a Home-Arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                  }
+                  const res = await fetch(
+                    emailApi,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: buyEmail, pdfName }),
+                    }
+                  );
+                  if (res.ok) {
+                    handleDownload(pdfName);
+                  } else {
+                    setBuyEmailError(t("Failed to save email."));
+                  }
+                } catch (e) {
+                  setBuyEmailError(t("Failed to save email."));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+            >
+              {loading ? t("Downloading...") : t("Download")}
+            </button>
+          </div>
+          <div className={`flex md:hidden w-65 flex-col gap-2 ${
+    isRTL ? "mr-2  text-right" : " text-left ml-2 "
+  }`}
+>
+            <input
+              type="text"
+              value={buyEmail}
+              onChange={(e) => setBuyEmail(e.target.value)}
+              placeholder={t("Email Address")}
+              className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
+            />
+            <button
+              onClick={async () => {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
+                  setBuyEmailError(t("Please enter a valid email."));
+                  return;
+                }
+                setLoading(true);
+                setBuyEmailError("");
+                try {
+                  let pdfName = "pdf2";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                  if (language === "ar") {
+                    pdfName = "How to Buy a Home-Arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                  }
+                  const res = await fetch(
+                    emailApi,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: buyEmail, pdfName }),
+                    }
+                  );
+                  if (res.ok) {
+                    handleDownload(pdfName);
+                  } else {
+                    setBuyEmailError(t("Failed to save email."));
+                  }
+                } catch (e) {
+                  setBuyEmailError(t("Failed to save email."));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+            >
+              {loading ? t("Downloading...") : t("Download")}
+            </button>
+          </div>
+          {buyEmailError && (
+            <div className="text-white text-sm mt-1">{buyEmailError}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div className="w-full px-6 md:px-12 lg:px-20">
   {/* About Section */}
   <div className="flex flex-col md:flex-row ">
@@ -1399,11 +1249,16 @@ useEffect(() => {
       </button>
     )}
   </div>
-) : (agentProperties.length === 0 && properties.length === 0) ? (
+) : (!propertiesLoading && agentProperties.length === 0 && properties.length === 0 && initialLoadComplete) ? (
   <div className="flex flex-col items-center justify-center h-60 text-center px-4">
     <div className="text-gray-500 text-xl font-medium mb-2">
       {t("No properties found for this agent")}
     </div>
+  </div>
+) : (!initialLoadComplete) ? (
+  <div className="flex flex-col justify-center items-center h-60 space-y-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[rgb(206,32,39,255)]"></div>
+    <p className="text-gray-600 text-lg">{t("Loading properties...")}</p>
   </div>
 ) : (
   <div className="px-4 md:px-20">

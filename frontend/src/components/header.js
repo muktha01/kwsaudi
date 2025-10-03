@@ -64,9 +64,15 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      setDesktopAtTop(currentScrollY < 10);
-      setIsAtTop(currentScrollY < 10);
-      setIsVisible(true);
+      const scrollThreshold = 10;
+      
+      // Add a smooth transition with requestAnimationFrame for better performance
+      requestAnimationFrame(() => {
+        setDesktopAtTop(currentScrollY < scrollThreshold);
+        setIsAtTop(currentScrollY < scrollThreshold);
+        setIsVisible(true);
+      });
+      
       prevScrollY.current = currentScrollY;
     };
 
@@ -155,11 +161,15 @@ const Header = () => {
         className={`
           pointer-events-auto
           flex justify-between items-left h-[63.5px]
-          transition-all duration-300 ease-in-out
+          transition-all duration-500 ease-out
           translate-y-0
           bg-black backdrop-blur-sm
           ${isMobile ? (isAtTop ? 'm-10' : 'mx-6 my-0') : (desktopAtTop ? 'm-14' : 'mx-8 my-0')}
         `}
+        style={{
+          transform: `translateY(0)`,
+          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1), margin 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
       >
         {/* Desktop Logo */}
         <div className="hidden md:flex flex-shrink-0 items-center h-[63.5px]">

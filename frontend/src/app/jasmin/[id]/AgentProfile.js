@@ -60,7 +60,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      alert("Download failed");
+     
     } finally {
       setLoading(false);
     }
@@ -470,23 +470,23 @@ const [buyEmail, setBuyEmail] = useState("");
 
 </div>
     
-   <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
+  <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
     {/* Left Red Box - Sell Home */}
-    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
       {/* Content */}
       <div className="pb-24">
         <p
-          className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+          className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
           } border-white`}
         >
           {t("Download guide")}
         </p>
-        <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+        <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
           {t("How to sell your home")}
         </h2>
-        <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+        <p className="text-base md:text-[1.1rem] mb-4 md:mb-6">
           {t(
             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
           )}
@@ -494,7 +494,7 @@ const [buyEmail, setBuyEmail] = useState("");
       </div>
       {/* Input Group - Responsive */}
   <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-24 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -507,7 +507,7 @@ const [buyEmail, setBuyEmail] = useState("");
             value={sellEmail}
             onChange={(e) => setSellEmail(e.target.value)}
             placeholder={t("Email Address")}
-            className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+            className="w-full px-4 py-2 bg-white text-black text-base outline-none"
           />
           <button
             onClick={async () => {
@@ -544,7 +544,7 @@ const [buyEmail, setBuyEmail] = useState("");
               }
             }}
             disabled={loading}
-            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
           >
             {loading ? t("Downloading...") : t("Download")}
           </button>
@@ -620,16 +620,16 @@ const [buyEmail, setBuyEmail] = useState("");
         {/* Content */}
         <div className="pb-24">
           <p
-            className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+            className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
             } border-white`}
           >
             {t("Download guide")}
           </p>
-          <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+          <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
             {t("How to buy a home")}
           </h2>
-          <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+          <p className="text-basemd:text-[1.1rem]  mb-4 md:mb-6">
             {t(
               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
             )}
@@ -637,7 +637,7 @@ const [buyEmail, setBuyEmail] = useState("");
         </div>
         {/* Input Group - Responsive */}
       <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-22 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -650,7 +650,7 @@ const [buyEmail, setBuyEmail] = useState("");
               value={buyEmail}
               onChange={(e) => setBuyEmail(e.target.value)}
               placeholder={t("Email Address")}
-              className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+              className="w-full px-4 py-2 bg-white text-black text-base outline-none"
             />
             <button
               onClick={async () => {
@@ -687,7 +687,7 @@ const [buyEmail, setBuyEmail] = useState("");
                 }
               }}
               disabled={loading}
-              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
             >
               {loading ? t("Downloading...") : t("Download")}
             </button>

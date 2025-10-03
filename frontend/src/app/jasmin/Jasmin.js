@@ -151,37 +151,203 @@ const Jasmin = () => {
       fetchAgents();
     }, []);
     useEffect(() => {
+      const CACHE_KEY = 'jasmin_page_data';
+      const CACHE_EXPIRY_KEY = 'jasmin_page_data_expiry';
+      const SESSION_CACHE_KEY = 'jasmin_page_session';
+      const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
       const fetchPageHero = async () => {
+        // Step 1: Show cached data immediately (if available)
+        const showCachedDataImmediately = () => {
+          if (typeof window !== 'undefined') {
+            // Check sessionStorage first for ultra-fast access
+            const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
+            if (sessionData) {
+              try {
+                const parsedData = JSON.parse(sessionData);
+                setPage(parsedData.page);
+                setHeroSrc(parsedData.heroSrc);
+                return true; // Cached data was shown
+              } catch (e) {
+                console.warn('Error parsing session cache:', e);
+              }
+            }
+
+            // Check localStorage for persistent cache
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+            const now = Date.now();
+
+            if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+              try {
+                const parsedData = JSON.parse(cachedData);
+                // Copy to session storage for ultra-fast next access
+                sessionStorage.setItem(SESSION_CACHE_KEY, cachedData);
+                setPage(parsedData.page);
+                setHeroSrc(parsedData.heroSrc);
+                return true; // Cached data was shown
+              } catch (e) {
+                console.warn('Error parsing localStorage cache:', e);
+              }
+            }
+          }
+          return false; // No cached data
+        };
+
+        // Step 2: Fetch fresh data function
+        const fetchFreshData = async (isBackgroundUpdate = false) => {
+          try {
+            if (!isBackgroundUpdate) {
+              setLoading(true);
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/jasmin`, {
+              signal: controller.signal,
+              headers: {
+                'Cache-Control': 'max-age=300', // 5 minutes browser cache
+              }
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+              // Try to use expired cache if API fails
+              if (typeof window !== 'undefined') {
+                const cachedData = localStorage.getItem(CACHE_KEY);
+                if (cachedData) {
+                  const parsedData = JSON.parse(cachedData);
+                  setPage(parsedData.page);
+                  setHeroSrc(parsedData.heroSrc);
+                  return;
+                }
+              }
+              throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
+            const page = await res.json();
+            setPage(page);
+            
+            let heroSrcValue = '/';
+            if (page?.backgroundImage) {
+              const cleanPath = page.backgroundImage.replace(/\\/g, '/');
+              heroSrcValue = cleanPath.startsWith('http')
+                ? cleanPath
+                : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+              setHeroSrc(heroSrcValue);
+            }
+
+            // Cache the fresh data in both localStorage and sessionStorage
+            if (typeof window !== 'undefined') {
+              const dataToCache = {
+                page: page,
+                heroSrc: heroSrcValue
+              };
+              const now = Date.now();
+              localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+              localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
+              sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache));
+            }
+
+            // Show update notification for background updates
+            if (isBackgroundUpdate) {
+              console.log('✅ Jasmin page updated with latest data');
+            }
+
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              console.warn('Jasmin page fetch timeout');
+            }
+            console.error('Error fetching jasmin page:', error);
+            
+            if (!isBackgroundUpdate) {
+              // Try to use expired cache if API fails
+              if (typeof window !== 'undefined') {
+                const cachedData = localStorage.getItem(CACHE_KEY);
+                if (cachedData) {
+                  try {
+                    const parsedData = JSON.parse(cachedData);
+                    setPage(parsedData.page);
+                    setHeroSrc(parsedData.heroSrc);
+                  } catch (parseError) {
+                    console.warn('Error parsing cached jasmin data:', parseError);
+                  }
+                }
+              }
+            }
+          } finally {
+            if (!isBackgroundUpdate) {
+              setLoading(false);
+            }
+          }
+        };
+
+        // Main execution flow
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/jasmin`);
-          if (!res.ok) return;
-          // console.log(res);
-          
-          const page = await res.json();
-          setPage(page)
-         if (page?.backgroundImage) {
-           const cleanPath = page.backgroundImage.replace(/\\/g, '/');
-        setHeroSrc(
-          cleanPath.startsWith('http')
-            ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
-        );
-        }
-        } catch (e) {
-          // console.error('Error fetching page hero:', e);
+          // Try to show cached data immediately
+          const cachedDataShown = showCachedDataImmediately();
+
+          if (cachedDataShown) {
+            // User sees cached data instantly, now fetch fresh data in background
+            setTimeout(() => fetchFreshData(true), 100); // Small delay to let UI render
+          } else {
+            // No cached data, show loading and fetch fresh data
+            await fetchFreshData(false);
+          }
+
+        } catch (err) {
+          console.error('Error in fetchPageHero:', err);
+          setLoading(false);
         }
       };
+
       fetchPageHero();
     }, []);
+
+    // Client-side cache initialization effect to avoid hydration errors
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        try {
+          // Check sessionStorage first for ultra-fast access
+          const sessionData = sessionStorage.getItem('jasmin_page_session');
+          if (sessionData) {
+            const parsedData = JSON.parse(sessionData);
+            if (parsedData.page && !page) setPage(parsedData.page);
+            if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+              setHeroSrc(parsedData.heroSrc);
+            }
+            return;
+          }
+
+          // Fallback to localStorage
+          const cachedData = localStorage.getItem('jasmin_page_data');
+          const cachedExpiry = localStorage.getItem('jasmin_page_data_expiry');
+          const now = Date.now();
+          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+            const parsedData = JSON.parse(cachedData);
+            if (parsedData.page && !page) setPage(parsedData.page);
+            if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+              setHeroSrc(parsedData.heroSrc);
+            }
+            // Copy to session storage for next access
+            sessionStorage.setItem('jasmin_page_session', cachedData);
+          }
+        } catch (e) {
+          console.warn('Error reading cached jasmin data in client effect:', e);
+        }
+      }
+    }, [heroSrc,page]); // Run once on mount
     return (
         <div>
         <Header></Header>
           <Box
        h3={t(page.backgroundOverlayContent)}
     src={heroSrc}
-         image={
-           'https://static.wixstatic.com/media/36a881_3c5b1d5faca941ea915b39acfedf52ee~mv2.png/v1/fill/w_271,h_180,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2-removebg-preview.png'
-         }
+        //  image={
+        //    'https://static.wixstatic.com/media/36a881_3c5b1d5faca941ea915b39acfedf52ee~mv2.png/v1/fill/w_271,h_180,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2-removebg-preview.png'
+        //  }
        /> 
         {/* Combined Section */}
         <section className="mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-2 gap-8">

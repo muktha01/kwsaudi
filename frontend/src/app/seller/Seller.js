@@ -69,28 +69,140 @@ const { language, isRTL, t } = useTranslation();
 
  
 useEffect(() => {
+  const CACHE_KEY = 'seller_page_data';
+  const CACHE_EXPIRY_KEY = 'seller_page_data_expiry';
+  const SESSION_CACHE_KEY = 'seller_page_session';
+  const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
   const fetchPageHero = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/five-steps-to-sell`);
-      if (!res.ok) return;
-      // console.log(res);
+      // Only check cache if we're in the browser to avoid hydration errors
+      if (typeof window !== 'undefined') {
+        // First check sessionStorage for ultra-fast access
+        const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
+        if (sessionData) {
+          const parsedSessionData = JSON.parse(sessionData);
+          setPage(parsedSessionData.page || '');
+          setHeroSrc(parsedSessionData.heroSrc || '/');
+          return;
+        }
+
+        // Then check localStorage for persistent cache
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+        const now = Date.now();
+
+        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+          const parsedData = JSON.parse(cachedData);
+          sessionStorage.setItem(SESSION_CACHE_KEY, cachedData); // Cache in session for ultra-fast next access
+          setPage(parsedData.page || '');
+          setHeroSrc(parsedData.heroSrc || '/');
+          return;
+        }
+      }
+
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/five-steps-to-sell`, {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'max-age=300', // 5 minutes browser cache
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        // Try to use expired cache if available
+        if (typeof window !== 'undefined') {
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            setPage(parsedData.page || '');
+            setHeroSrc(parsedData.heroSrc || '/');
+          }
+        }
+        return;
+      }
       
-      const page = await res.json();
-      setPage(page)
-      if (page?.backgroundImage) {
-        const cleanPath = page.backgroundImage.replace(/\\/g, '/');
-        setHeroSrc(
-          cleanPath.startsWith('http')
-            ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
-        );
+      const pageData = await res.json();
+      setPage(pageData);
+      
+      let heroSrcValue = '/';
+      if (pageData?.backgroundImage) {
+        const cleanPath = pageData.backgroundImage.replace(/\\/g, '/');
+        heroSrcValue = cleanPath.startsWith('http')
+          ? cleanPath
+          : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+        setHeroSrc(heroSrcValue);
+      }
+
+      // Cache the data in both localStorage and sessionStorage
+      if (typeof window !== 'undefined') {
+        const dataToCache = {
+          page: pageData,
+          heroSrc: heroSrcValue
+        };
+        const now = Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+        localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
+        sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache)); // Session cache for ultra-fast access
       }
     } catch (e) {
-      // console.error('Error fetching page hero:', e);
+      // On error, try to use cached data if available
+      if (typeof window !== 'undefined') {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          try {
+            const parsedData = JSON.parse(cachedData);
+            setPage(parsedData.page || '');
+            setHeroSrc(parsedData.heroSrc || '/');
+          } catch (parseError) {
+            console.warn('Error parsing cached seller page data:', parseError);
+          }
+        }
+      }
     }
   };
+
   fetchPageHero();
 }, []);
+
+// Client-side cache initialization effect to avoid hydration errors
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Check sessionStorage first for ultra-fast access
+      const sessionData = sessionStorage.getItem('seller_page_session');
+      if (sessionData) {
+        const parsedData = JSON.parse(sessionData);
+        if (parsedData.page && !page) setPage(parsedData.page);
+        if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+          setHeroSrc(parsedData.heroSrc);
+        }
+        return;
+      }
+
+      // Fallback to localStorage
+      const cachedData = localStorage.getItem('seller_page_data');
+      const cachedExpiry = localStorage.getItem('seller_page_data_expiry');
+      const now = Date.now();
+      if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+        const parsedData = JSON.parse(cachedData);
+        if (parsedData.page && !page) setPage(parsedData.page);
+        if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+          setHeroSrc(parsedData.heroSrc);
+        }
+        // Copy to session storage for next access
+        sessionStorage.setItem('seller_page_session', cachedData);
+      }
+    } catch (e) {
+      console.warn('Error reading cached seller page data in client effect:', e);
+    }
+  }
+}, [heroSrc,page]); // Run once on mount
 
   return (
     <div className="relative">

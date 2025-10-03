@@ -14,7 +14,7 @@ const defaultForm = {
 };
 
 const bannerPageNames = [
-  'Home', 'Properties', 
+  'Home', 'Properties', 'Instant Valuation',
       
    'Franchise',  'Seller Guide', 'Buyer Guide', 
   'KW Training',  'Five Steps To Sell', 'About Us', 'Contact Us', 

@@ -379,97 +379,273 @@ const applySorting = useCallback((propertiesArray) => {
   }
   return sorted;
 }, [sortOption]);
+
+  // Deterministic temp id using simple hash of address/title/price
+  const stableTempId = useCallback((prop) => {
+    const s = `${prop.list_address?.address || prop.address || ''}|${prop.title || prop.prop_type || ''}|${prop.current_list_price || prop.price || prop.rental_price || ''}`;
+    // simple hash (djb2)
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) {
+      h = ((h << 5) + h) + s.charCodeAt(i);
+      h = h & h; // keep 32-bit
+    }
+    return `stable-${Math.abs(h)}`;
+  }, []);
+
   // Update visible count when properties change
-  // Remove visibleCount effect, not needed for classic pagination
-  useEffect(() => {
-    async function fetchProperties(page = 1) {
-      // Only set main loading for first page, use loadingMore for subsequent pages
-      if (page === 1) {
-        setLoading(true);
-      }
-      setError(null);
-      try {
-        // Prepare API request body with all filter parameters
-        const requestBody = {
-          page: page,
-          limit: perPage,
-          forsale: appliedFilters.selected.sale && !appliedFilters.selected.rent ? true : undefined,
-          forrent: appliedFilters.selected.rent && !appliedFilters.selected.sale ? true : undefined,
-          property_type: appliedFilters.selected.commercial
-            ? 'Commercial'
-            : appliedFilters.propertyType !== 'PROPERTY TYPE' ? appliedFilters.propertyType : undefined,
-          property_subtype: appliedFilters.propertySubType || undefined,
-          location: appliedFilters.city !== 'CITY' ? appliedFilters.city : undefined,
-          min_price: appliedFilters.minPrice || undefined,
-          max_price: appliedFilters.maxPrice || undefined,
-          include_new_homes: appliedFilters.includeNewHomes ? true : undefined,
-          market_center: appliedFilters.marketCenter !== 'MARKET CENTER' ? appliedFilters.marketCenter : undefined
-        };
-        Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
-        // console.log('fetchProperties requestBody ->', JSON.stringify(requestBody));
-        
-        const data = await fetchPropertiesWithCache(page, requestBody);
-        if (data.success) {
-          let fetched = Array.isArray(data?.data) ? data.data : [];
-          // Normalize and deduplicate fetched properties, include items without id by assigning a temp id
-          const normalizeAndUnique = (items) => {
-            const unique = [];
-            const seen = new Set();
-            items.forEach(it => {
-              const propId = it._kw_meta?.id || it.id;
-              if (propId) {
-                if (!seen.has(propId)) {
-                  seen.add(propId);
-                  unique.push(it);
-                }
-              } else {
-                // assign a deterministic stable temp id if missing
-                const tempId = it._temp_id || stableTempId(it);
-                it._temp_id = tempId;
-                unique.push(it);
-              }
-            });
-            return unique;
-          };
-          // If loading first page, replace properties; if loading next page, append
-          setProperties(prev => {
-            if (page === 1) {
-              // For first page, apply sorting and mark as sorted
-              const sorted = applySorting(normalizeAndUnique(fetched));
-              setIsSorted(true);
-              return sorted;
-            } else {
-              // For subsequent pages, just append without sorting to preserve order
-              const combined = [...prev, ...fetched];
-              return normalizeAndUnique(combined);
-            }
-          });
-          // Update pagination state from API response
-          if (data.pagination) {
-            setCurrentPage(data.pagination.current_page);
-            setTotalPages(data.pagination.total_pages);
-            setTotalItems(data.pagination.total_items);
-            setPerPage(data.pagination.per_page);
-            setHasNextPage(data.pagination.has_next_page);
-            setHasPrevPage(data.pagination.has_prev_page);
+  // Optimized fetch properties function with hybrid caching
+  const fetchProperties = useCallback(async (page = 1) => {
+    const isFirstPage = page === 1;
+    
+    const requestBody = {
+      page: page,
+      limit: perPage,
+      forsale: appliedFilters.selected.sale && !appliedFilters.selected.rent ? true : undefined,
+      forrent: appliedFilters.selected.rent && !appliedFilters.selected.sale ? true : undefined,
+      property_type: appliedFilters.selected.commercial
+        ? 'Commercial'
+        : appliedFilters.propertyType !== 'PROPERTY TYPE' ? appliedFilters.propertyType : undefined,
+      property_subtype: appliedFilters.propertySubType || undefined,
+      location: appliedFilters.city !== 'CITY' ? appliedFilters.city : undefined,
+      min_price: appliedFilters.minPrice || undefined,
+      max_price: appliedFilters.maxPrice || undefined,
+      include_new_homes: appliedFilters.includeNewHomes ? true : undefined,
+      market_center: appliedFilters.marketCenter !== 'MARKET CENTER' ? appliedFilters.marketCenter : undefined
+    };
+    
+    // Remove undefined values
+    Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
+
+    // Create cache keys
+    const PROPERTIES_CACHE_KEY = `buyer_properties_${JSON.stringify(requestBody)}_page_${page}`;
+    const PROPERTIES_CACHE_EXPIRY_KEY = `${PROPERTIES_CACHE_KEY}_expiry`;
+    const PROPERTIES_SESSION_CACHE_KEY = `${PROPERTIES_CACHE_KEY}_session`;
+    const PROPERTIES_COUNT_KEY = `${PROPERTIES_CACHE_KEY}_count`;
+    const PROPERTIES_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+    // Normalize and deduplicate function
+    const normalizeAndUnique = (items) => {
+      const unique = [];
+      const seen = new Set();
+      items.forEach(it => {
+        const propId = it._kw_meta?.id || it.id;
+        if (propId) {
+          if (!seen.has(propId)) {
+            seen.add(propId);
+            unique.push(it);
           }
         } else {
-          setError(data.message || 'Failed to load properties');
+          const tempId = it._temp_id || stableTempId(it);
+          it._temp_id = tempId;
+          unique.push(it);
+        }
+      });
+      return unique;
+    };
+
+    // Apply data to state
+    const applyDataToState = (propertiesData, paginationData) => {
+      setProperties(prev => {
+        if (isFirstPage) {
+          const sorted = applySorting(normalizeAndUnique(propertiesData));
+          setIsSorted(true);
+          return sorted;
+        } else {
+          const combined = [...prev, ...propertiesData];
+          return normalizeAndUnique(combined);
+        }
+      });
+
+      if (paginationData) {
+        setCurrentPage(paginationData.current_page);
+        setTotalPages(paginationData.total_pages);
+        setTotalItems(paginationData.total_items);
+        setPerPage(paginationData.per_page);
+        setHasNextPage(paginationData.has_next_page);
+        setHasPrevPage(paginationData.has_prev_page);
+      }
+
+      if (isFirstPage) {
+        setLoading(false);
+      }
+      setLoadingMore(false);
+    };
+
+    // Step 1: Show cached data immediately (if available)
+    const showCachedDataImmediately = () => {
+      if (typeof window !== 'undefined') {
+        // Check sessionStorage first for ultra-fast access
+        const sessionData = sessionStorage.getItem(PROPERTIES_SESSION_CACHE_KEY);
+        if (sessionData) {
+          try {
+            const parsedData = JSON.parse(sessionData);
+            applyDataToState(parsedData.properties, parsedData.pagination);
+            return true; // Cached data was shown
+          } catch (e) {
+            console.warn('Error parsing session cache:', e);
+          }
+        }
+
+        // Check localStorage for persistent cache
+        const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
+        const cachedExpiry = localStorage.getItem(PROPERTIES_CACHE_EXPIRY_KEY);
+        const now = Date.now();
+
+        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+          try {
+            const parsedData = JSON.parse(cachedData);
+            // Copy to session storage for ultra-fast next access
+            sessionStorage.setItem(PROPERTIES_SESSION_CACHE_KEY, cachedData);
+            applyDataToState(parsedData.properties, parsedData.pagination);
+            return true; // Cached data was shown
+          } catch (e) {
+            console.warn('Error parsing localStorage cache:', e);
+          }
+        }
+      }
+      return false; // No cached data
+    };
+
+    // Step 2: Check for updates in background
+    const checkForUpdatesInBackground = async () => {
+      try {
+        // Lightweight API call to check if data has changed
+        const countRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/count/properties`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (countRes.ok) {
+          const countData = await countRes.json();
+          const cachedCount = localStorage.getItem(PROPERTIES_COUNT_KEY);
+          
+          // If count changed, data has been updated on server
+          if (countData.total !== parseInt(cachedCount || '0')) {
+            console.log('🔄 New buyer properties detected, refreshing cache...');
+            
+            // Clear cache and fetch fresh data
+            localStorage.removeItem(PROPERTIES_CACHE_KEY);
+            localStorage.removeItem(PROPERTIES_CACHE_EXPIRY_KEY);
+            sessionStorage.removeItem(PROPERTIES_SESSION_CACHE_KEY);
+            
+            // Fetch fresh data silently
+            await fetchFreshData(true);
+          }
+        }
+      } catch (error) {
+        // Silently fail - user still sees cached data
+        console.log('Background update check failed:', error);
+      }
+    };
+
+    // Step 3: Fetch fresh data function
+    const fetchFreshData = async (isBackgroundUpdate = false) => {
+      try {
+        if (!isBackgroundUpdate && isFirstPage) {
+          setLoading(true);
+          setError(null);
+        } else if (!isBackgroundUpdate && !isFirstPage) {
+          setLoadingMore(true);
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'max-age=300',
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!res.ok) {
+          // Try to use expired cache if API fails
+          if (typeof window !== 'undefined') {
+            const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
+            if (cachedData) {
+              const parsedData = JSON.parse(cachedData);
+              applyDataToState(parsedData.properties, parsedData.pagination);
+              return;
+            }
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        
+        if (data.success) {
+          let fetched = Array.isArray(data?.data) ? data.data : [];
+          
+          // Cache the fresh data
+          if (typeof window !== 'undefined') {
+            const dataToCache = {
+              properties: fetched,
+              pagination: data.pagination
+            };
+            const now = Date.now();
+            localStorage.setItem(PROPERTIES_CACHE_KEY, JSON.stringify(dataToCache));
+            localStorage.setItem(PROPERTIES_CACHE_EXPIRY_KEY, (now + PROPERTIES_CACHE_DURATION).toString());
+            localStorage.setItem(PROPERTIES_COUNT_KEY, data.pagination?.total_items?.toString() || '0');
+            sessionStorage.setItem(PROPERTIES_SESSION_CACHE_KEY, JSON.stringify(dataToCache));
+          }
+          
+          // Apply fresh data to state
+          applyDataToState(fetched, data.pagination);
+          
+          // Show update notification for background updates
+          if (isBackgroundUpdate) {
+            console.log('✅ Buyer properties updated with latest data');
+            // You can add a toast notification here if desired
+          }
+        } else {
+          throw new Error(data.message || 'Failed to load properties');
         }
       } catch (err) {
-        setError('Failed to load properties');
-        // console.error('Error fetching properties:', err);
-      } finally {
-        // Only reset main loading for first page
-        if (page === 1) {
-          setLoading(false);
+        console.error('Error fetching fresh buyer properties:', err);
+        if (!isBackgroundUpdate) {
+          setError('Failed to load properties. Please try again.');
+          if (isFirstPage) {
+            setLoading(false);
+          }
+          setLoadingMore(false);
         }
-        setLoadingMore(false); // Reset loadingMore state when fetch completes
       }
+    };
+
+    // Main execution flow
+    try {
+      setError(null);
+
+      // Try to show cached data immediately
+      const cachedDataShown = showCachedDataImmediately();
+
+      if (cachedDataShown) {
+        // User sees cached data instantly, now check for updates in background
+        setTimeout(() => checkForUpdatesInBackground(), 100); // Small delay to let UI render
+      } else {
+        // No cached data, show loading and fetch fresh data
+        if (isFirstPage) {
+          setLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
+        await fetchFreshData(false);
+      }
+
+    } catch (err) {
+      console.error('Error in fetchProperties:', err);
+      setError('Failed to load properties. Please try again.');
+      if (isFirstPage) {
+        setLoading(false);
+      }
+      setLoadingMore(false);
     }
-    // Initial load: fetch all properties for page 1
+  }, [appliedFilters, perPage, applySorting, stableTempId, setIsSorted, setProperties, setCurrentPage, setTotalPages, setTotalItems, setPerPage, setHasNextPage, setHasPrevPage, setLoading, setLoadingMore, setError]);
+
+  // Main useEffect for fetching properties - optimized dependencies
+  useEffect(() => {
     fetchProperties(currentPage);
-  }, [currentPage, perPage, appliedFilters, applySorting, fetchPropertiesWithCache]); // Include dependencies
+  }, [currentPage, appliedFilters, fetchProperties]); // Removed perPage from dependencies as it's included in pagination
 
   // Apply sorting to properties array
   
@@ -537,18 +713,6 @@ const applySorting = useCallback((propertiesArray) => {
     return `prop-${Date.now()}-${index}`;
   };
 
-  // Deterministic temp id using simple hash of address/title/price
-  const stableTempId = (prop) => {
-    const s = `${prop.list_address?.address || prop.address || ''}|${prop.title || prop.prop_type || ''}|${prop.current_list_price || prop.price || prop.rental_price || ''}`;
-    // simple hash (djb2)
-    let h = 5381;
-    for (let i = 0; i < s.length; i++) {
-      h = ((h << 5) + h) + s.charCodeAt(i);
-      h = h & h; // keep 32-bit
-    }
-    return `stable-${Math.abs(h)}`;
-  };
-
   // View More function with improved error handling
   const goToNextPage = useCallback(async () => {
     if (hasNextPage && !loadingMore) {
@@ -566,29 +730,140 @@ const applySorting = useCallback((propertiesArray) => {
   const [heroSrc, setHeroSrc] = useState('/')
   const[page,setPage]=useState('');
   useEffect(() => {
+    const CACHE_KEY = 'buyer_properties_page_data';
+    const CACHE_EXPIRY_KEY = 'buyer_properties_page_data_expiry';
+    const SESSION_CACHE_KEY = 'buyer_properties_page_session';
+    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
     const fetchPageHero = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`);
-        if (!res.ok) return;
-       
+        // Only check cache if we're in the browser to avoid hydration errors
+        if (typeof window !== 'undefined') {
+          // First check sessionStorage for ultra-fast access
+          const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
+          if (sessionData) {
+            const parsedSessionData = JSON.parse(sessionData);
+            setPage(parsedSessionData.page || '');
+            setHeroSrc(parsedSessionData.heroSrc || '/');
+            return;
+          }
+
+          // Then check localStorage for persistent cache
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+          const now = Date.now();
+
+          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+            const parsedData = JSON.parse(cachedData);
+            sessionStorage.setItem(SESSION_CACHE_KEY, cachedData); // Cache in session for ultra-fast next access
+            setPage(parsedData.page || '');
+            setHeroSrc(parsedData.heroSrc || '/');
+            return;
+          }
+        }
+
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`, {
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'max-age=300', // 5 minutes browser cache
+          }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          // Try to use expired cache if available
+          if (typeof window !== 'undefined') {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedData) {
+              const parsedData = JSON.parse(cachedData);
+              setPage(parsedData.page || '');
+              setHeroSrc(parsedData.heroSrc || '/');
+            }
+          }
+          return;
+        }
         
-        const page = await res.json();
-        // console.log(page);
-        setPage(page)
-        if (page?.backgroundImage) {
-           const cleanPath = page.backgroundImage.replace(/\\/g, '/');
-        setHeroSrc(
-          cleanPath.startsWith('http')
+        const pageData = await res.json();
+        setPage(pageData);
+        
+        let heroSrcValue = '/';
+        if (pageData?.backgroundImage) {
+          const cleanPath = pageData.backgroundImage.replace(/\\/g, '/');
+          heroSrcValue = cleanPath.startsWith('http')
             ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
-        );
+            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+          setHeroSrc(heroSrcValue);
+        }
+
+        // Cache the data in both localStorage and sessionStorage
+        if (typeof window !== 'undefined') {
+          const dataToCache = {
+            page: pageData,
+            heroSrc: heroSrcValue
+          };
+          const now = Date.now();
+          localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+          localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
+          sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache)); // Session cache for ultra-fast access
         }
       } catch (e) {
-        // console.error('Error fetching page hero:', e);
+        // On error, try to use cached data if available
+        if (typeof window !== 'undefined') {
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          if (cachedData) {
+            try {
+              const parsedData = JSON.parse(cachedData);
+              setPage(parsedData.page || '');
+              setHeroSrc(parsedData.heroSrc || '/');
+            } catch (parseError) {
+              console.warn('Error parsing cached buyer properties page data:', parseError);
+            }
+          }
+        }
       }
     };
+
     fetchPageHero();
   }, []);
+
+  // Client-side cache initialization effect to avoid hydration errors
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Check sessionStorage first for ultra-fast access
+        const sessionData = sessionStorage.getItem('buyer_properties_page_session');
+        if (sessionData) {
+          const parsedData = JSON.parse(sessionData);
+          if (parsedData.page && !page) setPage(parsedData.page);
+          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+            setHeroSrc(parsedData.heroSrc);
+          }
+          return;
+        }
+
+        // Fallback to localStorage
+        const cachedData = localStorage.getItem('buyer_properties_page_data');
+        const cachedExpiry = localStorage.getItem('buyer_properties_page_data_expiry');
+        const now = Date.now();
+        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+          const parsedData = JSON.parse(cachedData);
+          if (parsedData.page && !page) setPage(parsedData.page);
+          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+            setHeroSrc(parsedData.heroSrc);
+          }
+          // Copy to session storage for next access
+          sessionStorage.setItem('buyer_properties_page_session', cachedData);
+        }
+      } catch (e) {
+        console.warn('Error reading cached buyer properties page data in client effect:', e);
+      }
+    }
+  }, [heroSrc,page]); // Run once on mount
 
   // Fetch filter options from backend
   useEffect(() => {

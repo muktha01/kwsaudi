@@ -433,8 +433,9 @@ export default function Home() {
       {/* Left Text */}
       <div className="flex flex-col space-y-1 md:space-y-0 md:mr-4">
         <div>
-          <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/termsofuse">{t('Terms of Use')}</a> | 
-          <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/privacypolicy" className="mx-2">{t('Privacy Policy')}</a> | 
+          <Link href='/TermsofUse'>{t('Terms of Use')}</Link> | 
+          <Link href="/PrivacyPolicy" className="mx-2">{t('Privacy Policy')}</Link> | 
+               
           <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
           <span className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</span>
        </div>
@@ -658,7 +659,7 @@ export default function Home() {
 
   {/* Footer Links */}
   <div className="flex flex-wrap justify-center gap-1 text-gray-600 text-sm mt-6 ">
-    <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/termsofuse">{t('Terms of Use')} | </a>
+    <Link href="/TermsofUse">{t('Terms of Use')} | </Link>
     <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/privacypolicy">{t('Privacy Policy')} | </a>
     <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
                   <a href='#' className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</a>

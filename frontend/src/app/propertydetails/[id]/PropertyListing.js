@@ -29,25 +29,18 @@ export default function PropertyListing() {
   const params = useParams();
   const id = params.id;
   const router = useRouter();
-  // Redirect to home if id is not found after hydration (handles browser back edge case)
-  useEffect(() => {
-    let timeoutId;
-    if (!id) {
-      // Wait 200ms to allow id to be set after hydration
-      timeoutId = setTimeout(() => {
-        if (!id) {
-          router.replace('/');
-        }
-      }, 200);
-    }
-    return () => clearTimeout(timeoutId);
-  }, [id, router]);
+  
+  // Performance monitoring
+  const performanceRef = useRef({ startTime: Date.now() });
+  
+  // State declarations must come before any useEffect that references them
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);  
   const [isAtTop, setIsAtTop] = useState(true);  
   const prevScrollY = useRef(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null);
+  
   // Use localStorage.selectedProperty as initial value if it matches the id
   const getInitialProperty = () => {
     if (typeof window !== 'undefined') {
@@ -66,6 +59,7 @@ export default function PropertyListing() {
     }
     return null;
   };
+  
   const [property, setProperty] = useState(getInitialProperty);
   const [similarProperties, setSimilarProperties] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
@@ -90,9 +84,118 @@ export default function PropertyListing() {
   // Add refs for abort controllers to cancel pending requests
   const propertyAbortController = useRef(null);
   const similarAbortController = useRef(null);
+  
+  useEffect(() => {
+    performanceRef.current.startTime = Date.now();
+  }, [id]);
+  
+  // Log performance when property loads
+  useEffect(() => {
+    if (property && !pageLoading) {
+      const loadTime = Date.now() - performanceRef.current.startTime;
+      console.log(`Property ${id} loaded in ${loadTime}ms`);
+    }
+  }, [property, pageLoading, id]);
+  
+  // Redirect to home if id is not found after hydration (handles browser back edge case)
+  useEffect(() => {
+    let timeoutId;
+    if (!id) {
+      // Wait 200ms to allow id to be set after hydration
+      timeoutId = setTimeout(() => {
+        if (!id) {
+          router.replace('/');
+        }
+      }, 200);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [id, router]);
 
-  // Add simple in-memory cache
+  // Add comprehensive in-memory cache with management
   const cacheRef = useRef(new Map());
+
+  // Cache management utility wrapped in useMemo to prevent recreation on every render
+  const cacheManager = useMemo(() => ({
+    set: (key, value, type = 'general') => {
+      cacheRef.current.set(key, {
+        data: value,
+        timestamp: Date.now(),
+        type: type
+      });
+    },
+    
+    get: (key) => {
+      const cached = cacheRef.current.get(key);
+      if (!cached) return null;
+      
+      // Check if cache is older than 15 minutes for properties (longer than agent cache)
+      const isExpired = Date.now() - cached.timestamp > 15 * 60 * 1000;
+      if (isExpired) {
+        cacheRef.current.delete(key);
+        return null;
+      }
+      
+      return cached.data;
+    },
+    
+    clear: (propertyId) => {
+      const keysToDelete = Array.from(cacheRef.current.keys()).filter(key => 
+        key.includes(propertyId)
+      );
+      keysToDelete.forEach(key => cacheRef.current.delete(key));
+    },
+    
+    cleanup: () => {
+      // Keep only last 50 entries total
+      if (cacheRef.current.size > 50) {
+        const entries = Array.from(cacheRef.current.entries());
+        // Sort by timestamp, keep newest
+        entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+        
+        cacheRef.current.clear();
+        entries.slice(0, 50).forEach(([key, value]) => {
+          cacheRef.current.set(key, value);
+        });
+      }
+    }
+  }), []); // Empty dependency array since cacheRef is stable
+
+  // Prefetch mechanism for better performance
+  const prefetchProperty = useCallback(async (propertyId) => {
+    if (!propertyId || cacheManager.get(`property_${propertyId}`)) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/property/${propertyId}?fields=basic,photos,address,agent,pricing`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          cacheManager.set(`property_${propertyId}`, data.data, 'property');
+          console.log(`Prefetched property ${propertyId}`);
+        }
+      }
+    } catch (error) {
+      // Silent fail for prefetch
+      console.log(`Prefetch failed for property ${propertyId}:`, error.message);
+    }
+  }, [cacheManager]);
+
+  // Add property to localStorage for cross-page caching
+  const cachePropertyInStorage = useCallback((propertyData) => {
+    if (typeof window !== 'undefined' && propertyData) {
+      try {
+        localStorage.setItem('selectedProperty', JSON.stringify(propertyData));
+        localStorage.setItem('propertyLastViewed', Date.now().toString());
+      } catch (error) {
+        console.warn('Failed to cache property in localStorage:', error);
+      }
+    }
+  }, []);
 
   // Optimized function to fetch similar properties
   const fetchSimilarProperties = useCallback(async (currentProperty) => {
@@ -109,12 +212,13 @@ export default function PropertyListing() {
     setLoadingSimilar(true);
     
     try {
-      // Check cache first
+      // Check comprehensive cache first
       const cacheKey = `similar_${currentProperty._kw_meta?.id || currentProperty.id}`;
-      if (cacheRef.current.has(cacheKey)) {
-        const cachedSimilar = cacheRef.current.get(cacheKey);
+      const cachedSimilar = cacheManager.get(cacheKey);
+      if (cachedSimilar) {
         setSimilarProperties(cachedSimilar);
         setLoadingSimilar(false);
+        console.log(`Loaded similar properties from cache for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
         return;
       }
       
@@ -123,10 +227,10 @@ export default function PropertyListing() {
       const minPrice = Math.max(0, currentPrice * 0.8);
       const maxPrice = currentPrice * 1.2;
 
-      // Add timeout
+      // Reduced timeout for better UX
       const timeoutId = setTimeout(() => {
         similarAbortController.current?.abort();
-      }, 8000); // 8 second timeout for similar properties
+      }, 6000); // Reduced to 6 seconds
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
         method: 'POST',
@@ -162,13 +266,22 @@ export default function PropertyListing() {
         
         setSimilarProperties(filtered);
         
-        // Cache the similar properties
-        cacheRef.current.set(cacheKey, filtered);
-        // Limit cache size
-        if (cacheRef.current.size > 50) {
-          const firstKey = cacheRef.current.keys().next().value;
-          cacheRef.current.delete(firstKey);
-        }
+        // Cache with new cache manager
+        cacheManager.set(cacheKey, filtered, 'similar_properties');
+        
+        // Prefetch first few similar properties for instant navigation
+        filtered.slice(0, 3).forEach(prop => {
+          const propId = prop._kw_meta?.id || prop.id;
+          if (propId) {
+            // Prefetch after a short delay to not block current loading
+            setTimeout(() => prefetchProperty(propId), 1000);
+          }
+        });
+        
+        // Cleanup old cache entries
+        cacheManager.cleanup();
+        
+        console.log(`Cached ${filtered.length} similar properties for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
       }
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -180,7 +293,7 @@ export default function PropertyListing() {
     } finally {
       setLoadingSimilar(false);
     }
-  }, []);
+  }, [cacheManager,prefetchProperty]);
 
   // Memoize map data to prevent recalculation on every render
   const mapData = useMemo(() => {
@@ -374,8 +487,13 @@ const [activeTab, setActiveTab] = useState('overview');
     setProperty(null);
   }, [id]);
 
-  // Cleanup effect for component unmount
+  // Cleanup effect for component unmount and cache management
   useEffect(() => {
+    // Set up periodic cache cleanup
+    const cleanupInterval = setInterval(() => {
+      cacheManager.cleanup();
+    }, 5 * 60 * 1000); // Cleanup every 5 minutes
+
     return () => {
       // Cancel all pending requests on unmount
       if (propertyAbortController.current) {
@@ -384,8 +502,11 @@ const [activeTab, setActiveTab] = useState('overview');
       if (similarAbortController.current) {
         similarAbortController.current.abort();
       }
+      
+      // Clear cleanup interval
+      clearInterval(cleanupInterval);
     };
-  }, []);
+  }, [cacheManager]);
   useEffect(() => {
     async function fetchPropertyById() {
       if (!id) return;
@@ -401,21 +522,46 @@ const [activeTab, setActiveTab] = useState('overview');
       try {
         setPageLoading(true);
         
-        // Check cache first
+        // Check comprehensive cache first
         const cacheKey = `property_${id}`;
-        if (cacheRef.current.has(cacheKey)) {
-          const cachedData = cacheRef.current.get(cacheKey);
+        const cachedData = cacheManager.get(cacheKey);
+        if (cachedData) {
           setProperty(cachedData);
           // Still fetch similar properties in background
           fetchSimilarProperties(cachedData);
           setPageLoading(false);
+          console.log(`Loaded property ${id} from cache`);
           return;
         }
         
-        // Add timeout to the request
+        // Check localStorage cache (from property listings page)
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('selectedProperty');
+          if (stored) {
+            try {
+              const propertyData = JSON.parse(stored);
+              if (
+                (propertyData._kw_meta && String(propertyData._kw_meta.id) === String(id)) ||
+                String(propertyData.id) === String(id)
+              ) {
+                setProperty(propertyData);
+                // Cache the localStorage data
+                cacheManager.set(cacheKey, propertyData, 'property');
+                fetchSimilarProperties(propertyData);
+                setPageLoading(false);
+                console.log(`Loaded property ${id} from localStorage and cached`);
+                return;
+              }
+            } catch (parseError) {
+              console.warn('Error parsing stored property:', parseError);
+            }
+          }
+        }
+        
+        // Reduced timeout for better UX
         const timeoutId = setTimeout(() => {
           propertyAbortController.current?.abort();
-        }, 10000); // 10 second timeout
+        }, 7000); // Reduced to 7 seconds
         
         // Fetch property by ID from backend with optimized fields
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/property/${id}?fields=basic,photos,address,agent,pricing`, {
@@ -437,37 +583,22 @@ const [activeTab, setActiveTab] = useState('overview');
         
         if (data.success && data.data) {
           setProperty(data.data);
-          // Cache the data
-          cacheRef.current.set(cacheKey, data.data);
-          // Limit cache size to prevent memory issues
-          if (cacheRef.current.size > 50) {
-            const firstKey = cacheRef.current.keys().next().value;
-            cacheRef.current.delete(firstKey);
-          }
+          
+          // Cache with new cache manager
+          cacheManager.set(cacheKey, data.data, 'property');
+          
+          // Cache in localStorage for cross-page use
+          cachePropertyInStorage(data.data);
+          
+          // Cleanup old cache entries
+          cacheManager.cleanup();
+          
+          console.log(`Fetched and cached property ${id}`);
           
           // Fetch similar properties in parallel (non-blocking)
           fetchSimilarProperties(data.data);
         } else {
-          // Try to get from localStorage as fallback
-          if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('selectedProperty');
-            if (stored) {
-              const propertyData = JSON.parse(stored);
-              if (
-                (propertyData._kw_meta && String(propertyData._kw_meta.id) === String(id)) ||
-                String(propertyData.id) === String(id)
-              ) {
-                setProperty(propertyData);
-                fetchSimilarProperties(propertyData);
-              } else {
-                console.error('Property not found with ID:', id);
-              }
-            } else {
-              console.error('Property not found with ID:', id);
-            }
-          } else {
-            console.error('Property not found with ID:', id);
-          }
+          console.error('Property not found with ID:', id);
         }
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -476,7 +607,7 @@ const [activeTab, setActiveTab] = useState('overview');
         }
         console.error('Error fetching property:', error);
         
-        // Fallback to localStorage on network error
+        // Enhanced fallback to localStorage on network error
         if (typeof window !== 'undefined') {
           const stored = localStorage.getItem('selectedProperty');
           if (stored) {
@@ -487,7 +618,10 @@ const [activeTab, setActiveTab] = useState('overview');
                 String(propertyData.id) === String(id)
               ) {
                 setProperty(propertyData);
+                // Cache the fallback data
+                cacheManager.set(cacheKey, propertyData, 'property');
                 fetchSimilarProperties(propertyData);
+                console.log(`Used localStorage fallback for property ${id}`);
               }
             } catch (parseError) {
               console.error('Error parsing stored property:', parseError);
@@ -498,7 +632,6 @@ const [activeTab, setActiveTab] = useState('overview');
         setPageLoading(false);
       }
     }
-
     fetchPropertyById();
     
     // Cleanup function
@@ -507,7 +640,7 @@ const [activeTab, setActiveTab] = useState('overview');
         propertyAbortController.current.abort();
       }
     };
-  }, [id, fetchSimilarProperties]);
+  }, [id, fetchSimilarProperties,cacheManager,cachePropertyInStorage]);
   
   // Optimized function to fetch similar properties
  
@@ -526,16 +659,47 @@ const [activeTab, setActiveTab] = useState('overview');
   // Fallback image path
   const FALLBACK_IMAGE = "/propertyfallbackimage.jpg";
 
-  // Use property images (sanitized) or fallback
+  // Optimized property images with better fallback and lazy loading
   const propertyImages = useMemo(() => {
+    if (!property) return [FALLBACK_IMAGE];
+    
     const urls = (property?.photos || [])
       .map((photo) => photo?.ph_url)
-      .filter((url) => typeof url === 'string' && url.trim().length > 0);
-    return urls.length ? urls : [FALLBACK_IMAGE];
-  }, [property]);
+      .filter((url) => typeof url === 'string' && url.trim().length > 0)
+      .filter((url) => !brokenImages.has(url)); // Filter out broken images
+    
+    // If no valid images, use fallback
+    if (urls.length === 0) return [FALLBACK_IMAGE];
+    
+    // Prioritize higher quality images (if available)
+    const sortedUrls = urls.sort((a, b) => {
+      // Prefer larger images (basic heuristic based on URL patterns)
+      if (a.includes('large') || a.includes('1200')) return -1;
+      if (b.includes('large') || b.includes('1200')) return 1;
+      return 0;
+    });
+    
+    return sortedUrls;
+  }, [property, brokenImages]);
 
   // Use property images for thumbnails or fallback
   const thumbnailImages = propertyImages.slice(0, 8);
+
+  // Preload next few images for smoother navigation
+  useEffect(() => {
+    if (propertyImages.length > 1) {
+      const preloadImages = propertyImages.slice(1, Math.min(4, propertyImages.length));
+      preloadImages.forEach(src => {
+        if (src !== FALLBACK_IMAGE && !brokenImages.has(src)) {
+          const img = document.createElement('img');
+          img.src = src;
+          img.onerror = () => {
+            setBrokenImages(prev => new Set([...prev, src]));
+          };
+        }
+      });
+    }
+  }, [propertyImages, brokenImages, FALLBACK_IMAGE]);
 
   // Tab state
   

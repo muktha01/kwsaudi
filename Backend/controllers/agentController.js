@@ -2,6 +2,37 @@
 
 import Agent from '../models/Agent.js';
 import axios from 'axios';
+
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Helper function to get cached data
+const getCachedData = (key) => {
+  const cached = cache.get(key);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+// Helper function to set cached data
+const setCachedData = (key, data) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+};
+
+// Clean up old cache entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of cache.entries()) {
+    if ((now - value.timestamp) > CACHE_DURATION) {
+      cache.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
 // Get agent by email
 export const getAgentByEmail = async (req, res) => {
   try {
@@ -542,88 +573,228 @@ export const getKWListingsByRegion = async (req, res) => {
 
 export const getKWCombinedData = async (req, res) => {
   try {
+    const { offset = 0, limit = 6 } = req.query; // Default to 6 for fastest loading
+    const requestedOffset = parseInt(offset);
+    const requestedLimit = Math.min(parseInt(limit), 20); // Reduced cap to 20 for better performance
+
+    // Check cache first
+    const cacheKey = `combined-data-${requestedOffset}-${requestedLimit}`;
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached data for:', cacheKey);
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const headers = {
       Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
       Accept: 'application/json',
     };
 
     const apis = [
-      { type: 'people_org_50449', url: 'https://partners.api.kw.com/v2/listings/orgs/50449/people' },
-      { type: 'people_org_2414288', url: 'https://partners.api.kw.com/v2/listings/orgs/2414288/people' },
-      { type: 'listings_region_50394', url: 'https://partners.api.kw.com/v2/listings/region/50394' }
+      { 
+        type: 'people_org_50449', 
+        url: `https://partners.api.kw.com/v2/listings/orgs/50449/people?page[offset]=${requestedOffset}&page[limit]=${requestedLimit}` 
+      },
+      { 
+        type: 'people_org_2414288', 
+        url: `https://partners.api.kw.com/v2/listings/orgs/2414288/people?page[offset]=${requestedOffset}&page[limit]=${requestedLimit}` 
+      },
+      { 
+        type: 'listings_region_50394', 
+        url: `https://partners.api.kw.com/v2/listings/region/50394?page[offset]=${requestedOffset}&page[limit]=${requestedLimit}` 
+      }
     ];
 
-      const fetchAllPages = async (api) => {
-        const limit = 1000; // Maximum batch size per request for better performance
-        let allData = [];
-        let offset = 0;
-        let total = 0;
+    // Fetch data with pagination instead of all pages
+    const fetchPaginatedData = async (api) => {
+      try {
+        console.log(`Fetching from: ${api.url}`);
+        const resp = await axios.get(api.url, { 
+          headers, 
+          timeout: 15000, // Reduced to 15s timeout for faster response
+          maxRedirects: 3,
+          validateStatus: function (status) {
+            return status >= 200 && status < 300; // Only resolve if status is 2xx
+          }
+        });
 
-        try {
-          do {
-            const url = `${api.url}?page[offset]=${offset}&page[limit]=${limit}`;
-            const resp = await axios.get(url, { headers });
-
-            // Handle quota exceeded or TOO_MANY_REQUESTS errors from KW API
-            if (resp.data && resp.data.success === 'false' && (resp.data.errorCode === 'TOO_MANY_REQUESTS' || resp.data.message?.toLowerCase().includes('quota'))) {
-              throw new Error(resp.data.message || 'KW API quota exceeded or too many requests');
-            }
-
-            const data = resp.data.data || resp.data.hits?.hits || [];
-            total = resp.data.meta?.total || resp.data.hits?.total?.value || data.length;
-
-            allData = [...allData, ...data];
-            offset += limit;
-          } while (allData.length < total);
-
-          return {
-            type: api.type,
-            url: api.url,
-            success: true,
-            total,
-            count: allData.length,
-            data: allData
-          };
-        } catch (err) {
-          // If quota exceeded or too many requests, return a special error result for this API
-          return {
-            type: api.type,
-            url: api.url,
-            success: false,
-            error: err.message || 'Failed to fetch from KW API',
-            errorCode: err.response?.data?.errorCode || null
-          };
+        // Handle quota exceeded errors
+        if (resp.data && resp.data.success === 'false' && (resp.data.errorCode === 'TOO_MANY_REQUESTS' || resp.data.message?.toLowerCase().includes('quota'))) {
+          throw new Error(resp.data.message || 'KW API quota exceeded or too many requests');
         }
-      };
 
-    const results = await Promise.all(apis.map(fetchAllPages));
+        const data = resp.data.data || resp.data.hits?.hits || [];
+        const total = resp.data.meta?.total || resp.data.hits?.total?.value || 0;
 
-      // Calculate total agents and total listings
-      let totalAgents = 0;
-      let totalListings = 0;
-      results.forEach(result => {
+        return {
+          type: api.type,
+          url: api.url,
+          success: true,
+          total,
+          count: data.length,
+          data: data
+        };
+      } catch (err) {
+        console.error(`Error fetching ${api.type}:`, err.message);
+        return {
+          type: api.type,
+          url: api.url,
+          success: false,
+          error: err.message || 'Failed to fetch from KW API',
+          errorCode: err.response?.data?.errorCode || null
+        };
+      }
+    };
+
+    const results = await Promise.all(apis.map(fetchPaginatedData));
+
+    // Calculate totals
+    let totalAgents = 0;
+    let totalListings = 0;
+    results.forEach(result => {
+      if (result.success) {
         if (result.type === 'people_org_50449' || result.type === 'people_org_2414288') {
-          totalAgents += typeof result.total === 'number' ? result.total : 0;
+          totalAgents += result.total || 0;
         }
         if (result.type === 'listings_region_50394') {
-          totalListings += typeof result.total === 'number' ? result.total : 0;
+          totalListings += result.total || 0;
         }
-      });
+      }
+    });
 
-      res.status(200).json({
-        success: true,
-        message: 'All KW API data fetched',
-        timestamp: new Date().toISOString(),
+    const responseData = {
+      success: true,
+      message: 'KW API data fetched with pagination',
+      timestamp: new Date().toISOString(),
+      pagination: {
+        offset: requestedOffset,
+        limit: requestedLimit,
         totalAgents,
-        totalListings,
-        results
-      });
+        totalListings
+      },
+      results
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    res.status(200).json(responseData);
 
   } catch (error) {
     console.error('Combined API Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch combined KW API data',
+      error: error.message
+    });
+  }
+};
+
+// Fast agents-only endpoint (without coordinates)
+export const getKWAgentsOnly = async (req, res) => {
+  try {
+    const { offset = 0, limit = 10 } = req.query;
+    const requestedOffset = parseInt(offset);
+    const requestedLimit = Math.min(parseInt(limit), 50);
+
+    // Check cache first
+    const cacheKey = `agents-only-${requestedOffset}-${requestedLimit}`;
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached agents data for:', cacheKey);
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const headers = {
+      Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+      Accept: 'application/json',
+    };
+
+    // Only fetch agents data (faster)
+    const apis = [
+      { 
+        type: 'people_org_50449', 
+        url: `https://partners.api.kw.com/v2/listings/orgs/50449/people?page[offset]=${requestedOffset}&page[limit]=${requestedLimit}` 
+      },
+      { 
+        type: 'people_org_2414288', 
+        url: `https://partners.api.kw.com/v2/listings/orgs/2414288/people?page[offset]=${requestedOffset}&page[limit]=${requestedLimit}` 
+      }
+    ];
+
+    const fetchAgentData = async (api) => {
+      try {
+        console.log(`Fetching agents from: ${api.url}`);
+        const resp = await axios.get(api.url, { 
+          headers, 
+          timeout: 10000, // Even faster timeout for agents only
+          maxRedirects: 3
+        });
+
+        const data = resp.data.data || [];
+        const total = resp.data.meta?.total || 0;
+
+        return {
+          type: api.type,
+          url: api.url,
+          success: true,
+          total,
+          count: data.length,
+          data: data
+        };
+      } catch (err) {
+        console.error(`Error fetching ${api.type}:`, err.message);
+        return {
+          type: api.type,
+          url: api.url,
+          success: false,
+          error: err.message,
+          errorCode: err.response?.data?.errorCode || null
+        };
+      }
+    };
+
+    const results = await Promise.all(apis.map(fetchAgentData));
+
+    let totalAgents = 0;
+    results.forEach(result => {
+      if (result.success) {
+        totalAgents += result.total || 0;
+      }
+    });
+
+    const responseData = {
+      success: true,
+      message: 'KW Agents data fetched (fast)',
+      timestamp: new Date().toISOString(),
+      pagination: {
+        offset: requestedOffset,
+        limit: requestedLimit,
+        totalAgents
+      },
+      results
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error('Fast Agents API Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agents data',
       error: error.message
     });
   }

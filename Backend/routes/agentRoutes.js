@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { syncAgentsFromKWPeople, fetchAgentOrProperties, syncAgentsFromMultipleKWPeople, getAgentByEmail, getKWCombinedData, getKWPeopleByOrg, getKWListingsByRegion, getAgentWithProperties, getAllAgentsWithPropertyCounts } from '../controllers/agentController.js';
+import { syncAgentsFromKWPeople, fetchAgentOrProperties, syncAgentsFromMultipleKWPeople, getAgentByEmail, getKWCombinedData, getKWPeopleByOrg, getKWListingsByRegion, getAgentWithProperties, getAllAgentsWithPropertyCounts, getKWAgentsOnly } from '../controllers/agentController.js';
 const router = express.Router();
 router.get('/agents/by-email', getAgentByEmail);
 router.get('/agents/byid/:agentId', fetchAgentOrProperties);
@@ -16,6 +16,7 @@ router.post('/properties', fetchAgentOrProperties);
 router.get('/kw/orgs/:orgId/people', getKWPeopleByOrg);
 router.get('/kw/regions/:regionId/listings', getKWListingsByRegion);
 router.get('/kw/combined-data', getKWCombinedData);
+router.get('/kw/agents-only', getKWAgentsOnly); // Fast agents endpoint
 
 // NEW: Agent with their matched properties
 router.get('/kw/agent/:agentId/properties', getAgentWithProperties);

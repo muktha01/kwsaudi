@@ -109,6 +109,26 @@ const [pdfs, setPdfs] = useState([]);
     return ['/home.png']; // Single fallback image
   }, [apiImages]);
 
+  // Initialize with cached data if available for instant display
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sessionData = sessionStorage.getItem('home_page_session');
+      if (sessionData) {
+        try {
+          const parsedData = JSON.parse(sessionData);
+          if (parsedData.imageUrls && parsedData.imageUrls.length > 0 && !apiImages.length) {
+            setApiImages(parsedData.imageUrls);
+            setFirstImageLoaded(true);
+            setLoaded(prev => ({ ...prev, 0: true }));
+            preloadFirstImage(parsedData.imageUrls[0]);
+          }
+        } catch (error) {
+          console.warn('Error parsing session data:', error);
+        }
+      }
+    }
+  }, [apiImages.length]); // Run only once on mount
+
   const [mobilePropertySearchTerm, setMobilePropertySearchTerm] = useState('');
   const [mobileAgentSearchTerm, setMobileAgentSearchTerm] = useState('');
   const [propertySearchTerm, setPropertySearchTerm] = useState('');
@@ -232,7 +252,10 @@ const [pdfs, setPdfs] = useState([]);
         matchesCategory = property.list_category === 'For Rent';
       }
 
-      return matchesSearch && matchesCategory;
+      // Only show properties with list_status "Active"
+      const isActive = property.list_status === 'Active';
+
+      return matchesSearch && matchesCategory && isActive;
     });
   }, [properties, propertySearchTerm, mobilePropertySearchTerm, filterCategory, isClient]);
 
@@ -245,7 +268,7 @@ const [pdfs, setPdfs] = useState([]);
       setPdfs(Array.isArray(data) ? data : []);
     } catch (err) {
       // console.error(err);
-      alert("Failed to load PDFs");
+     
       setPdfs([]);
     }
   };
@@ -288,7 +311,7 @@ const [pdfs, setPdfs] = useState([]);
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      alert("Download failed");
+     
     } finally {
       setLoading(false);
     }
@@ -305,7 +328,7 @@ const [pdfs, setPdfs] = useState([]);
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               page: 1,
-              limit: 50,
+              limit: 1000,
 
             }),
           }
@@ -465,64 +488,342 @@ const [pdfs, setPdfs] = useState([]);
 
   const [loadedIndex, setLoadedIndex] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [loaded, setLoaded] = useState({}); // track which images are loaded
+  const [loaded, setLoaded] = useState({ 0: true });
   const [stableIndex, setStableIndex] = useState(0);
+  const [firstImageLoaded, setFirstImageLoaded] = useState(false);
+  
+  // Enhanced preload function with better cross-browser support
+  const preloadFirstImage = (imageUrl) => {
+    if (imageUrl && typeof window !== 'undefined') {
+      return new Promise((resolve, reject) => {
+        // Use native browser Image constructor, not Next.js Image component
+        const img = new window.Image();
+        
+        // Add crossOrigin attribute for better CORS handling
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = () => {
+          setFirstImageLoaded(true);
+          setLoaded(prev => ({ ...prev, 0: true }));
+          resolve(img);
+        };
+        
+        img.onerror = (error) => {
+          console.warn('Failed to preload image:', imageUrl, error);
+          // Still mark as loaded to prevent infinite loading states
+          setFirstImageLoaded(true);
+          setLoaded(prev => ({ ...prev, 0: true }));
+          reject(error);
+        };
+        
+        // Set timeout to prevent hanging
+        setTimeout(() => {
+          if (!img.complete) {
+            console.warn('Image preload timeout:', imageUrl);
+            setFirstImageLoaded(true);
+            setLoaded(prev => ({ ...prev, 0: true }));
+            resolve(img);
+          }
+        }, 5000);
+        
+        img.src = imageUrl;
+      });
+    }
+    return Promise.resolve();
+  };
   useEffect(() => {
     const interval = setInterval(() => {
       setPrevHeroIndex(heroIndex);
       const nextIndex = (heroIndex + 1) % displayedImages.length;
       setHeroIndex(nextIndex);
       setLoadedIndex(null); // reset before new loads
-    }, 6000); // every 6s
+    }, 10000); // every 10s - increased from 6s for longer display time
     return () => clearInterval(interval);
   }, [heroIndex, displayedImages.length]);
  
    useEffect(() => {
-  const fetchPageHero = async () => {
-    try {
-      setLoadingPageData(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/home-pages`);
-      
-      if (!res.ok) {
-        // console.warn('API not available, no fallback used');
-        setLoadingPageData(false);
-        return;
-      }
+    const CACHE_KEY = 'home_page_data';
+    const CACHE_EXPIRY_KEY = 'home_page_data_expiry';
+    const SESSION_CACHE_KEY = 'home_page_session';
+    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-      const pages = await res.json();
-      // console.log('Fetched pages from API:', pages);
-
-      const activePage = Array.isArray(pages) 
-        ? pages.find(p => p.status === 'published') || pages[0]
-        : pages;
-
-      if (activePage) {
-        setPage(activePage);
-        // console.log('Using page data:', activePage);
-
-        if (activePage.backgroundImage && Array.isArray(activePage.backgroundImage) && activePage.backgroundImage.length > 0) {
-          const imageUrls = activePage.backgroundImage.map(imagePath =>
-            imagePath.startsWith('http')
-              ? imagePath
-              : `${process.env.NEXT_PUBLIC_BASE_URL}/${imagePath.replace(/\\/g, '/')}`
-          );
-
-          // console.log('✅ Using API images:', imageUrls);
-          setApiImages(imageUrls); // Only API images
+    // Helper function to safely access storage with fallback
+    const safeStorageAccess = (storage, key, isSet = false, value = null) => {
+      try {
+        if (isSet) {
+          storage.setItem(key, value);
+          return true;
         } else {
-          setApiImages([]); // No fallback images
+          return storage.getItem(key);
         }
+      } catch (error) {
+        console.warn(`Storage access failed for ${key}:`, error);
+        return isSet ? false : null;
       }
-    } catch (e) {
-      // console.error('Error fetching page data:', e);
-      setApiImages([]); // No fallback
-    } finally {
-      setLoadingPageData(false);
-    }
-  };
+    };
 
-  fetchPageHero();
-}, []);
+    const fetchPageHero = async () => {
+      try {
+        // Only check cache if we're in the browser to avoid hydration errors
+        if (typeof window !== 'undefined') {
+          // First check sessionStorage for ultra-fast access within same session
+          const sessionData = safeStorageAccess(sessionStorage, SESSION_CACHE_KEY);
+          if (sessionData) {
+            try {
+              const parsedSessionData = JSON.parse(sessionData);
+              if (!page || !apiImages.length) {
+                setPage(parsedSessionData.page);
+                setApiImages(parsedSessionData.imageUrls || []);
+                if (parsedSessionData.imageUrls && parsedSessionData.imageUrls.length > 0) {
+                  setLoaded(prev => ({ ...prev, 0: true }));
+                  // Use the enhanced preload function
+                  preloadFirstImage(parsedSessionData.imageUrls[0]).catch(() => {
+                    // Fallback: mark as loaded even if preload fails
+                    setFirstImageLoaded(true);
+                  });
+                }
+              }
+              setLoadingPageData(false);
+              return;
+            } catch (parseError) {
+              console.warn('Failed to parse session data:', parseError);
+              safeStorageAccess(sessionStorage, SESSION_CACHE_KEY, true, null);
+            }
+          }
+
+          // Then check localStorage for persistent cache
+          const cachedData = safeStorageAccess(localStorage, CACHE_KEY);
+          const cachedExpiry = safeStorageAccess(localStorage, CACHE_EXPIRY_KEY);
+          const now = Date.now();
+
+          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+            try {
+              // Data is already loaded synchronously in state initialization
+              // Just ensure states are consistent and save to session
+              const parsedData = JSON.parse(cachedData);
+              safeStorageAccess(sessionStorage, SESSION_CACHE_KEY, true, cachedData); // Cache in session for ultra-fast next access
+              
+              if (!page || !apiImages.length) {
+                setPage(parsedData.page);
+                setApiImages(parsedData.imageUrls || []);
+                if (parsedData.imageUrls && parsedData.imageUrls.length > 0) {
+                  setLoaded(prev => ({ ...prev, 0: true }));
+                  // Use the enhanced preload function
+                  preloadFirstImage(parsedData.imageUrls[0]).catch(() => {
+                    // Fallback: mark as loaded even if preload fails
+                    setFirstImageLoaded(true);
+                  });
+                }
+              }
+              setLoadingPageData(false);
+              return;
+            } catch (parseError) {
+              console.warn('Failed to parse cached data:', parseError);
+              // Clear corrupted cache
+              safeStorageAccess(localStorage, CACHE_KEY, true, null);
+              safeStorageAccess(localStorage, CACHE_EXPIRY_KEY, true, null);
+            }
+          }
+        }
+
+        // Only set loading state if we need to fetch from API
+        setLoadingPageData(true);
+
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/home-pages`, {
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'max-age=300', // 5 minutes browser cache
+          }
+        });
+
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) {
+          // Try to use expired cache if available
+          const fallbackCachedData = safeStorageAccess(localStorage, CACHE_KEY);
+          if (fallbackCachedData) {
+            try {
+              const parsedData = JSON.parse(fallbackCachedData);
+              setPage(parsedData.page);
+              setApiImages(parsedData.imageUrls || []);
+              // Immediately mark first image as loaded for instant display
+              if (parsedData.imageUrls && parsedData.imageUrls.length > 0) {
+                setLoaded(prev => ({ ...prev, 0: true }));
+                preloadFirstImage(parsedData.imageUrls[0]).catch(() => {
+                  setFirstImageLoaded(true);
+                });
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse fallback cache:', parseError);
+              setApiImages([]);
+            }
+          }
+          setLoadingPageData(false);
+          return;
+        }
+
+        const pages = await res.json();
+
+        const activePage = Array.isArray(pages) 
+          ? pages.find(p => p.status === 'published') || pages[0]
+          : pages;
+
+        if (activePage) {
+          setPage(activePage);
+
+          let imageUrls = [];
+          if (activePage.backgroundImage && Array.isArray(activePage.backgroundImage) && activePage.backgroundImage.length > 0) {
+            imageUrls = activePage.backgroundImage.map(imagePath =>
+              imagePath.startsWith('http')
+                ? imagePath
+                : `${process.env.NEXT_PUBLIC_BASE_URL}/${imagePath.replace(/\\/g, '/')}`
+            );
+            setApiImages(imageUrls);
+            // Use enhanced preload function
+            if (imageUrls.length > 0) {
+              setLoaded(prev => ({ ...prev, 0: true }));
+              preloadFirstImage(imageUrls[0]).catch(() => {
+                // Fallback: mark as loaded even if preload fails
+                setFirstImageLoaded(true);
+              });
+            }
+          } else {
+            setApiImages([]);
+          }
+
+          // Cache the data in both localStorage and sessionStorage
+          const dataToCache = {
+            page: activePage,
+            imageUrls: imageUrls
+          };
+          if (typeof window !== 'undefined') {
+            const now = Date.now();
+            safeStorageAccess(localStorage, CACHE_KEY, true, JSON.stringify(dataToCache));
+            safeStorageAccess(localStorage, CACHE_EXPIRY_KEY, true, (now + CACHE_DURATION).toString());
+            safeStorageAccess(sessionStorage, SESSION_CACHE_KEY, true, JSON.stringify(dataToCache)); // Session cache for ultra-fast access
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching hero data:', e);
+        // On error, try to use cached data if available
+        if (typeof window !== 'undefined') {
+          const fallbackCachedData = safeStorageAccess(localStorage, CACHE_KEY);
+          if (fallbackCachedData) {
+            try {
+              const parsedData = JSON.parse(fallbackCachedData);
+              setPage(parsedData.page);
+              setApiImages(parsedData.imageUrls || []);
+              // Immediately mark first image as loaded for instant display
+              if (parsedData.imageUrls && parsedData.imageUrls.length > 0) {
+                setLoaded(prev => ({ ...prev, 0: true }));
+                preloadFirstImage(parsedData.imageUrls[0]).catch(() => {
+                  setFirstImageLoaded(true);
+                });
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse error fallback cache:', parseError);
+              setApiImages([]);
+            }
+          } else {
+            setApiImages([]);
+          }
+        } else {
+          setApiImages([]);
+        }
+      } finally {
+        setLoadingPageData(false);
+      }
+    };
+
+    fetchPageHero();
+  }, [apiImages.length,page]);
+
+  // Enhanced client-side cache initialization effect to avoid hydration errors
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const safeStorageAccess = (storage, key, isSet = false, value = null) => {
+        try {
+          if (isSet) {
+            storage.setItem(key, value);
+            return true;
+          } else {
+            return storage.getItem(key);
+          }
+        } catch (error) {
+          console.warn(`Storage access failed for ${key}:`, error);
+          return isSet ? false : null;
+        }
+      };
+
+      try {
+        // Check sessionStorage first for ultra-fast access
+        const sessionData = safeStorageAccess(sessionStorage, 'home_page_session');
+        if (sessionData) {
+          try {
+            const parsedData = JSON.parse(sessionData);
+            if (parsedData.page && !page) setPage(parsedData.page);
+            if (parsedData.imageUrls && parsedData.imageUrls.length > 0 && apiImages.length === 0) {
+              setApiImages(parsedData.imageUrls);
+              setLoaded(prev => ({ ...prev, 0: true }));
+              // Use enhanced preload for immediate display
+              preloadFirstImage(parsedData.imageUrls[0]).catch(() => {
+                setFirstImageLoaded(true);
+              });
+              setLoadingPageData(false);
+            }
+            return;
+          } catch (parseError) {
+            console.warn('Failed to parse session data in client effect:', parseError);
+            safeStorageAccess(sessionStorage, 'home_page_session', true, null);
+          }
+        }
+
+        // Fallback to localStorage
+        const cachedData = safeStorageAccess(localStorage, 'home_page_data');
+        const cachedExpiry = safeStorageAccess(localStorage, 'home_page_data_expiry');
+        const now = Date.now();
+        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+          try {
+            const parsedData = JSON.parse(cachedData);
+            if (parsedData.page && !page) setPage(parsedData.page);
+            if (parsedData.imageUrls && parsedData.imageUrls.length > 0 && apiImages.length === 0) {
+              setApiImages(parsedData.imageUrls);
+              setLoaded(prev => ({ ...prev, 0: true }));
+              // Use enhanced preload for immediate display
+              preloadFirstImage(parsedData.imageUrls[0]).catch(() => {
+                setFirstImageLoaded(true);
+              });
+              setLoadingPageData(false);
+              // Copy to session storage for next access
+              safeStorageAccess(sessionStorage, 'home_page_session', true, cachedData);
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse localStorage data in client effect:', parseError);
+            safeStorageAccess(localStorage, 'home_page_data', true, null);
+            safeStorageAccess(localStorage, 'home_page_data_expiry', true, null);
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading cached data in client effect:', e);
+      }
+    }
+  }, [apiImages.length,page]); // Run once on mount
+
+  // Preload first image immediately when apiImages are available
+  useEffect(() => {
+    if (typeof window !== 'undefined' && apiImages.length > 0 && !firstImageLoaded) {
+      const firstImage = new window.Image();
+      firstImage.onload = () => {
+        setLoaded(prev => ({ ...prev, 0: true }));
+        setFirstImageLoaded(true);
+      };
+      firstImage.src = apiImages[0];
+    }
+  }, [apiImages, firstImageLoaded]);
 
   return (
     <div>
@@ -541,37 +842,82 @@ const [pdfs, setPdfs] = useState([]);
 
           {/* Background Image with previous blurring out and next coming in */}
 
-          <section className="relative w-full h-screen md:h-[120vh] text-white">
+          <section className="relative w-full h-[86vh] md:h-[120vh] text-white">
             {/* Background Image Transition */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
-           <AnimatePresence initial={false} mode="sync">
+            <div 
+              className="absolute inset-0 z-0 overflow-hidden"
+              style={{
+                // Use a more reliable background approach for cross-browser compatibility
+                backgroundColor: '#1a1a1a', // Fallback color
+                // Only show background image if API images are loaded and first image is ready
+                ...(apiImages.length > 0 && firstImageLoaded && {
+                  backgroundImage: `url(${apiImages[0]})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }),
+                // Ensure no CSS transitions interfere
+                transition: 'none',
+                transform: 'translateZ(0)', // Force GPU acceleration
+                willChange: 'auto'
+              }}
+            >
+           <AnimatePresence initial={!firstImageLoaded} mode="sync">
   {[stableIndex, heroIndex]
     .filter((v, i, a) => a.indexOf(v) === i) // dedupe indices
     .map((idx) => (
       apiImages[idx] ? (  // Only render if valid image URL
         <motion.div
           key={idx}
-          initial={{ opacity: idx === heroIndex ? 0 : 1, filter: 'blur(15px)' }}
+          initial={{ 
+            opacity: idx === 0 ? (firstImageLoaded ? 1 : 0) : (idx === heroIndex ? 0 : 1), 
+            filter: idx === 0 ? (firstImageLoaded ? 'blur(0px)' : 'blur(15px)') : 'blur(15px)' 
+          }}
           animate={{
-            opacity: idx === heroIndex ? (loaded[idx] ? 1 : 0) : 1,
-            filter: loaded[idx] ? 'blur(0px)' : 'blur(15px)',
+            opacity: idx === 0 ? (firstImageLoaded ? 1 : 0) : (idx === heroIndex ? (loaded[idx] ? 1 : 0) : 1),
+            filter: (idx === 0 && firstImageLoaded) || loaded[idx] ? 'blur(0px)' : 'blur(15px)',
           }}
           exit={{ opacity: idx === stableIndex ? 0 : 1 }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
+          transition={{ 
+            duration: idx === 0 ? (firstImageLoaded ? 0 : 1.2) : 1.2, 
+            ease: 'easeInOut',
+            // Ensure no delay for immediate display
+            delay: 0
+          }}
           className="absolute inset-0"
           onAnimationComplete={() => {
-            if (idx === heroIndex && loaded[idx]) setStableIndex(heroIndex);
+            if ((idx === heroIndex && loaded[idx]) || (idx === 0 && firstImageLoaded)) setStableIndex(heroIndex);
           }}
-          style={{ willChange: 'opacity, filter' }}
+          style={{ 
+            willChange: 'opacity, filter',
+            // Enhanced browser compatibility styles
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+          }}
         >
           <Image
             src={apiImages[idx]}
             alt={t("Hero Background")}
             fill
-            className={`object-cover transition-transform duration-300 ${isRTL ? 'scale-x-[-1]' : ''}`}
-            onLoadingComplete={() =>
-              setLoaded((prev) => ({ ...prev, [idx]: true }))
-            }
+            priority={idx === 0} // Add priority loading for first image
+            className={`object-cover transition-transform duration-100 ${isRTL ? 'scale-x-[-1]' : ''}`}
+            onLoadingComplete={() => {
+              setLoaded((prev) => ({ ...prev, [idx]: true }));
+              if (idx === 0) setFirstImageLoaded(true);
+            }}
+            onError={(e) => {
+              console.warn(`Failed to load image at index ${idx}:`, apiImages[idx]);
+              // Mark as loaded to prevent infinite loading state
+              setLoaded((prev) => ({ ...prev, [idx]: true }));
+              if (idx === 0) setFirstImageLoaded(true);
+            }}
+            // Enhanced loading strategy for cross-browser compatibility
+            loading={idx === 0 ? "eager" : "lazy"}
+            sizes="100vw"
+            quality={85}
+            unoptimized={false}
           />
         </motion.div>
       ) : null
@@ -580,20 +926,31 @@ const [pdfs, setPdfs] = useState([]);
 
 
 
-              {/* Hidden preloader for the *next* image */}
+              {/* Enhanced preloader for the *next* image with better error handling */}
               <div className="hidden">
-                <Image
-                  src={displayedImages[(heroIndex + 1) % displayedImages.length]}
-                  alt={t("preload")}
-                  width={1}
-                  height={1}
-                  onLoadingComplete={() =>
-                    setLoaded((prev) => ({
-                      ...prev,
-                      [(heroIndex + 1) % displayedImages.length]: true,
-                    }))
-                  }
-                />
+                {displayedImages[(heroIndex + 1) % displayedImages.length] && (
+                  <Image
+                    src={displayedImages[(heroIndex + 1) % displayedImages.length]}
+                    alt={t("preload")}
+                    width={1}
+                    height={1}
+                    onLoadingComplete={() =>
+                      setLoaded((prev) => ({
+                        ...prev,
+                        [(heroIndex + 1) % displayedImages.length]: true,
+                      }))
+                    }
+                    onError={() => {
+                      console.warn('Failed to preload next image');
+                      setLoaded((prev) => ({
+                        ...prev,
+                        [(heroIndex + 1) % displayedImages.length]: true,
+                      }));
+                    }}
+                    loading="lazy"
+                    unoptimized={false}
+                  />
+                )}
               </div>
             </div>
 
@@ -622,12 +979,12 @@ const [pdfs, setPdfs] = useState([]);
             {/* Content */}
           <div
   className={`absolute inset-0 md:top-60 top-40 custom-centered px-4 ${
-    isRTL ? "md:right-36" : "md:left-36"
+    isRTL ? "md:right-36 right-6" : "md:left-36 left-6"
   }`}
 >
               <div className="max-w-full  md:max-w-3xl">
                <h1
-  className={`text-3xl sm:text-2xl md:text-5xl font-bold md:font-semibold mb-3 md:mb-6 leading-tight ${
+  className={`text-3xl sm:text-2xl md:text-5xl font-bold md:font-semibold mb-10 md:mb-6 leading-tight ${
     isRTL ? "text-right" : "text-left"
   }`}
 >
@@ -636,7 +993,7 @@ const [pdfs, setPdfs] = useState([]);
 </h1>
 
 
-                <p className="text-base sm:text-sm md:text-[1.1rem] font-normal mb-3 md:mb-8 max-w-full md:max-w-2xl">
+                <p className="text-base sm:text-sm md:text-[1.1rem] font-normal mb-10 md:mb-8 max-w-full md:max-w-2xl">
               { t( "Our real estate agents are business owners, not employees, so you get more choice, time, and a better experience. Get expert advice from the largest real estate franchise in the world.")}
                 </p>
 
@@ -746,7 +1103,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
                   {/* Mobile View */}
-                  <div className="flex md:hidden  gap-1 ">
+                  <div className="flex md:hidden  gap-1 mt-4 ">
 
                     {activeTab === 'property' ? (
                       <>
@@ -1177,7 +1534,7 @@ const [pdfs, setPdfs] = useState([]);
                     isRTL ? "flex justify-end" : "flex justify-start"
                   }`}
                 >
-                  {t(property?.list_category || "To Let")}
+                  {t(property?.list_status || "To Let")}
                 </span>
                 <div
                   className={`flex flex-col ${
@@ -1426,20 +1783,20 @@ const [pdfs, setPdfs] = useState([]);
   <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
     {/* Left Red Box - Sell Home */}
-    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
       {/* Content */}
       <div className="pb-24">
         <p
-          className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+          className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
           } border-white`}
         >
           {t("Download guide")}
         </p>
-        <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+        <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
           {t("How to sell your home")}
         </h2>
-        <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+        <p className="text-base md:text-[1.1rem] mb-4 md:mb-6">
           {t(
             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
           )}
@@ -1447,7 +1804,7 @@ const [pdfs, setPdfs] = useState([]);
       </div>
       {/* Input Group - Responsive */}
   <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-24 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -1460,7 +1817,7 @@ const [pdfs, setPdfs] = useState([]);
             value={sellEmail}
             onChange={(e) => setSellEmail(e.target.value)}
             placeholder={t("Email Address")}
-            className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+            className="w-full px-4 py-2 bg-white text-black text-base outline-none"
           />
           <button
             onClick={async () => {
@@ -1497,7 +1854,7 @@ const [pdfs, setPdfs] = useState([]);
               }
             }}
             disabled={loading}
-            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
           >
             {loading ? t("Downloading...") : t("Download")}
           </button>
@@ -1573,16 +1930,16 @@ const [pdfs, setPdfs] = useState([]);
         {/* Content */}
         <div className="pb-24">
           <p
-            className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+            className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
             } border-white`}
           >
             {t("Download guide")}
           </p>
-          <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+          <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
             {t("How to buy a home")}
           </h2>
-          <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+          <p className="text-basemd:text-[1.1rem]  mb-4 md:mb-6">
             {t(
               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
             )}
@@ -1590,7 +1947,7 @@ const [pdfs, setPdfs] = useState([]);
         </div>
         {/* Input Group - Responsive */}
       <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-22 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -1603,7 +1960,7 @@ const [pdfs, setPdfs] = useState([]);
               value={buyEmail}
               onChange={(e) => setBuyEmail(e.target.value)}
               placeholder={t("Email Address")}
-              className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+              className="w-full px-4 py-2 bg-white text-black text-base outline-none"
             />
             <button
               onClick={async () => {
@@ -1640,7 +1997,7 @@ const [pdfs, setPdfs] = useState([]);
                 }
               }}
               disabled={loading}
-              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
             >
               {loading ? t("Downloading...") : t("Download")}
             </button>
