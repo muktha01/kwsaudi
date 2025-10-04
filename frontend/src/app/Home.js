@@ -123,7 +123,7 @@ const [pdfs, setPdfs] = useState([]);
             preloadFirstImage(parsedData.imageUrls[0]);
           }
         } catch (error) {
-          console.warn('Error parsing session data:', error);
+          //console.warn('Error parsing session data:', error);
         }
       }
     }
@@ -193,6 +193,27 @@ const [pdfs, setPdfs] = useState([]);
   // Trending properties state
   const [properties, setProperties] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
+
+  // Animation refs for guide section
+  const [sellGuideRef, sellGuideInView] = useInView({ threshold: 0.2 });
+  const [buyGuideRef, buyGuideInView] = useInView({ threshold: 0.2 });
+  
+  // Animation state to track if animations have been triggered
+  const [sellGuideAnimated, setSellGuideAnimated] = useState(false);
+  const [buyGuideAnimated, setBuyGuideAnimated] = useState(false);
+
+  // Trigger animations only once when elements come into view
+  useEffect(() => {
+    if (sellGuideInView && !sellGuideAnimated) {
+      setSellGuideAnimated(true);
+    }
+  }, [sellGuideInView, sellGuideAnimated]);
+
+  useEffect(() => {
+    if (buyGuideInView && !buyGuideAnimated) {
+      setBuyGuideAnimated(true);
+    }
+  }, [buyGuideInView, buyGuideAnimated]);
 
   // Helper function to format numbers with commas
   const formatPrice = (price) => {
@@ -509,7 +530,7 @@ const [pdfs, setPdfs] = useState([]);
         };
         
         img.onerror = (error) => {
-          console.warn('Failed to preload image:', imageUrl, error);
+        //  console.warn('Failed to preload image:', imageUrl, error);
           // Still mark as loaded to prevent infinite loading states
           setFirstImageLoaded(true);
           setLoaded(prev => ({ ...prev, 0: true }));
@@ -519,7 +540,7 @@ const [pdfs, setPdfs] = useState([]);
         // Set timeout to prevent hanging
         setTimeout(() => {
           if (!img.complete) {
-            console.warn('Image preload timeout:', imageUrl);
+           // console.warn('Image preload timeout:', imageUrl);
             setFirstImageLoaded(true);
             setLoaded(prev => ({ ...prev, 0: true }));
             resolve(img);
@@ -557,7 +578,7 @@ const [pdfs, setPdfs] = useState([]);
           return storage.getItem(key);
         }
       } catch (error) {
-        console.warn(`Storage access failed for ${key}:`, error);
+        //console.warn(`Storage access failed for ${key}:`, error);
         return isSet ? false : null;
       }
     };
@@ -586,7 +607,7 @@ const [pdfs, setPdfs] = useState([]);
               setLoadingPageData(false);
               return;
             } catch (parseError) {
-              console.warn('Failed to parse session data:', parseError);
+             // console.warn('Failed to parse session data:', parseError);
               safeStorageAccess(sessionStorage, SESSION_CACHE_KEY, true, null);
             }
           }
@@ -618,7 +639,7 @@ const [pdfs, setPdfs] = useState([]);
               setLoadingPageData(false);
               return;
             } catch (parseError) {
-              console.warn('Failed to parse cached data:', parseError);
+              //console.warn('Failed to parse cached data:', parseError);
               // Clear corrupted cache
               safeStorageAccess(localStorage, CACHE_KEY, true, null);
               safeStorageAccess(localStorage, CACHE_EXPIRY_KEY, true, null);
@@ -658,7 +679,7 @@ const [pdfs, setPdfs] = useState([]);
                 });
               }
             } catch (parseError) {
-              console.warn('Failed to parse fallback cache:', parseError);
+              //console.warn('Failed to parse fallback cache:', parseError);
               setApiImages([]);
             }
           }
@@ -708,7 +729,7 @@ const [pdfs, setPdfs] = useState([]);
           }
         }
       } catch (e) {
-        console.warn('Error fetching hero data:', e);
+       // console.warn('Error fetching hero data:', e);
         // On error, try to use cached data if available
         if (typeof window !== 'undefined') {
           const fallbackCachedData = safeStorageAccess(localStorage, CACHE_KEY);
@@ -725,7 +746,7 @@ const [pdfs, setPdfs] = useState([]);
                 });
               }
             } catch (parseError) {
-              console.warn('Failed to parse error fallback cache:', parseError);
+              //console.warn('Failed to parse error fallback cache:', parseError);
               setApiImages([]);
             }
           } else {
@@ -754,7 +775,7 @@ const [pdfs, setPdfs] = useState([]);
             return storage.getItem(key);
           }
         } catch (error) {
-          console.warn(`Storage access failed for ${key}:`, error);
+         // console.warn(`Storage access failed for ${key}:`, error);
           return isSet ? false : null;
         }
       };
@@ -777,7 +798,7 @@ const [pdfs, setPdfs] = useState([]);
             }
             return;
           } catch (parseError) {
-            console.warn('Failed to parse session data in client effect:', parseError);
+            //console.warn('Failed to parse session data in client effect:', parseError);
             safeStorageAccess(sessionStorage, 'home_page_session', true, null);
           }
         }
@@ -802,13 +823,13 @@ const [pdfs, setPdfs] = useState([]);
               safeStorageAccess(sessionStorage, 'home_page_session', true, cachedData);
             }
           } catch (parseError) {
-            console.warn('Failed to parse localStorage data in client effect:', parseError);
+            //console.warn('Failed to parse localStorage data in client effect:', parseError);
             safeStorageAccess(localStorage, 'home_page_data', true, null);
             safeStorageAccess(localStorage, 'home_page_data_expiry', true, null);
           }
         }
       } catch (e) {
-        console.warn('Error reading cached data in client effect:', e);
+       // console.warn('Error reading cached data in client effect:', e);
       }
     }
   }, [apiImages.length,page]); // Run once on mount
@@ -905,7 +926,7 @@ const [pdfs, setPdfs] = useState([]);
               if (idx === 0) setFirstImageLoaded(true);
             }}
             onError={(e) => {
-              console.warn(`Failed to load image at index ${idx}:`, apiImages[idx]);
+              //console.warn(`Failed to load image at index ${idx}:`, apiImages[idx]);
               // Mark as loaded to prevent infinite loading state
               setLoaded((prev) => ({ ...prev, [idx]: true }));
               if (idx === 0) setFirstImageLoaded(true);
@@ -938,7 +959,7 @@ const [pdfs, setPdfs] = useState([]);
                       }))
                     }
                     onError={() => {
-                      console.warn('Failed to preload next image');
+                     // console.warn('Failed to preload next image');
                       setLoaded((prev) => ({
                         ...prev,
                         [(heroIndex + 1) % displayedImages.length]: true,
@@ -1879,11 +1900,17 @@ const [pdfs, setPdfs] = useState([]);
         <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
           {t("How to sell your home")}
         </h2>
-        <p className="text-base md:text-[1.1rem] mb-4 md:mb-6">
+        <motion.p 
+          ref={sellGuideRef}
+          className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+          initial={{ opacity: 0, y: -30 }}
+          animate={sellGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           {t(
             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
           )}
-        </p>
+        </motion.p>
       </div>
       {/* Input Group - Responsive */}
   <div
@@ -2022,11 +2049,17 @@ const [pdfs, setPdfs] = useState([]);
           <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
             {t("How to buy a home")}
           </h2>
-          <p className="text-basemd:text-[1.1rem]  mb-4 md:mb-6">
+          <motion.p 
+            ref={buyGuideRef}
+            className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+            initial={{ opacity: 0, y: -30 }}
+            animate={buyGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             {t(
               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
             )}
-          </p>
+          </motion.p>
         </div>
         {/* Input Group - Responsive */}
       <div

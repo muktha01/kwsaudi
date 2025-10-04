@@ -8,6 +8,66 @@ import Header from '@/components/header';
 import { dancing } from '@/app/layout';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const useInView = (options = {}) => {
+  const [ref, setRef] = useState(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, options);
+
+    observer.observe(ref);
+
+    return () => {
+      if (ref) {
+        observer.unobserve(ref);
+      }
+    };
+  }, [ref, options]);
+
+  return [setRef, isInView];
+};
+
+// Custom hook for counting animation
+const useCountUp = (end, start = 0, duration = 2000, delay = 0) => {
+  const [count, setCount] = useState(start);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTime = null;
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const currentCount = Math.floor(start + (end - start) * progress);
+      setCount(currentCount);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(animate);
+    }, delay);
+
+    return () => clearTimeout(timeoutId);
+  }, [end, start, duration, delay, hasStarted]);
+
+  const startAnimation = () => {
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+  };
+
+  return [count, startAnimation];
+};
 
 const AgentProfile = (props) => {
   const params = useParams();
@@ -37,9 +97,29 @@ const [buyEmail, setBuyEmail] = useState("");
   const agentAbortController = useRef(null);
   const propertiesAbortController = useRef(null);
   const enhancedApiAbortController = useRef(null);
+   // Animation refs for guide section
+    const [sellGuideRef, sellGuideInView] = useInView({ threshold: 0.2 });
+    const [buyGuideRef, buyGuideInView] = useInView({ threshold: 0.2 });
+    
+    // Animation state to track if animations have been triggered
+    const [sellGuideAnimated, setSellGuideAnimated] = useState(false);
+    const [buyGuideAnimated, setBuyGuideAnimated] = useState(false);
 
   // Add simple in-memory cache
   const cacheRef = useRef(new Map());
+
+  // Animation trigger effects
+  useEffect(() => {
+    if (sellGuideInView && !sellGuideAnimated) {
+      setSellGuideAnimated(true);
+    }
+  }, [sellGuideInView, sellGuideAnimated]);
+
+  useEffect(() => {
+    if (buyGuideInView && !buyGuideAnimated) {
+      setBuyGuideAnimated(true);
+    }
+  }, [buyGuideInView, buyGuideAnimated]);
 
   // Icon URLs
   const bedIconUrl = "/bed.png";
@@ -395,7 +475,7 @@ const [buyEmail, setBuyEmail] = useState("");
  
        window.URL.revokeObjectURL(blobUrl);
      } catch (err) {
-       alert("Download failed");
+    
      } finally {
        setLoading(false);
      }
@@ -815,7 +895,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
   </div>
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-xl md:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">{t("Sell your home with")} </span>
     <span>
   {(() => {
@@ -871,28 +951,34 @@ const [buyEmail, setBuyEmail] = useState("");
    <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
     {/* Left Red Box - Sell Home */}
-    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
       {/* Content */}
       <div className="pb-24">
         <p
-          className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+          className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
           } border-white`}
         >
           {t("Download guide")}
         </p>
-        <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+        <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
           {t("How to sell your home")}
         </h2>
-        <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+        <motion.p 
+          ref={sellGuideRef}
+          className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+          initial={{ opacity: 0, y: -30 }}
+          animate={sellGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           {t(
             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
           )}
-        </p>
+        </motion.p>
       </div>
       {/* Input Group - Responsive */}
   <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-24 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -905,7 +991,7 @@ const [buyEmail, setBuyEmail] = useState("");
             value={sellEmail}
             onChange={(e) => setSellEmail(e.target.value)}
             placeholder={t("Email Address")}
-            className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+            className="w-full px-4 py-2 bg-white text-black text-base outline-none"
           />
           <button
             onClick={async () => {
@@ -942,7 +1028,7 @@ const [buyEmail, setBuyEmail] = useState("");
               }
             }}
             disabled={loading}
-            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
           >
             {loading ? t("Downloading...") : t("Download")}
           </button>
@@ -1018,24 +1104,30 @@ const [buyEmail, setBuyEmail] = useState("");
         {/* Content */}
         <div className="pb-24">
           <p
-            className={`text-base md:text-[1.6rem] font-normal mb-6 pl-3 ${
+            className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
             } border-white`}
           >
             {t("Download guide")}
           </p>
-          <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+          <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
             {t("How to buy a home")}
           </h2>
-          <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+          <motion.p 
+            ref={buyGuideRef}
+            className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+            initial={{ opacity: 0, y: -30 }}
+            animate={buyGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             {t(
               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
             )}
-          </p>
+          </motion.p>
         </div>
         {/* Input Group - Responsive */}
       <div
-  className={`absolute md:bottom-18 bottom-6 w-full ${
+  className={`absolute md:bottom-22 bottom-16 w-full ${
     isRTL
       ? "md:right-14 md:left-auto right-2 left-auto text-right"
       : "md:left-14 md:right-6 left-2 right-auto text-left"
@@ -1048,7 +1140,7 @@ const [buyEmail, setBuyEmail] = useState("");
               value={buyEmail}
               onChange={(e) => setBuyEmail(e.target.value)}
               placeholder={t("Email Address")}
-              className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
+              className="w-full px-4 py-2 bg-white text-black text-base outline-none"
             />
             <button
               onClick={async () => {
@@ -1085,7 +1177,7 @@ const [buyEmail, setBuyEmail] = useState("");
                 }
               }}
               disabled={loading}
-              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black disabled:opacity-50"
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
             >
               {loading ? t("Downloading...") : t("Download")}
             </button>

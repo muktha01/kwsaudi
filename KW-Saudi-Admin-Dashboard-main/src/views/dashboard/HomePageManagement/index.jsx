@@ -46,8 +46,7 @@ export default function HomePageManagement() {
     setDeleteDialog(false);
     setDeleteId(null);
   } catch (e) {
-    console.error('Error deleting home page:', e);
-    alert('Error deleting home page');
+   
   }
 };
 
@@ -77,7 +76,7 @@ export default function HomePageManagement() {
       const data = await homePageService.getAll();
       setPages(data);
     } catch (e) {
-      console.error('Fetch error:', e);
+     
       setPages([]);
     }
     setLoading(false);
@@ -149,8 +148,7 @@ export default function HomePageManagement() {
       await fetchPages();
       handleClose();
     } catch (e) {
-      console.error('Error saving home page:', e);
-      alert('Error saving home page');
+     
     }
   };
 

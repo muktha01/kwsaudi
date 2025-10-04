@@ -3,21 +3,30 @@ import React from 'react';
 import Image from 'next/image';
 
 const Box = ({ src, image, h3 }) => {
+  // Check if src is valid (not empty, not just '/', and not undefined)
+  const isValidSrc = src && src !== '/' && src.length > 1;
+  
   return (
     <div className=" p-6 md:p-8">
     <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
       {/* Hero Section */}
       <div className="relative">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <Image
-            src={src}
-            alt="Background"
-            fill
-            className="object-cover "
-            priority
-          />
-        </div>
+        {/* Background Image - only render if src is valid */}
+        {isValidSrc && (
+          <div className="absolute inset-0">
+            <Image
+              src={src}
+              alt="Background"
+              fill
+              className="object-cover "
+              priority
+            />
+          </div>
+        )}
+        {/* Fallback background color when no valid image */}
+        {!isValidSrc && (
+          <div className="absolute inset-0 bg-gray-800"></div>
+        )}
         <div className="absolute inset-0 bg-black/25"></div>
 
         {/* Content Box */}

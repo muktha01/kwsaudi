@@ -142,16 +142,7 @@ PropertyCard.displayName = "PropertyCard";
     {/* Garage (optional, if you have this) */}
    
     </div>
-            {/* <div className="absolute top-2 left-2 sm:top-2 sm:left-2 z-10">
-              
-              <Image
-                src="/360logo.png"
-                alt="360 Virtual Tour"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div> */}
+           
           </div>
         </div>
         <div className="p-4">
@@ -161,9 +152,11 @@ PropertyCard.displayName = "PropertyCard";
                      
                    </h3>
                    <span className=" flex justify-start text-[rgb(206,32,39,255)] text-lg font-semibold">
-                   {property?.list_category || "To Let"}
+                   {property.prop_subtype|| "To Let"}
+              
                    </span>
                    <p
+                   
      className="text-xl font-bold text-gray-600 mb-2 truncate"
      title={property.list_address?.address} // hover to see full text
    >
@@ -232,14 +225,22 @@ PropertyCard.displayName = "PropertyCard";
   }
 
   export default function Home(props) {
+    // Check if this component is being used as a child component
+    const isChildComponent = props?.isChildComponent || false;
+    
+    // Accept filters from parent component (buyer/rent pages)
+    const parentFilters = props?.appliedFilters || null;
+    
+    // Memoize parentProperties to prevent dependency changes on every render
+    const parentProperties = useMemo(() => props?.properties || [], [props?.properties]);
+    
     const router = useRouter();
     const [viewMode, setViewMode] = useState("list");
-    const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const propertiesPerPage = 10;
+    const propertiesPerPage = 6;
     const filterPanelRef = useRef(null);
+    const mobileMapRef = useRef(null);
     const [properties, setProperties] = useState([]);
-    const [isMobile, setIsMobile] = useState(false);
     const [totalCount, setTotalCount] = useState(0); // <-- add this for backend total count
     const [hasNextPage, setHasNextPage] = useState(false);
   const [propertyCategory, setPropertyCategory] = useState('All');
@@ -258,7 +259,6 @@ PropertyCard.displayName = "PropertyCard";
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [mapProjection, setMapProjection] = useState(null);
-    const [fullscreenProperty, setFullscreenProperty] = useState(null); // fullscreen property card for mobile
     // Helper to check if marker is near the bottom of the map (desktop only)
      const { language,isRTL, t } = useTranslation();
     const isNearBottom = (coords) => {
@@ -284,41 +284,9 @@ PropertyCard.displayName = "PropertyCard";
 
     
     const { isLoaded } = useJsApiLoader({
-      googleMapsApiKey: "AIzaSyDG48YF2dsvPN0qHX3_vSaTJj6aqg3-Oc4"
+      googleMapsApiKey: "AIzaSyDhQDfHVkov3_YZ_Zt-m9N7Q-ytIxcVpx0"
     });
     const [desktopMap, setDesktopMap] = useState(null);
-    const mobileMapRef = useRef(null);
-
-    useEffect(() => {
-      if (!showMobileFilters) return;
-      function handleClickOutside(event) {
-        if (filterPanelRef.current && !filterPanelRef.current.contains(event.target)) {
-          setShowMobileFilters(false);
-        }
-      }
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [showMobileFilters]);
-
-    useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    useEffect(() => {
-      if (fullscreenProperty) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
-      }
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }, [fullscreenProperty]);
 
     const bedIconUrl = "/bed.png";
     const bathIconUrl = "/bath.png";
@@ -340,8 +308,9 @@ PropertyCard.displayName = "PropertyCard";
 
     const params = useParams();
     const searchParams = useSearchParams();
-    const typeParam = params?.type || '';
-    const searchTerm = searchParams?.get('q') || '';
+    // Only read URL parameters when not used as child component
+    const typeParam = isChildComponent ? '' : (params?.type || '');
+    const searchTerm = isChildComponent ? '' : (searchParams?.get('q') || '');
 
     // Helper to format type for display
     const displayType = typeParam
@@ -350,102 +319,204 @@ PropertyCard.displayName = "PropertyCard";
 
     useEffect(() => {
       setCurrentPage(1);
-    }, [debouncedPropertyCategory, debouncedPropertySubtype, debouncedMarketCenter, debouncedLocation, debouncedPriceRange, typeParam, searchTerm]);
+    }, [debouncedPropertyCategory, debouncedPropertySubtype, debouncedMarketCenter, debouncedLocation, debouncedPriceRange, typeParam, searchTerm, parentFilters]);
 
     useEffect(() => {
+      // Only fetch data if not a child component
+      if (isChildComponent) {
+        return;
+      }
+      
       const fetchData = async () => {
+        // Normalize and deduplicate function (same as buyer page)
+        const normalizeAndUnique = (items) => {
+          const unique = [];
+          const seen = new Set();
+          items.forEach(it => {
+            const propId = it._kw_meta?.id || it.id;
+            if (propId) {
+              if (!seen.has(propId)) {
+                seen.add(propId);
+                unique.push(it);
+              }
+            } else {
+              // Generate stable temp ID for properties without ID
+              const tempId = it._temp_id || stableTempId(it);
+              it._temp_id = tempId;
+              unique.push(it);
+            }
+          });
+          return unique;
+        };
+
+        // Helper to generate stable temp ID (same as buyer page)
+        const stableTempId = (prop) => {
+          const s = `${prop.list_address?.address || prop.address || ''}|${prop.title || prop.prop_type || ''}|${prop.current_list_price || prop.price || prop.rental_price || ''}`;
+          // simple hash (djb2)
+          let h = 5381;
+          for (let i = 0; i < s.length; i++) {
+            h = ((h << 5) + h) + s.charCodeAt(i);
+            h = h & h; // keep 32-bit
+          }
+          return `stable-${Math.abs(h)}`;
+        };
+
         try {
           if (currentPage === 1) {
             setLoading(true);
           } else {
             setLoadingMore(true);
           }
-          // Map priceRange to min/max price
-          let minPrice = undefined, maxPrice = undefined;
-          if (debouncedPriceRange === 'Below SAR 50,000') {
-            maxPrice = 50010;
-          } else if (debouncedPriceRange === 'SAR 50,000 – 100,000') {
-            minPrice = 50010;
-            maxPrice = 100000;
-          } else if (debouncedPriceRange === 'Above SAR 100,000') {
-            minPrice = 100000;
-          }
-          // Map marketCenter to API value
-          const marketCenterMap = {
-            Jasmin: '50449',
-            Jeddah: '2414288',
-          };
-          const apiMarketCenter = marketCenterMap[debouncedMarketCenter] || undefined;
-
-          // Build request body similar to buyer page
+          
+          // Build request body using the same pattern as buyer page
           let requestBody = {
             page: currentPage,
             limit: propertiesPerPage
           };
 
-          // Add forsale/forrent parameters based on typeParam
-          if (typeParam === 'sale') {
-            requestBody.forsale = true;
-          } else if (typeParam === 'rent') {
+          // Apply filters from parent component if provided (buyer/rent page filters)
+          if (parentFilters) {
+            // Use the same filter structure as buyer Properties.js
+            requestBody.forsale = parentFilters.selected.sale && !parentFilters.selected.rent ? true : undefined;
+            requestBody.forrent = parentFilters.selected.rent && !parentFilters.selected.sale ? true : undefined;
+            requestBody.property_type = parentFilters.selected.commercial
+              ? 'Commercial'
+              : parentFilters.propertyType !== 'PROPERTY TYPE' ? parentFilters.propertyType : undefined;
+            requestBody.property_subtype = parentFilters.propertySubType || undefined;
+            requestBody.location = parentFilters.city !== 'CITY' ? parentFilters.city : undefined;
+            requestBody.min_price = parentFilters.minPrice || undefined;
+            requestBody.max_price = parentFilters.maxPrice || undefined;
+            requestBody.include_new_homes = parentFilters.includeNewHomes ? true : undefined;
+            requestBody.market_center = parentFilters.marketCenter !== 'MARKET CENTER' ? parentFilters.marketCenter : undefined;
+          }
+          // For child component usage without parent filters, apply default filters
+          else if (isChildComponent) {
             requestBody.forrent = true;
+          } else {
+            // For standalone use, show all properties by default (like buyer page)
+            // Only apply filters if explicitly specified in URL params
+            if (typeParam === 'sale') {
+              requestBody.forsale = true;
+            } else if (typeParam === 'rent') {
+              requestBody.forrent = true;
+            } else if (typeParam === 'commercial') {
+              requestBody.property_type = 'Commercial';
+            }
+            // If no typeParam, show all properties (no filter applied)
           }
 
-          // Add property_type parameter if commercial is selected
-          if (typeParam === 'commercial') {
-            requestBody.property_type = 'Commercial';
-          }
-
-          // Add other filters if they are not 'All'
-          if (apiMarketCenter) {
-            requestBody.market_center = apiMarketCenter;
-          }
-          if (debouncedPropertySubtype !== 'All') {
-            requestBody.property_subtype = debouncedPropertySubtype;
-          }
-          if (minPrice !== undefined) {
-            requestBody.min_price = minPrice;
-          }
-          if (maxPrice !== undefined) {
-            requestBody.max_price = maxPrice;
-          }
-          if (debouncedLocation !== 'All') {
-            requestBody.location = debouncedLocation;
-          }
-
-          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, requestBody);
+          // Map marketCenter to API value (same as rent page) - only for internal filters
+          const marketCenterMap = {
+            'MARKET CENTER': undefined,
+            'Jasmin': '50449',
+            'Jeddah': '2414288',
+          };
           
-          if (response.data.success) {
-            let fetched = [];
-            if (Array.isArray(response.data?.data)) {
-              fetched = response.data.data;
+          // Add filters when they are not default values (only for standalone use without parent filters)
+          if (!isChildComponent && !parentFilters) {
+            if (debouncedMarketCenter !== 'All') {
+              const apiMarketCenter = marketCenterMap[debouncedMarketCenter];
+              if (apiMarketCenter) {
+                requestBody.market_center = apiMarketCenter;
+              }
             }
             
+            if (debouncedPropertySubtype !== 'All') {
+              requestBody.property_subtype = debouncedPropertySubtype;
+            }
+            
+            if (debouncedLocation !== 'All') {
+              requestBody.location = debouncedLocation;
+            }
+            
+            // Map priceRange to min/max price (same as rent page)
+            if (debouncedPriceRange !== 'All') {
+              if (debouncedPriceRange === 'Below SAR 50,000') {
+                requestBody.max_price = 50000;
+              } else if (debouncedPriceRange === 'SAR 50,000 – 100,000') {
+                requestBody.min_price = 50000;
+                requestBody.max_price = 100000;
+              } else if (debouncedPriceRange === 'Above SAR 100,000') {
+                requestBody.min_price = 100000;
+              }
+            }
+          }
+
+          // Remove undefined values
+          Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
+
+          // Use the same API endpoint as rent page
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'max-age=300',
+            },
+            body: JSON.stringify(requestBody)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          if (data.success) {
+            let fetched = Array.isArray(data?.data) ? data.data : [];
+            
+            // Temporarily comment out sold property filtering to debug
+            // fetched = fetched.filter(property => 
+            //   property.list_category !== 'sold' && 
+            //   property.list_category !== 'Sold'
+            // );
+            
+            // Apply normalization and deduplication (same as buyer page)
             if (currentPage === 1) {
-              setProperties(fetched);
+              setProperties(normalizeAndUnique(fetched));
             } else {
-              setProperties(prev => [...prev, ...fetched]);
+              setProperties(prev => normalizeAndUnique([...prev, ...fetched]));
             }
-            setTotalCount(response.data.total || 0);
             
-            // Set pagination state
-            if (response.data.pagination) {
-              setHasNextPage(response.data.pagination.has_next_page || false);
+            // Handle pagination - simple approach
+            if (data.pagination) {
+              const originalHasNextPage = data.pagination.has_next_page || false;
+              
+              // Use API pagination data
+              setHasNextPage(originalHasNextPage);
+              
+              // For total count, use API data
+              if (currentPage === 1) {
+                setTotalCount(data.pagination.total_items || fetched.length);
+              }
             } else {
-              // Fallback: check if we have more properties than currently loaded
+              setTotalCount(fetched.length);
               setHasNextPage(fetched.length === propertiesPerPage);
             }
           } else {
-            console.error('API Error:', response.data.message || 'Failed to load properties');
+            //console.error('API Error:', data.message || 'Failed to load properties');
           }
         } catch (error) {
-          console.error('POST request error:', error);
+          //console.error('Error fetching properties:', error);
         } finally {
           setLoading(false);
           setLoadingMore(false);
         }
       };
+      
       fetchData();
-    }, [currentPage, propertiesPerPage, debouncedPropertyCategory, debouncedPropertySubtype, debouncedMarketCenter, debouncedLocation, debouncedPriceRange, typeParam, searchTerm]);
+    }, [currentPage, propertiesPerPage, debouncedPropertyCategory, debouncedPropertySubtype, debouncedMarketCenter, debouncedLocation, debouncedPriceRange, typeParam, searchTerm, isChildComponent, parentFilters]);
+    
+    // Separate effect to handle parent properties changes when used as child component
+    useEffect(() => {
+      if (isChildComponent && parentProperties.length > 0) {
+        // Filter out properties with list_category=sold
+        const filteredProperties = parentProperties.filter(property => property.list_category !== 'sold');
+        setProperties(filteredProperties);
+        setTotalCount(filteredProperties.length);
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    }, [parentProperties, isChildComponent]);
     
     // Helper to get map src based on hovered property
     const getMapSrc = () => {
@@ -504,8 +575,69 @@ PropertyCard.displayName = "PropertyCard";
         const [lng, lat] = hoveredProperty.coordinates_gs.coordinates;
         return { lat: lat + 0.01, lng };
       }
+      
+      // If properties with coordinates are found, center the map to show them
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        // Calculate bounds to show all properties
+        const bounds = calculateMapBounds(propertiesWithCoords);
+        if (bounds) {
+          return bounds.center;
+        }
+      }
+      
       return { lat: 24.7136, lng: 46.6753 };
     };
+
+    // Helper function to calculate optimal map bounds for properties
+    const calculateMapBounds = (propertiesWithCoords) => {
+      if (propertiesWithCoords.length === 0) return null;
+      
+      if (propertiesWithCoords.length === 1) {
+        const coords = propertiesWithCoords[0].property_address.coordinates_gs.coordinates;
+        return {
+          center: { lat: coords[1], lng: coords[0] },
+          zoom: 14
+        };
+      }
+      
+      // Calculate bounds for multiple properties
+      let minLat = Infinity, maxLat = -Infinity;
+      let minLng = Infinity, maxLng = -Infinity;
+      
+      propertiesWithCoords.forEach(property => {
+        const coords = property.property_address.coordinates_gs.coordinates;
+        const lat = coords[1];
+        const lng = coords[0];
+        
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+      });
+      
+      // Add padding to bounds
+      const latPadding = (maxLat - minLat) * 0.1;
+      const lngPadding = (maxLng - minLng) * 0.1;
+      
+      return {
+        center: {
+          lat: (minLat + maxLat) / 2,
+          lng: (minLng + maxLng) / 2
+        },
+        bounds: {
+          north: maxLat + latPadding,
+          south: minLat - latPadding,
+          east: maxLng + lngPadding,
+          west: minLng - lngPadding
+        }
+      };
+    };
+
     const getMapZoom = () => {
       if (
         hoveredProperty &&
@@ -515,6 +647,19 @@ PropertyCard.displayName = "PropertyCard";
       ) {
         return 16; // zoom in when hovering
       }
+      
+      // Auto-adjust zoom based on properties with coordinates
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length === 1) {
+        return 14; // Good zoom for single property
+      } else if (propertiesWithCoords.length > 1) {
+        return 12; // Wider view for multiple properties
+      }
+      
       return 10; // default zoom
     };
 
@@ -535,6 +680,82 @@ PropertyCard.displayName = "PropertyCard";
       }
     }, [hoveredProperty, desktopMap]);
 
+    // Auto-adjust map view when properties with coordinates are found
+    useEffect(() => {
+      if (!desktopMap || hoveredProperty) return; // Don't interfere when property is hovered
+      
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        const mapBounds = calculateMapBounds(propertiesWithCoords);
+        
+        if (mapBounds) {
+          if (propertiesWithCoords.length === 1) {
+            // For single property, center and zoom in
+            desktopMap.panTo(mapBounds.center);
+            desktopMap.setZoom(14);
+          } else {
+            // For multiple properties, fit bounds to show all
+            if (mapBounds.bounds && window.google?.maps) {
+              const bounds = new window.google.maps.LatLngBounds(
+                new window.google.maps.LatLng(mapBounds.bounds.south, mapBounds.bounds.west),
+                new window.google.maps.LatLng(mapBounds.bounds.north, mapBounds.bounds.east)
+              );
+              desktopMap.fitBounds(bounds);
+              
+              // Ensure minimum zoom level for readability
+              const listener = window.google.maps.event.addListener(desktopMap, 'zoom_changed', () => {
+                if (desktopMap.getZoom() > 16) desktopMap.setZoom(16);
+                if (desktopMap.getZoom() < 10) desktopMap.setZoom(10);
+                window.google.maps.event.removeListener(listener);
+              });
+            }
+          }
+        }
+      }
+    }, [properties, desktopMap, hoveredProperty]);
+
+    // Auto-adjust mobile map view when properties with coordinates are found
+    useEffect(() => {
+      if (!mobileMapRef.current) return;
+      
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        const mapBounds = calculateMapBounds(propertiesWithCoords);
+        
+        if (mapBounds) {
+          if (propertiesWithCoords.length === 1) {
+            // For single property, center and zoom in
+            mobileMapRef.current.panTo(mapBounds.center);
+            mobileMapRef.current.setZoom(14);
+          } else {
+            // For multiple properties, fit bounds to show all
+            if (mapBounds.bounds && window.google?.maps) {
+              const bounds = new window.google.maps.LatLngBounds(
+                new window.google.maps.LatLng(mapBounds.bounds.south, mapBounds.bounds.west),
+                new window.google.maps.LatLng(mapBounds.bounds.north, mapBounds.bounds.east)
+              );
+              mobileMapRef.current.fitBounds(bounds);
+              
+              // Ensure minimum zoom level for mobile readability
+              const listener = window.google.maps.event.addListener(mobileMapRef.current, 'zoom_changed', () => {
+                if (mobileMapRef.current.getZoom() > 15) mobileMapRef.current.setZoom(15);
+                if (mobileMapRef.current.getZoom() < 9) mobileMapRef.current.setZoom(9);
+                window.google.maps.event.removeListener(listener);
+              });
+            }
+          }
+        }
+      }
+    }, [properties]);
+
     useEffect(() => {
       if (
         desktopMap &&
@@ -548,393 +769,18 @@ PropertyCard.displayName = "PropertyCard";
       }
     }, [hoveredProperty, desktopMap]);
 
-    // Fit map to all property markers (mobile)
-    useEffect(() => {
-      if (!mobileMapRef.current || !isLoaded || !properties.length) return;
-      setTimeout(() => {
-        const bounds = new window.google.maps.LatLngBounds();
-        let hasCoords = false;
-        properties.forEach(property => {
-          const coords = property.property_address?.coordinates_gs?.coordinates;
-          if (coords && coords.length === 2) {
-            bounds.extend({ lat: coords[1], lng: coords[0] });
-            hasCoords = true;
-          }
-        });
-        if (hasCoords) {
-          mobileMapRef.current.fitBounds(bounds);
-        }
-      }, 0);
-    }, [properties, isLoaded]);
+
     
 
     return (
-      <div className="min-h-screen bg-gray-50 ">
-        {/* Header */}
-        {/* <header className="w-full bg-gray-200 shadow-sm py-4 rounded-xl">
-  <div className="container mx-auto px-4 md:px-4">
-    <div className="flex flex-wrap md:flex-row w-full gap-1 md:items-center">
-     
-      <div className="md:hidden w-full flex items-center justify-between py-2">
-        <div className="flex items-center border rounded-lg overflow-hidden">
-          <button
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${viewMode === "list" ? "text-white bg-black" : "text-gray-800 bg-white"}`}
-            onClick={() => setViewMode("list")}
-          >
-            List
-          </button>
-          <button
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${viewMode === "map" ? "text-white bg-black" : "text-gray-800 bg-white"}`}
-            onClick={() => setViewMode("map")}
-          >
-            Map
-          </button>
-        </div>
-
-        <button
-          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg font-semibold bg-white text-gray-800 hover:bg-gray-100"
-          onClick={() => setShowMobileFilters((prev) => !prev)}
-        >
-          <FiFilter />
-          All Filters
-        </button>
-      </div>
-
-      
-      <div className="hidden md:block w-full">
-        <div className="flex flex-row items-center w-full">
-          {/* List/Map Toggle
-          <div className="flex items-center border rounded-lg overflow-hidden md:mr-4">
-            <button
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${viewMode === "list" ? "text-white bg-black" : "text-gray-800 bg-white"}`}
-              onClick={() => setViewMode("list")}
-            >
-              List
-            </button>
-            <button
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${viewMode === "map" ? "text-white bg-black" : "text-gray-800 bg-white"}`}
-              onClick={() => setViewMode("map")}
-            >
-              Map
-            </button>
-          </div> 
-
-          
-          <div className="flex-1 md:flex md:flex-row md:gap-4">
-       
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaHome className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                defaultValue='property Type'
-              >
-                <option value="For Rent">For Rent</option>
-                <option value="For Sale">For Sale</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-
-           
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaBuilding className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                value={propertyCategory}
-                onChange={e => setPropertyCategory(e.target.value)}
-              >
-                <option>Property Type</option>
-                <option>Commercial</option>
-                <option>Farm and Agriculture</option>
-                <option>Lots and Land</option>
-                <option>Residential</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-
-           
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaWarehouse  className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                value={propertySubtype}
-                onChange={e => setPropertySubtype(e.target.value)}
-              >
-                <option>Property Subtype</option>
-                <option>Apartment</option>
-                <option>Condominium</option>
-                <option>Duplex</option>
-                <option>Hotel-Motel</option>
-                <option>Industrial</option>
-                <option>Mobile Home</option>
-                <option>Multi-Family</option>
-                <option>Other</option>
-                <option>Quadruplex</option>
-                <option>Ranch</option>
-                <option>Single Family Attach</option>
-                <option>Single Family detached</option>
-                <option>Townhouse</option>
-                <option>Unimproved land</option>
-                <option>Warehouse</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-
-          
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaShoppingBag   className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                value={marketCenter}
-                onChange={e => setMarketCenter(e.target.value)}
-              >
-                <option>Market Center</option>
-                <option>Jasmin</option>
-                <option>Jeddah</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-
-           
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaMapMarkerAlt className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-              >
-                <option>Select Location</option>
-                <option>ALRIYADH</option>
-                <option>JED</option>
-                <option>JEDDAH</option>
-                <option>Jeddah</option>
-                <option>Jeddah city</option>
-                <option>KSA</option>
-                <option>Khobar</option>
-                <option>Riyadh</option>
-                <option>Saudi Arabia</option>
-                <option>alriyadh</option>
-                <option>jeddah</option>
-                <option>jedah</option>
-                <option>riyad</option>
-                <option>riyadh</option>
-                <option>الرياض</option>
-                <option>جدة</option>
-                <option>جده</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-
-          
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FaMoneyBillWave className="text-gray-500" />
-              </div>
-              <select
-                className="w-full appearance-none min-w-[180px] pl-10 pr-3 py-2 rounded-lg bg-white text-sm text-gray-500 border border-gray-300"
-                value={priceRange}
-                onChange={e => setPriceRange(e.target.value)}
-              >
-                <option>Select Price Range</option>
-                <option>Below SAR 50,000</option>
-                <option>SAR 50,000 – 100,000</option>
-                <option>Above SAR 100,000</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <FaChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-     
-      <div
-        ref={filterPanelRef}
-        className={`${showMobileFilters ? 'flex flex-col gap-2 absolute top-80 left-0 w-full z-20 p-4 bg-gray-500/50 backdrop-blur-sm  rounded-lg shadow-lg' : 'hidden'} md:hidden`}
-      >
-     
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaHome className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            defaultValue='propertyType'
-          >
-            <option value="For Rent">For Rent</option>
-            <option value="For Sale">For Sale</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-
-       
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaBuilding className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            value={propertyCategory}
-            onChange={e => setPropertyCategory(e.target.value)}
-          >
-            <option>Property Type</option>
-            <option>Commercial</option>
-            <option>Farm and Agriculture</option>
-            <option>Lots and Land</option>
-            <option>Residential</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-
-       
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaMapMarkerAlt className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            value={propertySubtype}
-            onChange={e => setPropertySubtype(e.target.value)}
-          >
-            <option>Property Subtype</option>
-            <option>Apartment</option>
-            <option>Condominium</option>
-            <option>Duplex</option>
-            <option>Hotel-Motel</option>
-            <option>Industrial</option>
-            <option>Mobile Home</option>
-            <option>Multi-Family</option>
-            <option>Other</option>
-            <option>Quadruplex</option>
-            <option>Ranch</option>
-            <option>Single Family Attach</option>
-            <option>Single Family detached</option>
-            <option>Townhouse</option>
-            <option>Unimproved land</option>
-            <option>Warehouse</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-
-    
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaShoppingBag  className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            value={marketCenter}
-            onChange={e => setMarketCenter(e.target.value)}
-          >
-            <option>All</option>
-            <option>Jasmin</option>
-            <option>Jeddah</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-
-      
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaMapMarkerAlt className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            value={location}
-            onChange={e => setLocation(e.target.value)}
-          >
-            <option>Select Location</option>
-            <option>ALRIYADH</option>
-            <option>JED</option>
-            <option>JEDDAH</option>
-            <option>Jeddah</option>
-            <option>Jeddah city</option>
-            <option>KSA</option>
-            <option>Khobar</option>
-            <option>Riyadh</option>
-            <option>Saudi Arabia</option>
-            <option>alriyadh</option>
-            <option>jeddah</option>
-            <option>jedah</option>
-            <option>riyad</option>
-            <option>riyadh</option>
-            <option>الرياض</option>
-            <option>جدة</option>
-            <option>جده</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-
-       
-        <div className="relative w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <FaMoneyBillWave className="text-gray-400" />
-          </div>
-          <select
-            className="w-full appearance-none pl-10 pr-3 py-2 rounded-lg bg-gray-100 text-sm text-gray-500 border border-gray-300"
-            value={priceRange}
-            onChange={e => setPriceRange(e.target.value)}
-          >
-            <option>Select Price Range</option>
-            <option>Below SAR 20,000</option>
-            <option>SAR 20,000 – 25,000</option>
-            <option>Above SAR 25,000</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <FaChevronDown className="h-4 w-4" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</header> */}
-  
-        {/* Title & Filters */}
-        {/* <div className="p-4 md:p-1 md:pt-8">
-          <h2 className="text-xl md:text-2xl ml-3 text-gray-700 font-normal mb-4 mt-10">
-            Properties For {props.type}
-          </h2>
-          <p className=" ml-3 text-gray-700 font-normal  mt-4">
-            {loading ? 'Loading...' : `${properties.length} of ${totalCount} Results ${currentPage > 1 && `(Page ${currentPage})`}`}
-          </p>
-        </div> */}
-
+      <div className="min-h-screen bg-gray-50 hidden md:block">
+   
+        
         {/* Content: 2 Columns Split (Cards + Map) */}
         <div className="flex flex-col md:flex-row md:gap-4 bg-gray-100  md:px-0 pb-8 ">
-          {/* Mobile: Toggle between list and map */}
-          {/* List view for mobile */}
-          {viewMode === "list" && (
-            <div className="w-full grid grid-cols-1 gap-4 md:hidden">
+          {/* Mobile sections disabled for desktop-only component */}
+          {false && (
+            <div>
               {loading ? (
                 Array.from({ length: 4 }).map((_, idx) => <CardSkeleton key={idx} />)
               ) : (
@@ -973,15 +819,15 @@ PropertyCard.displayName = "PropertyCard";
                   </button>
                 </div>
               )}
-              {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
+              {/* {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
                 <div className="col-span-full flex justify-center items-center mt-6">
                   <p className="text-gray-500 text-sm font-medium">All properties have been loaded</p>
                 </div>
-              )}
+              )} */}
             </div>
           )}
-          {/* Map view for mobile */}
-          {viewMode === "map" && (
+          {/* Map view for mobile - also disabled for desktop-only component */}
+          {false && viewMode === "map" && (
             <div className="w-full h-[400px] sm:h-[400px] md:hidden bg-blue-100 overflow-hidden sticky top-0">
               {isLoaded && (
                 <GoogleMap
@@ -1123,8 +969,8 @@ PropertyCard.displayName = "PropertyCard";
           <div className="hidden md:flex w-full min-h-[80vh]">
     {/* Left - Properties List (natural scroll) */}
     <div className="w-1/2 pr-3">
-      {/* Property Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2">
+      {/* Property Cards Grid - 3 columns for even display of 6 properties */}
+      <div className="grid grid-cols-1 md:grid-cols-2  gap-4 p-2">
         {loading ? (
           Array.from({ length: 6 }).map((_, idx) => <CardSkeleton key={idx} />)
         ) : (
@@ -1142,12 +988,12 @@ PropertyCard.displayName = "PropertyCard";
           ))
         )}
         {!loading && properties.length === 0 && (
-          <div className="col-span-full flex justify-center items-center mt-6">
+          <div className="col-span-full md:col-span-2 flex justify-center items-center mt-6">
             <p className="text-gray-500 text-lg font-medium">No properties found</p>
           </div>
         )}
         {!loading && properties.length > 0 && hasNextPage && (
-          <div className="col-span-full flex justify-center items-center mt-6">
+          <div className="col-span-full md:col-span-2 flex justify-center items-center mt-6">
             <button
               onClick={() => {
                 setCurrentPage(prev => prev + 1);
@@ -1163,19 +1009,48 @@ PropertyCard.displayName = "PropertyCard";
             </button>
           </div>
         )}
-        {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
-          <div className="col-span-full flex justify-center items-center mt-6">
+        {/* {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
+          <div className="col-span-full md:col-span-2 flex justify-center items-center mt-6">
             <p className="text-gray-500 text-sm font-medium">All properties have been loaded</p>
           </div>
-        )}
+        )} */}
       </div>
     </div>
 
     {/* Right - Map (sticky) */}
     <div className="w-1/2">
-      <div className="sticky top-16 w-full h-screen bg-blue-100 overflow-hidden relative">
-        {/* Lazy load GoogleMap for performance */}
-        {isLoaded && (
+      <div className="sticky top-16 w-full h-screen bg-blue-100 overflow-hidden">
+        <div className="relative w-full h-full">
+          {/* Location indicator when properties with coordinates are found */}
+          {(() => {
+            const propertiesWithCoords = properties.filter(property => 
+              property.property_address?.coordinates_gs?.coordinates &&
+              property.property_address.coordinates_gs.coordinates.length === 2
+            );
+            
+            // if (propertiesWithCoords.length > 0) {
+            //   return (
+            //     <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+            //       <div className="flex items-center gap-2">
+            //         <FaMapMarkerAlt className="text-[rgb(206,32,39,255)] text-sm" />
+            //         <span className="text-sm font-medium text-gray-700">
+            //           {propertiesWithCoords.length} {propertiesWithCoords.length === 1 ? t('property') : t('properties')} 
+            //           {' '}{t('with location')} {propertiesWithCoords.length > 1 ? t('found') : t('found')}
+            //         </span>
+            //       </div>
+            //       {propertiesWithCoords.length > 1 && (
+            //         <div className="text-xs text-gray-500 mt-1">
+            //           {t('Map auto-adjusted to show all locations')}
+            //         </div>
+            //       )}
+            //     </div>
+            //   );
+            // }
+            return null;
+          })()}
+          
+          {/* Lazy load GoogleMap for performance */}
+          {isLoaded && (
           <Suspense fallback={<Loader />}>
             <GoogleMap
               mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -1207,7 +1082,7 @@ PropertyCard.displayName = "PropertyCard";
                 const mapDiv = desktopMap.getDiv();
                 const mapHeight = mapDiv.clientHeight;
                 // Debug log
-                console.log('Marker pixel y:', y, 'Map height:', mapHeight, 'Show above:', y > mapHeight * 0.7);
+               // console.log('Marker pixel y:', y, 'Map height:', mapHeight, 'Show above:', y > mapHeight * 0.7);
                 // If marker is in the bottom 30% of the map, show card above
                 return y > mapHeight * 0.7;
               };
@@ -1287,11 +1162,7 @@ PropertyCard.displayName = "PropertyCard";
   {property.current_list_price?.toLocaleString?.() || property.current_list_price}
 </span>
                 </div>
-                {/* Pointer/arrow below the badge */}
-                {/* <div
-                  className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-[rgb(206,32,39,255)]"
-                  style={{ marginTop: '-2px' }}
-                /> */}
+                
               </div>
             </OverlayView>
 
@@ -1340,7 +1211,7 @@ PropertyCard.displayName = "PropertyCard";
                       <div className="flex-1 min-w-0  ">
                         <h3 className="font-normal text-sm md:text-sm  text-gray-600 px-2">{property.prop_type}</h3>
                         <p className="text-xs text-[rgb(206,32,39,255)] py-1 px-2">
-                        {property?.list_category || "To Let"}
+                        {property.prop_subtype || "To Let"}
 </p> <p
       className="text-xs font-bold text-gray-600 mb-2 px-2"
      
@@ -1404,7 +1275,7 @@ PropertyCard.displayName = "PropertyCard";
             </GoogleMap>
           </Suspense>
         )}
-
+        </div>
       </div>
     </div>
 </div>

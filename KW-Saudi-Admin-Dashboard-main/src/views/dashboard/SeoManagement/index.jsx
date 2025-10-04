@@ -37,7 +37,7 @@ export default function SeoManagement() {
       const data = await seoService.getAllSEO();
       setSeoData(data);
     } catch (e) {
-      console.error("SEO fetch error:", e);
+     
       setSeoData([]);
     }
     setLoading(false);
@@ -49,7 +49,7 @@ export default function SeoManagement() {
       const data = await pagesService.getAll();
       setPages(data);
     } catch (e) {
-      console.error("Pages fetch error:", e);
+   
     }
   };
 
@@ -109,8 +109,7 @@ export default function SeoManagement() {
       await fetchSeoData();
       handleClose();
     } catch (error) {
-      console.error("Save error:", error);
-      alert("Error saving SEO entry");
+      
     }
   };
 
@@ -120,8 +119,7 @@ export default function SeoManagement() {
       await seoService.deleteSEO(id);
       await fetchSeoData();
     } catch (error) {
-      console.error("Delete error:", error);
-      alert("Error deleting SEO entry");
+     
     }
   };
 

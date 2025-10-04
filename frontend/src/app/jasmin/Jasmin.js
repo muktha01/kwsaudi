@@ -169,7 +169,7 @@ const Jasmin = () => {
                 setHeroSrc(parsedData.heroSrc);
                 return true; // Cached data was shown
               } catch (e) {
-                console.warn('Error parsing session cache:', e);
+               // console.warn('Error parsing session cache:', e);
               }
             }
 
@@ -187,7 +187,7 @@ const Jasmin = () => {
                 setHeroSrc(parsedData.heroSrc);
                 return true; // Cached data was shown
               } catch (e) {
-                console.warn('Error parsing localStorage cache:', e);
+               // console.warn('Error parsing localStorage cache:', e);
               }
             }
           }
@@ -253,14 +253,14 @@ const Jasmin = () => {
 
             // Show update notification for background updates
             if (isBackgroundUpdate) {
-              console.log('✅ Jasmin page updated with latest data');
+             // console.log('✅ Jasmin page updated with latest data');
             }
 
           } catch (error) {
             if (error.name === 'AbortError') {
-              console.warn('Jasmin page fetch timeout');
+             // console.warn('Jasmin page fetch timeout');
             }
-            console.error('Error fetching jasmin page:', error);
+           // console.error('Error fetching jasmin page:', error);
             
             if (!isBackgroundUpdate) {
               // Try to use expired cache if API fails
@@ -272,7 +272,7 @@ const Jasmin = () => {
                     setPage(parsedData.page);
                     setHeroSrc(parsedData.heroSrc);
                   } catch (parseError) {
-                    console.warn('Error parsing cached jasmin data:', parseError);
+                    //console.warn('Error parsing cached jasmin data:', parseError);
                   }
                 }
               }
@@ -298,7 +298,7 @@ const Jasmin = () => {
           }
 
         } catch (err) {
-          console.error('Error in fetchPageHero:', err);
+          //console.error('Error in fetchPageHero:', err);
           setLoading(false);
         }
       };
@@ -335,7 +335,7 @@ const Jasmin = () => {
             sessionStorage.setItem('jasmin_page_session', cachedData);
           }
         } catch (e) {
-          console.warn('Error reading cached jasmin data in client effect:', e);
+          //console.warn('Error reading cached jasmin data in client effect:', e);
         }
       }
     }, [heroSrc,page]); // Run once on mount
@@ -377,9 +377,9 @@ const Jasmin = () => {
         {/* Google Map */}
         <div className="w-full h-90">
           <iframe
-            src='https://www.google.com/maps?q=Jasmin,+Saudi+Arabia&output=embed'
-            width="100%"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3315.8339800365347!2d46.63285617867506!3d24.781105091676388!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e2ee3a1f1615ec9%3A0x6ce11aeaaf02c203!2sKW%20Saudi%20Arabia!5e1!3m2!1sen!2sin!4v1759573969594!5m2!1sen!2sin"
             height="100%"
+            width='100%'
             style={{ border: 0 }}
             allowFullScreen=""
             loading="lazy"

@@ -17,6 +17,7 @@ const nextConfig = {
       'www.kw.com','encrypted-tbn0.gstatic.com',
       "www.kw.com",
       'avatar.kwconnect.com',
+      
       'kwsaudi.x-360.ai' ,
       'kwlast-j4yv.vercel.app',
       'res.cloudinary.com',

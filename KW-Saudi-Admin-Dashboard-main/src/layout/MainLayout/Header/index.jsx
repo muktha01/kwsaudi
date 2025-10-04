@@ -7,9 +7,7 @@ import Button from '@mui/material/Button';
 
 // project imports
 import LogoSection from '../LogoSection';
-import SearchSection from './SearchSection';
 import ProfileSection from './ProfileSection';
-import NotificationSection from './NotificationSection';
 import { useTranslation } from '../../../contexts/TranslationContext';
 
 import { handlerDrawerOpen, useGetMenuMaster } from 'api/menu';
@@ -64,13 +62,7 @@ export default function Header() {
         {language === 'en' ? 'عربي' : 'English'}
       </Button>
 
-      {/* header search */}
-      <SearchSection />
       <Box sx={{ flexGrow: 1 }} />
-      <Box sx={{ flexGrow: 1 }} />
-
-      {/* notification */}
-      <NotificationSection />
 
       {/* profile */}
       <ProfileSection />

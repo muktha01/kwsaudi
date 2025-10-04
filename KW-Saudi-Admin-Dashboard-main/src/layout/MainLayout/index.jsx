@@ -18,8 +18,6 @@ import {
   GlobalOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BellOutlined,
-  SearchOutlined,
   BuildOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
@@ -262,24 +260,8 @@ export default function MainLayout() {
                 style={{ fontSize: '18px', cursor: 'pointer', padding: '8px' }}
               />
             )}
-            <div style={{ marginLeft: '24px' }}>
-              <Tooltip title="Search">
-                <Button 
-                  type="text" 
-                  icon={<SearchOutlined style={{ fontSize: '16px', color: '#8c8c8c' }} />} 
-                />
-              </Tooltip>
-            </div>
           </div>
           <Space size="large">
-            <Tooltip title="Notifications">
-              <Badge count={5} size="small">
-                <Button 
-                  type="text" 
-                  icon={<BellOutlined style={{ fontSize: '18px' }} />} 
-                />
-              </Badge>
-            </Tooltip>
             <Dropdown
               menu={{ items: profileMenuItems }}
               placement="bottomRight"

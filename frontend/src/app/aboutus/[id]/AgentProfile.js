@@ -8,13 +8,78 @@ import Header from '@/components/header';
 import { dancing } from '@/app/layout';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { motion, AnimatePresence } from 'framer-motion';
+const useInView = (options = {}) => {
+  
+  const [ref, setRef] = useState(null);
+  const [isInView, setIsInView] = useState(false);
+const [pdfs, setPdfs] = useState([]);
+  useEffect(() => {
+    if (!ref) return;
 
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, options);
+
+    observer.observe(ref);
+
+    return () => {
+      if (ref) {
+        observer.unobserve(ref);
+      }
+    };
+  }, [ref, options]);
+
+  return [setRef, isInView];
+};
+
+// Custom hook for counting animation
+const useCountUp = (end, start = 0, duration = 2000, delay = 0) => {
+  const [count, setCount] = useState(start);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTime = null;
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const currentCount = Math.floor(start + (end - start) * progress);
+      setCount(currentCount);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(animate);
+    }, delay);
+
+    return () => clearTimeout(timeoutId);
+  }, [end, start, duration, delay, hasStarted]);
+
+  const startAnimation = () => {
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+  };
+
+  return [count, startAnimation];
+};
 const AgentProfile = (props) => {
   const params = useParams();
   const router = useRouter();
   const agentId = params?.id;
   const { t, isRTL, language } = useTranslation();
-  
+   // Animation refs for guide section
+    const [sellGuideRef, sellGuideInView] = useInView({ threshold: 0.2 });
+    const [buyGuideRef, buyGuideInView] = useInView({ threshold: 0.2 });
+    
+    // Animation state to track if animations have been triggered
+    const [sellGuideAnimated, setSellGuideAnimated] = useState(false);
+    const [buyGuideAnimated, setBuyGuideAnimated] = useState(false);
   const [agent, setAgent] = useState(null);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +96,19 @@ const [buyEmail, setBuyEmail] = useState("");
   // Icon URLs
   const bedIconUrl = "/bed.png";
   const bathIconUrl = "/bath.png";
+  
+  // Animation trigger effects
+  useEffect(() => {
+    if (sellGuideInView && !sellGuideAnimated) {
+      setSellGuideAnimated(true);
+    }
+  }, [sellGuideInView, sellGuideAnimated]);
+
+  useEffect(() => {
+    if (buyGuideInView && !buyGuideAnimated) {
+      setBuyGuideAnimated(true);
+    }
+  }, [buyGuideInView, buyGuideAnimated]);
   
   // Function to retry fetching properties
   const retryFetchProperties = () => {
@@ -58,7 +136,7 @@ const [buyEmail, setBuyEmail] = useState("");
       setError(null);
       
       try {
-        console.log('Fetching agent data for ID:', agentId);
+        // console.log('Fetching agent data for ID:', agentId);
         
         // First check if agent data is available in localStorage (from property details page)
         const storedAgent = localStorage.getItem('selectedAgent');
@@ -71,23 +149,23 @@ const [buyEmail, setBuyEmail] = useState("");
             const storedId2 = String(agentData.id || '');
             const currentId = String(agentId);
             
-            console.log('Comparing IDs:', {
-              storedId,
-              storedKwId, 
-              storedId2,
-              currentId,
-              match: storedId === currentId || storedKwId === currentId || storedId2 === currentId
-            });
+            // console.log('Comparing IDs:', {
+            //   storedId,
+            //   storedKwId, 
+            //   storedId2,
+            //   currentId,
+            //   match: storedId === currentId || storedKwId === currentId || storedId2 === currentId
+            // });
             
             if (storedId === currentId || storedKwId === currentId || storedId2 === currentId) {
-              console.log('Using stored agent data:', agentData);
+              // console.log('Using stored agent data:', agentData);
               setAgent(agentData);
               if (agentData.image) setImgSrc(agentData.image);
               setLoading(false);
               return;
             }
           } catch (e) {
-            console.log('Error parsing stored agent data:', e);
+            // console.log('Error parsing stored agent data:', e);
           }
         }
        
@@ -97,7 +175,7 @@ const [buyEmail, setBuyEmail] = useState("");
         
         if (agentRes.ok) {
           const agentData = await agentRes.json();
-          console.log('Agents API response:', agentData);
+          // console.log('Agents API response:', agentData);
           
           if (agentData.success && agentData.data) {
             // Find the specific agent by ID
@@ -121,7 +199,7 @@ const [buyEmail, setBuyEmail] = useState("");
               
               setAgent(mappedAgent);
               if (mappedAgent.image) setImgSrc(mappedAgent.image);
-              console.log('Agent found and set:', mappedAgent);
+              // console.log('Agent found and set:', mappedAgent);
             } else {
               setError('Agent not found.');
             }
@@ -132,7 +210,7 @@ const [buyEmail, setBuyEmail] = useState("");
           throw new Error(`Failed to fetch agent data: ${agentRes.status}`);
         }
       } catch (e) {
-        console.error('Error fetching agent data:', e);
+        // console.error('Error fetching agent data:', e);
         setError(`Failed to load agent data: ${e.message}`);
       } finally {
         setLoading(false);
@@ -157,8 +235,8 @@ const [buyEmail, setBuyEmail] = useState("");
       setError(null);
       
       try {
-        console.log('Fetching properties for agent:', agent);
-        console.log('Agent kw_id:', agent.kw_id || agent.kwId);
+        // console.log('Fetching properties for agent:', agent);
+        // console.log('Agent kw_id:', agent.kw_id || agent.kwId);
         
         // First try the main properties API endpoint
         let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/properties`, {
@@ -175,29 +253,29 @@ const [buyEmail, setBuyEmail] = useState("");
           })
         });
         
-        console.log('Main API Response status:', res.status);
+        // console.log('Main API Response status:', res.status);
         
         if (res.ok) {
           const data = await res.json();
-          console.log('Properties API response:', data);
+          // console.log('Properties API response:', data);
           
           if (data.success && data.properties && data.properties.data) {
             setProperties(data.properties.data);
-            console.log('Properties set successfully:', data.properties.data.length);
+            // console.log('Properties set successfully:', data.properties.data.length);
             return;
           } else if (data.success && data.listings) {
             setProperties(data.listings);
-            console.log('Listings set successfully:', data.listings.length);
+            // console.log('Listings set successfully:', data.listings.length);
             return;
           }
         }
         
         // If main API fails or returns no data, set empty properties
-        console.log('Main API failed or no data, setting empty properties');
+        // console.log('Main API failed or no data, setting empty properties');
         setProperties([]);
         
       } catch (e) {
-        console.error('Error fetching properties:', e);
+        // console.error('Error fetching properties:', e);
         
         // Show a more user-friendly error message
         if (e.message.includes('Failed to fetch')) {
@@ -424,7 +502,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
   </div>
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-xl md:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">{t('Get in touch with ')}</span>
     <span>
   {(() => {
@@ -467,287 +545,299 @@ const [buyEmail, setBuyEmail] = useState("");
   
 
 </div>
-   <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
-   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
-     {/* Left Red Box - Sell Home */}
-     <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
-       {/* Content */}
-       <div className="pb-24">
-         <p
-           className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
-             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
-           } border-white`}
-         >
-           {t("Download guide")}
-         </p>
-         <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
-           {t("How to sell your home")}
-         </h2>
-         <p className="text-base md:text-[1.1rem] mb-4 md:mb-6">
-           {t(
-             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
-           )}
-         </p>
-       </div>
-       {/* Input Group - Responsive */}
-   <div
-   className={`absolute md:bottom-24 bottom-16 w-full ${
-     isRTL
-       ? "md:right-14 md:left-auto right-2 left-auto text-right"
-       : "md:left-14 md:right-6 left-2 right-auto text-left"
-   }`}
- >
- 
-         <div className="hidden md:flex w-full  md:max-w-lg items-center">
-           <input
-             type="text"
-             value={sellEmail}
-             onChange={(e) => setSellEmail(e.target.value)}
-             placeholder={t("Email Address")}
-             className="w-full px-4 py-2 bg-white text-black text-base outline-none"
-           />
-           <button
-             onClick={async () => {
-               if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
-                 setSellEmailError(t("Please enter a valid email."));
-                 return;
-               }
-               setLoading(true);
-               setSellEmailError("");
-               try {
-                 let pdfName = "pdf1";
-                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                 if (language === "ar") {
-                   pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                 }
-                 const res = await fetch(
-                   emailApi,
-                   {
-                     method: "POST",
-                     headers: { "Content-Type": "application/json" },
-                     body: JSON.stringify({ email: sellEmail, pdfName }),
-                   }
-                 );
-                 if (res.ok) {
-                   handleDownload(pdfName);
-                 } else {
-                   setSellEmailError(t("Failed to save email."));
-                 }
-               } catch (e) {
-                 setSellEmailError(t("Failed to save email."));
-               } finally {
-                 setLoading(false);
-               }
-             }}
-             disabled={loading}
-             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-           >
-             {loading ? t("Downloading...") : t("Download")}
-           </button>
-         </div>
-       <div
-   className={`flex md:hidden w-65 flex-col gap-2 ${
-     isRTL ? "mr-2 text-right" : " text-left ml-2 "
-   }`}
- >
-           <input
-             type="text"
-             value={sellEmail}
-             onChange={(e) => setSellEmail(e.target.value)}
-             placeholder={t("Email Address")}
-             className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
-           />
-           <button
-             onClick={async () => {
-               if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
-                 setSellEmailError(t("Please enter a valid email."));
-                 return;
-               }
-               setLoading(true);
-               setSellEmailError("");
-               try {
-                 let pdfName = "pdf1";
-                 let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                 if (language === "ar") {
-                   pdfName = "How to Sell Your Home-Arabic";
-                   emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                 }
-                 const res = await fetch(
-                   emailApi,
-                   {
-                     method: "POST",
-                     headers: { "Content-Type": "application/json" },
-                     body: JSON.stringify({ email: sellEmail, pdfName }),
-                   }
-                 );
-                 if (res.ok) {
-                   handleDownload(pdfName);
-                 } else {
-                   setSellEmailError(t("Failed to save email."));
-                 }
-               } catch (e) {
-                 setSellEmailError(t("Failed to save email."));
-               } finally {
-                 setLoading(false);
-               }
-             }}
-             disabled={loading}
-             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-           >
-             {loading ? t("Downloading...") : t("Download")}
-           </button>
-         </div>
-         {sellEmailError && (
-           <div className="text-white text-sm mt-1">{sellEmailError}</div>
-         )}
-       </div>
-     </div>
- 
-     {/* Right Image Box - Buy Home */}
-     <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
-       <Image
-         src="/3.jpg"
-         alt={t("Home")}
-         fill
-         className="object-cover grayscale"
-       />
-       <div className="absolute inset-0 bg-gray-500/50"></div>
-       <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
-         {/* Content */}
-         <div className="pb-24">
-           <p
-             className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
-               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
-             } border-white`}
-           >
-             {t("Download guide")}
-           </p>
-           <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
-             {t("How to buy a home")}
-           </h2>
-           <p className="text-basemd:text-[1.1rem]  mb-4 md:mb-6">
-             {t(
-               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
-             )}
-           </p>
-         </div>
-         {/* Input Group - Responsive */}
-       <div
-   className={`absolute md:bottom-22 bottom-16 w-full ${
-     isRTL
-       ? "md:right-14 md:left-auto right-2 left-auto text-right"
-       : "md:left-14 md:right-6 left-2 right-auto text-left"
-   }`}
- >
- 
-           <div className="hidden md:flex w-full  md:max-w-lg items-center">
-             <input
-               type="text"
-               value={buyEmail}
-               onChange={(e) => setBuyEmail(e.target.value)}
-               placeholder={t("Email Address")}
-               className="w-full px-4 py-2 bg-white text-black text-base outline-none"
-             />
-             <button
-               onClick={async () => {
-                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
-                   setBuyEmailError(t("Please enter a valid email."));
-                   return;
-                 }
-                 setLoading(true);
-                 setBuyEmailError("");
-                 try {
-                   let pdfName = "pdf2";
-                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                   if (language === "ar") {
-                     pdfName = "How to Buy a Home-Arabic";
-                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                   }
-                   const res = await fetch(
-                     emailApi,
-                     {
-                       method: "POST",
-                       headers: { "Content-Type": "application/json" },
-                       body: JSON.stringify({ email: buyEmail, pdfName }),
-                     }
-                   );
-                   if (res.ok) {
-                     handleDownload(pdfName);
-                   } else {
-                     setBuyEmailError(t("Failed to save email."));
-                   }
-                 } catch (e) {
-                   setBuyEmailError(t("Failed to save email."));
-                 } finally {
-                   setLoading(false);
-                 }
-               }}
-               disabled={loading}
-               className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-             >
-               {loading ? t("Downloading...") : t("Download")}
-             </button>
-           </div>
-           <div className={`flex md:hidden w-65 flex-col gap-2 ${
-     isRTL ? "mr-2  text-right" : " text-left ml-2 "
-   }`}
- >
-             <input
-               type="text"
-               value={buyEmail}
-               onChange={(e) => setBuyEmail(e.target.value)}
-               placeholder={t("Email Address")}
-               className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
-             />
-             <button
-               onClick={async () => {
-                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
-                   setBuyEmailError(t("Please enter a valid email."));
-                   return;
-                 }
-                 setLoading(true);
-                 setBuyEmailError("");
-                 try {
-                   let pdfName = "pdf2";
-                   let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
-                   if (language === "ar") {
-                     pdfName = "How to Buy a Home-Arabic";
-                     emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
-                   }
-                   const res = await fetch(
-                     emailApi,
-                     {
-                       method: "POST",
-                       headers: { "Content-Type": "application/json" },
-                       body: JSON.stringify({ email: buyEmail, pdfName }),
-                     }
-                   );
-                   if (res.ok) {
-                     handleDownload(pdfName);
-                   } else {
-                     setBuyEmailError(t("Failed to save email."));
-                   }
-                 } catch (e) {
-                   setBuyEmailError(t("Failed to save email."));
-                 } finally {
-                   setLoading(false);
-                 }
-               }}
-               disabled={loading}
-               className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
-             >
-               {loading ? t("Downloading...") : t("Download")}
-             </button>
-           </div>
-           {buyEmailError && (
-             <div className="text-white text-sm mt-1">{buyEmailError}</div>
-           )}
-         </div>
-       </div>
-     </div>
-   </div>
- </div>
+    <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
+  <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
+    {/* Left Red Box - Sell Home */}
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
+      {/* Content */}
+      <div className="pb-24">
+        <p
+          className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
+            isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
+          } border-white`}
+        >
+          {t("Download guide")}
+        </p>
+        <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
+          {t("How to sell your home")}
+        </h2>
+        <motion.p 
+          ref={sellGuideRef}
+          className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+          initial={{ opacity: 0, y: -30 }}
+          animate={sellGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          {t(
+            "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
+          )}
+        </motion.p>
+      </div>
+      {/* Input Group - Responsive */}
+  <div
+  className={`absolute md:bottom-24 bottom-16 w-full ${
+    isRTL
+      ? "md:right-14 md:left-auto right-2 left-auto text-right"
+      : "md:left-14 md:right-6 left-2 right-auto text-left"
+  }`}
+>
+
+        <div className="hidden md:flex w-full  md:max-w-lg items-center">
+          <input
+            type="text"
+            value={sellEmail}
+            onChange={(e) => setSellEmail(e.target.value)}
+            placeholder={t("Email Address")}
+            className="w-full px-4 py-2 bg-white text-black text-base outline-none"
+          />
+          <button
+            onClick={async () => {
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
+                setSellEmailError(t("Please enter a valid email."));
+                return;
+              }
+              setLoading(true);
+              setSellEmailError("");
+              try {
+                let pdfName = "pdf1";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                if (language === "ar") {
+                  pdfName = "How to Sell Your Home-Arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                }
+                const res = await fetch(
+                  emailApi,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: sellEmail, pdfName }),
+                  }
+                );
+                if (res.ok) {
+                  handleDownload(pdfName);
+                } else {
+                  setSellEmailError(t("Failed to save email."));
+                }
+              } catch (e) {
+                setSellEmailError(t("Failed to save email."));
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+          >
+            {loading ? t("Downloading...") : t("Download")}
+          </button>
+        </div>
+      <div
+  className={`flex md:hidden w-65 flex-col gap-2 ${
+    isRTL ? "mr-2 text-right" : " text-left ml-2 "
+  }`}
+>
+          <input
+            type="text"
+            value={sellEmail}
+            onChange={(e) => setSellEmail(e.target.value)}
+            placeholder={t("Email Address")}
+            className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
+          />
+          <button
+            onClick={async () => {
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellEmail)) {
+                setSellEmailError(t("Please enter a valid email."));
+                return;
+              }
+              setLoading(true);
+              setSellEmailError("");
+              try {
+                let pdfName = "pdf1";
+                let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                if (language === "ar") {
+                  pdfName = "How to Sell Your Home-Arabic";
+                  emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                }
+                const res = await fetch(
+                  emailApi,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: sellEmail, pdfName }),
+                  }
+                );
+                if (res.ok) {
+                  handleDownload(pdfName);
+                } else {
+                  setSellEmailError(t("Failed to save email."));
+                }
+              } catch (e) {
+                setSellEmailError(t("Failed to save email."));
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+          >
+            {loading ? t("Downloading...") : t("Download")}
+          </button>
+        </div>
+        {sellEmailError && (
+          <div className="text-white text-sm mt-1">{sellEmailError}</div>
+        )}
+      </div>
+    </div>
+
+    {/* Right Image Box - Buy Home */}
+    <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
+      <Image
+        src="/3.jpg"
+        alt={t("Home")}
+        fill
+        className="object-cover grayscale"
+      />
+      <div className="absolute inset-0 bg-gray-500/50"></div>
+      <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
+        {/* Content */}
+        <div className="pb-24">
+          <p
+            className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
+              isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
+            } border-white`}
+          >
+            {t("Download guide")}
+          </p>
+          <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
+            {t("How to buy a home")}
+          </h2>
+          <motion.p 
+            ref={buyGuideRef}
+            className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+            initial={{ opacity: 0, y: -30 }}
+            animate={buyGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {t(
+              "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
+            )}
+          </motion.p>
+        </div>
+        {/* Input Group - Responsive */}
+      <div
+  className={`absolute md:bottom-22 bottom-16 w-full ${
+    isRTL
+      ? "md:right-14 md:left-auto right-2 left-auto text-right"
+      : "md:left-14 md:right-6 left-2 right-auto text-left"
+  }`}
+>
+
+          <div className="hidden md:flex w-full  md:max-w-lg items-center">
+            <input
+              type="text"
+              value={buyEmail}
+              onChange={(e) => setBuyEmail(e.target.value)}
+              placeholder={t("Email Address")}
+              className="w-full px-4 py-2 bg-white text-black text-base outline-none"
+            />
+            <button
+              onClick={async () => {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
+                  setBuyEmailError(t("Please enter a valid email."));
+                  return;
+                }
+                setLoading(true);
+                setBuyEmailError("");
+                try {
+                  let pdfName = "pdf2";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                  if (language === "ar") {
+                    pdfName = "How to Buy a Home-Arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                  }
+                  const res = await fetch(
+                    emailApi,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: buyEmail, pdfName }),
+                    }
+                  );
+                  if (res.ok) {
+                    handleDownload(pdfName);
+                  } else {
+                    setBuyEmailError(t("Failed to save email."));
+                  }
+                } catch (e) {
+                  setBuyEmailError(t("Failed to save email."));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+            >
+              {loading ? t("Downloading...") : t("Download")}
+            </button>
+          </div>
+          <div className={`flex md:hidden w-65 flex-col gap-2 ${
+    isRTL ? "mr-2  text-right" : " text-left ml-2 "
+  }`}
+>
+            <input
+              type="text"
+              value={buyEmail}
+              onChange={(e) => setBuyEmail(e.target.value)}
+              placeholder={t("Email Address")}
+              className="py-3 px-2 shadow-2xl text-black font-normal bg-white text-base outline-none"
+            />
+            <button
+              onClick={async () => {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyEmail)) {
+                  setBuyEmailError(t("Please enter a valid email."));
+                  return;
+                }
+                setLoading(true);
+                setBuyEmailError("");
+                try {
+                  let pdfName = "pdf2";
+                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
+                  if (language === "ar") {
+                    pdfName = "How to Buy a Home-Arabic";
+                    emailApi = `${process.env.NEXT_PUBLIC_API_URL}/emails-arabic`;
+                  }
+                  const res = await fetch(
+                    emailApi,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: buyEmail, pdfName }),
+                    }
+                  );
+                  if (res.ok) {
+                    handleDownload(pdfName);
+                  } else {
+                    setBuyEmailError(t("Failed to save email."));
+                  }
+                } catch (e) {
+                  setBuyEmailError(t("Failed to save email."));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+            >
+              {loading ? t("Downloading...") : t("Download")}
+            </button>
+          </div>
+          {buyEmailError && (
+            <div className="text-white text-sm mt-1">{buyEmailError}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
      
 
