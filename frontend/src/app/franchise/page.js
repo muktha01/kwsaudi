@@ -1,9 +1,11 @@
-// app/instantvaluation/page.js
-
+// app/franchise/page.js
+import { generateHreflangMetadata, getLanguageFromParams } from '@/utils/hreflang';
 import Franchise from './Franchise'; // client component
 
-// Server-side dynamic metadata
-export async function generateMetadata() {
+// Server-side dynamic metadata with hreflang support
+export async function generateMetadata({ searchParams }) {
+  const lang = await getLanguageFromParams(searchParams);
+  
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seo/slug/franchise`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('Failed to fetch SEO');
@@ -13,11 +15,14 @@ export async function generateMetadata() {
       title: data.metaTitle || undefined,
       description: data.metaDescription || undefined,
       keywords: data.metaKeywords || undefined,
+      ...generateHreflangMetadata('/franchise', lang), // Add hreflang tags
     };
   } catch (err) {
-    // No fallback; metadata will be undefined if API fails
+    // Fallback with hreflang even if SEO API fails
     console.error('Failed to fetch SEO:', err);
-    return {};
+    return {
+      ...generateHreflangMetadata('/franchise', lang),
+    };
   }
 }
 

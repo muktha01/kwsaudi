@@ -14,14 +14,17 @@ export default defineConfig(({ mode }) => {
       open: true,
       // this sets a default port to 3000
       port: PORT,
-      host: true
+      host: '0.0.0.0',
+      allowedHosts: ['kw-saudiarabia.com', '.kw-saudiarabia.com']
     },
     build: {
       chunkSizeWarningLimit: 1600
     },
     preview: {
       open: true,
-      host: true
+      port: 3001,
+      host: '0.0.0.0',
+      allowedHosts: ['kw-saudiarabia.com', '.kw-saudiarabia.com']
     },
     define: {
       global: 'window'
