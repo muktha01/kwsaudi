@@ -181,7 +181,7 @@ const [buyEmail, setBuyEmail] = useState("");
         // This prevents the brief "no properties found" flash
       }
     }
-  }, [agentId, agent]); // This will run when navigating to a new agent
+  }, [agentId]); // This will run when navigating to a new agent
   const agentBios = {
     1: {
       text: `

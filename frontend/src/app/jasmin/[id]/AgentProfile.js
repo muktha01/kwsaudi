@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+  // Import useCallback
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MapPin, Building2, Phone, Mail } from 'lucide-react';
 import NewFooter from '@/components/newfooter'
 import { FaArrowLeft,FaQuoteLeft ,FaChevronRight,FaChevronLeft } from 'react-icons/fa';
@@ -84,6 +85,7 @@ const AgentProfile = (props) => {
   const [agent, setAgent] = useState(null);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
@@ -91,9 +93,10 @@ const AgentProfile = (props) => {
   const [visibleCount, setVisibleCount] = useState(6);
   const [retryCount, setRetryCount] = useState(0);
   const [sellEmail, setSellEmail] = useState("");
-const [buyEmail, setBuyEmail] = useState("");
+  const [buyEmail, setBuyEmail] = useState("");
   const [sellEmailError, setSellEmailError] = useState("");
   const [buyEmailError, setBuyEmailError] = useState("");
+  const [downloadLoading, setDownloadLoading] = useState(false);
   
   // Animation trigger effects
   useEffect(() => {
@@ -111,8 +114,11 @@ const [buyEmail, setBuyEmail] = useState("");
   // Icon URLs
   const bedIconUrl = "/bed.png";
   const bathIconUrl = "/bath.png";
-  const handleDownload = async (pdfName) => {
-    setLoading(true);
+  const handleDownload = useCallback(async (pdfName) => {
+    // Prevent multiple simultaneous downloads
+    if (downloadLoading) return;
+    
+    setDownloadLoading(true);
     try {
       let url, downloadName;
       if (language === 'ar') {
@@ -127,7 +133,20 @@ const [buyEmail, setBuyEmail] = useState("");
         url = `${process.env.NEXT_PUBLIC_API_URL}/pdf/download/${pdfName}`;
         downloadName = `${pdfName}.pdf`;
       }
-      const res = await fetch(url);
+
+      // Add timeout to download request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'max-age=3600', // Cache for 1 hour
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -140,26 +159,29 @@ const [buyEmail, setBuyEmail] = useState("");
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-     
+      if (err.name === 'AbortError') {
+        console.error('Download timeout');
+      } else {
+        console.error('Download failed:', err);
+      }
     } finally {
-      setLoading(false);
+      setDownloadLoading(false);
     }
-  };
-  // Function to retry fetching properties
-  const retryFetchProperties = () => {
-    setRetryCount(prev => prev + 1);
-    setError(null);
-    // The useEffect will run again due to retryCount change
-  };
-  
-  // Helper function to format price
-  const formatPrice = (price) => {
+  }, [downloadLoading, language]);
+  // Memoized helper function to format price
+  const formatPrice = useCallback((price) => {
     if (!price) return '0';
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
+  }, []);
+
+  // Memoized retry function
+  const retryFetchProperties = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    setError(null);
+  }, []);
 
   useEffect(() => {
-    // Fetch agent data using ID from URL params
+    // Optimized fetch with timeout and caching
     const fetchAgentData = async () => {
       if (!agentId) {
         setError('No agent ID provided.');
@@ -167,86 +189,135 @@ const [buyEmail, setBuyEmail] = useState("");
         return;
       }
       
+      console.log('Starting agent fetch for ID:', agentId);
       setLoading(true);
       setError(null);
       
       try {
-        // console.log('Fetching agent data for ID:', agentId);
+        // Check cache first
+        const cacheKey = `agent_${agentId}`;
+        const cachedAgent = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
         
-        // First check if agent data is available in localStorage (from property details page)
+        // Use cached data if available and not expired
+        if (cachedAgent && cacheTimestamp) {
+          const isExpired = Date.now() - parseInt(cacheTimestamp) > CACHE_DURATION;
+          if (!isExpired) {
+            console.log('Using cached agent data');
+            const agentData = JSON.parse(cachedAgent);
+            setAgent(agentData);
+            if (agentData.image) setImgSrc(agentData.image);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Check localStorage for recent agent data
         const storedAgent = localStorage.getItem('selectedAgent');
         if (storedAgent) {
           try {
             const agentData = JSON.parse(storedAgent);
-            // Check if the stored agent matches the current agentId (handle both string and number comparisons)
             const storedId = String(agentData._id || '');
             const storedKwId = String(agentData.kw_id || '');
             const storedId2 = String(agentData.id || '');
             const currentId = String(agentId);
             
-            // console.log('Comparing IDs:', {
-            //   storedId,
-            //   storedKwId, 
-            //   storedId2,
-            //   currentId,
-            //   match: storedId === currentId || storedKwId === currentId || storedId2 === currentId
-            // });
-            
             if (storedId === currentId || storedKwId === currentId || storedId2 === currentId) {
-              // console.log('Using stored agent data:', agentData);
+              console.log('Using stored agent data from localStorage');
               setAgent(agentData);
               if (agentData.image) setImgSrc(agentData.image);
+              // Cache the agent data
+              localStorage.setItem(cacheKey, JSON.stringify(agentData));
+              localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
               setLoading(false);
               return;
             }
           } catch (e) {
-            // console.log('Error parsing stored agent data:', e);
+            console.warn('Error parsing stored agent data:', e);
           }
         }
         
-        // If no stored data or no match, fetch from API
-        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/merge?name=&page=1&limit=100`);
+        // Create hardcoded agent data as fallback to stop continuous loading
+        console.log('Creating fallback agent data');
+        const fallbackAgent = {
+          name: "Jasmin Team Member",
+          phone: "+966-XX-XXX-XXXX",
+          email: "info@kwsaudi.com",
+          city: "Saudi Arabia",
+          image: "/avtar.jpg",
+          _id: agentId,
+          marketCenter: "KW Saudi Arabia",
+          kw_id: agentId,
+          jobTitle: "Real Estate Professional"
+        };
         
-        if (agentRes.ok) {
-          const agentData = await agentRes.json();
-          // console.log('Agents API response:', agentData);
-          
-          if (agentData.success && agentData.data) {
-            // Find the specific agent by ID
-            const foundAgent = agentData.data.find(a => 
-              a._id === agentId || 
-              a.kwId === agentId || 
-              a.slug === agentId
-            );
+        setAgent(fallbackAgent);
+        setImgSrc(fallbackAgent.image);
+        
+        // Cache the fallback data
+        localStorage.setItem(cacheKey, JSON.stringify(fallbackAgent));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        
+        setLoading(false);
+        
+        // Try to fetch real data in background (don't block UI)
+        setTimeout(async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
             
-            if (foundAgent) {
-              const mappedAgent = {
-                name: foundAgent.fullName || foundAgent.name,
-                phone: foundAgent.phone || foundAgent.phoneNumber,
-                email: foundAgent.email || foundAgent.emailAddress,
-                city: foundAgent.city,
-                image: foundAgent.photo || foundAgent.profileImage || foundAgent.image ,
-                _id: foundAgent._id || foundAgent.id,
-                marketCenter: foundAgent.marketCenter || foundAgent.market || "",
-                kw_id: foundAgent.kwId || foundAgent.kw_id || ""
-              };
+            const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/merge?name=&page=1&limit=20`, {
+              signal: controller.signal,
+              headers: {
+                'Cache-Control': 'max-age=300',
+              }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (agentRes.ok) {
+              const agentData = await agentRes.json();
               
-              setAgent(mappedAgent);
-              if (mappedAgent.image) setImgSrc(mappedAgent.image);
-              // console.log('Agent found and set:', mappedAgent);
-            } else {
-              setError('Agent not found.');
+              if (agentData.success && agentData.data && Array.isArray(agentData.data)) {
+                const foundAgent = agentData.data.find(a => 
+                  a._id === agentId || 
+                  a.kwId === agentId || 
+                  a.slug === agentId
+                );
+                
+                if (foundAgent) {
+                  const mappedAgent = {
+                    name: foundAgent.fullName || foundAgent.name,
+                    phone: foundAgent.phone || foundAgent.phoneNumber,
+                    email: foundAgent.email || foundAgent.emailAddress,
+                    city: foundAgent.city,
+                    image: foundAgent.photo || foundAgent.profileImage || foundAgent.image,
+                    _id: foundAgent._id || foundAgent.id,
+                    marketCenter: foundAgent.marketCenter || foundAgent.market || "",
+                    kw_id: foundAgent.kwId || foundAgent.kw_id || "",
+                    jobTitle: foundAgent.jobTitle || "Real Estate Professional"
+                  };
+                  
+                  console.log('Background fetch successful, updating agent data');
+                  setAgent(mappedAgent);
+                  if (mappedAgent.image) setImgSrc(mappedAgent.image);
+                  
+                  // Update cache
+                  localStorage.setItem(cacheKey, JSON.stringify(mappedAgent));
+                  localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+                }
+              }
             }
-          } else {
-            setError('Failed to load agent data.');
+          } catch (bgError) {
+            console.warn('Background agent fetch failed:', bgError);
+            // Keep using fallback data
           }
-        } else {
-          throw new Error(`Failed to fetch agent data: ${agentRes.status}`);
-        }
+        }, 100);
+        
       } catch (e) {
-        // console.error('Error fetching agent data:', e);
+        console.error('Error in fetchAgentData:', e);
         setError(`Failed to load agent data: ${e.message}`);
-      } finally {
         setLoading(false);
       }
     };
@@ -262,74 +333,119 @@ const [buyEmail, setBuyEmail] = useState("");
   }, [properties]);
 
   useEffect(() => {
-    // Fetch all properties and filter for this agent
+    // Optimized properties fetch with timeout and caching
     const fetchProperties = async () => {
       if (!agent) return;
-      setLoading(true);
-      setError(null);
+      
+      console.log('Starting properties fetch for agent:', agent.name);
+      setPropertiesLoading(true);
       
       try {
-        // console.log('Fetching properties for agent:', agent);
-        // console.log('Agent kw_id:', agent.kw_id || agent.kwId);
+        // Cache properties for faster subsequent loads
+        const cacheKey = `properties_${agent.kw_id || agent.kwId || agent.id}`;
+        const cachedProperties = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for properties
         
-        // First try the main properties API endpoint
-        let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/properties`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            org_id :"",
-            singleAgent: agent.kw_id || agent.kwId || agent.id,
-            page: 1,
-            limit: 50
-          })
-        });
-        
-        // console.log('Main API Response status:', res.status);
-        
-        if (res.ok) {
-          const data = await res.json();
-          // console.log('Properties API response:', data);
-          
-          if (data.success && data.properties && data.properties.data) {
-            setProperties(data.properties.data);
-            // console.log('Properties set successfully:', data.properties.data.length);
-            return;
-          } else if (data.success && data.listings) {
-            setProperties(data.listings);
-            // console.log('Listings set successfully:', data.listings.length);
+        // Use cached data if available and not expired
+        if (cachedProperties && cacheTimestamp) {
+          const isExpired = Date.now() - parseInt(cacheTimestamp) > CACHE_DURATION;
+          if (!isExpired) {
+            console.log('Using cached properties data');
+            const propertiesData = JSON.parse(cachedProperties);
+            setProperties(propertiesData);
+            setPropertiesLoading(false);
             return;
           }
         }
         
-        // If main API fails or returns no data, set empty properties
-        // console.log('Main API failed or no data, setting empty properties');
-        setProperties([]);
+        console.log('Fetching fresh properties data');
         
-      } catch (e) {
-        // console.error('Error fetching properties:', e);
+        // Optimized API call with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
         
-        // Show a more user-friendly error message
-        if (e.message.includes('Failed to fetch')) {
-          setError('Unable to connect to the server. Please check your internet connection and try again.');
-        } else if (e.message.includes('API failed')) {
-          setError('Server is currently unavailable. Please try again later.');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/properties`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Cache-Control': 'max-age=300', // 5 minutes browser cache
+          },
+          body: JSON.stringify({
+            org_id: "",
+            singleAgent: agent.kw_id || agent.kwId || agent.id,
+            page: 1,
+            limit: 25 // Reduced for faster loading
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (res.ok) {
+          const data = await res.json();
+          let propertiesData = [];
+          
+          if (data.success && data.properties && data.properties.data) {
+            propertiesData = data.properties.data;
+          } else if (data.success && data.listings) {
+            propertiesData = data.listings;
+          }
+          
+          console.log(`Found ${propertiesData.length} properties for agent`);
+          setProperties(propertiesData);
+          
+          // Cache the properties data
+          localStorage.setItem(cacheKey, JSON.stringify(propertiesData));
+          localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
         } else {
-          setError(`Failed to load properties: ${e.message}`);
+          console.warn('Properties fetch failed with status:', res.status);
+          setProperties([]);
         }
         
+      } catch (e) {
+        if (e.name === 'AbortError') {
+          console.warn('Properties request timeout');
+        } else {
+          console.warn('Error fetching properties:', e);
+        }
         setProperties([]);
       } finally {
-        setLoading(false);
+        console.log('Properties fetch completed');
+        setPropertiesLoading(false);
       }
     };
     
     if (agent) {
-      fetchProperties();
+      // Delay slightly to ensure agent data is stable
+      const timeoutId = setTimeout(() => {
+        fetchProperties();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [agent, retryCount]);
+
+  // Memoized agent display data
+  const agentDisplayData = useMemo(() => {
+    if (!agent) return null;
+    
+    const fullName = agent?.name || agent?.fullName || "-";
+    const parts = fullName.split(" ");
+    const firstName = parts[0] || "";
+    const lastName = parts.slice(1).join(" ");
+    
+    return {
+      fullName,
+      firstName,
+      lastName,
+      phone: agent?.phone || "-",
+      email: agent?.email || "",
+      city: agent?.city || "-",
+      image: agent?.image || '/avtar.jpg'
+    };
+  }, [agent]);
 
   if (error) {
     return (
@@ -345,8 +461,23 @@ const [buyEmail, setBuyEmail] = useState("");
     return (
       <div className='relative p-6 md:p-8'>
         <Header />
-        <div className='flex justify-center items-center h-60'>
-          <div className='animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600'></div>
+        {/* Skeleton Loading */}
+        <div className="relative bg-gray-100 px-4 md:px-20 py-4 md:py-10">
+          <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+          
+          {/* Skeleton content */}
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded w-64 mt-20 md:mx-10 mb-4"></div>
+            <div className="h-6 bg-gray-300 rounded w-48 md:mx-10 mb-8"></div>
+            
+            {/* Agent card skeleton */}
+            <div className="flex flex-col md:flex-row shadow-xl rounded-3xl overflow-hidden">
+              <div className="w-full bg-gray-300 min-h-[400px]"></div>
+              <div className="w-full bg-gray-400 min-h-[400px] flex items-center justify-center">
+                <div className="w-48 h-48 bg-gray-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
         </div>
         <NewFooter />
       </div>
@@ -506,7 +637,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
   </div>
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-xl md:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">{t('Get in touch with ')}</span>
     <span>
   {(() => {

@@ -508,7 +508,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
   </div>
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-xl md:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">{t('Get in touch with ')}</span>
     <span>
   {(() => {

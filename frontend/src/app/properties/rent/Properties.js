@@ -539,38 +539,146 @@ const PropertiesContent = () => {
   const [page, setPage] = useState('');
   
   useEffect(() => {
+    const CACHE_KEY = 'rent_page_data';
+    const CACHE_EXPIRY_KEY = 'rent_page_data_expiry';
+    const SESSION_CACHE_KEY = 'rent_page_session';
+    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
     const fetchPageHero = async () => {
+      // Step 1: Show cached data immediately (if available)
+      const showCachedDataImmediately = () => {
+        if (typeof window !== 'undefined') {
+          // Check sessionStorage first for ultra-fast access
+          const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
+          if (sessionData) {
+            try {
+              const parsedData = JSON.parse(sessionData);
+              setPage(parsedData.page);
+              setHeroSrc(parsedData.heroSrc);
+              return true; // Cached data was shown
+            } catch (e) {
+              console.warn('Error parsing session cache:', e);
+            }
+          }
+
+          // Check localStorage for persistent cache
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+          const now = Date.now();
+
+          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+            try {
+              const parsedData = JSON.parse(cachedData);
+              // Copy to session storage for ultra-fast next access
+              sessionStorage.setItem(SESSION_CACHE_KEY, cachedData);
+              setPage(parsedData.page);
+              setHeroSrc(parsedData.heroSrc);
+              return true; // Cached data was shown
+            } catch (e) {
+              console.warn('Error parsing localStorage cache:', e);
+            }
+          }
+        }
+        return false; // No cached data
+      };
+
+      // Step 2: Fetch fresh data function
+      const fetchFreshData = async (isBackgroundUpdate = false) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`, {
+            signal: controller.signal,
+            headers: {
+              'Cache-Control': 'max-age=300', // 5 minutes browser cache
+            }
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            // Try to use expired cache if API fails
+            if (typeof window !== 'undefined') {
+              const cachedData = localStorage.getItem(CACHE_KEY);
+              if (cachedData) {
+                const parsedData = JSON.parse(cachedData);
+                setPage(parsedData.page);
+                setHeroSrc(parsedData.heroSrc);
+                return;
+              }
+            }
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          
+          const page = await res.json();
+          setPage(page);
+          
+          let heroSrcValue = '/';
+          if (page?.backgroundImage) {
+            const cleanPath = page.backgroundImage.replace(/\\/g, '/');
+            heroSrcValue = cleanPath.startsWith('http')
+              ? cleanPath
+              : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+            setHeroSrc(heroSrcValue);
+          }
+
+          // Cache the fresh data in both localStorage and sessionStorage
+          if (typeof window !== 'undefined') {
+            const dataToCache = {
+              page: page,
+              heroSrc: heroSrcValue
+            };
+            const now = Date.now();
+            localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+            localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache));
+          }
+
+          // Show update notification for background updates
+          if (isBackgroundUpdate) {
+            console.log('✅ Rent page updated with latest data');
+          }
+
+        } catch (error) {
+          if (error.name === 'AbortError') {
+            console.warn('Rent page fetch timeout');
+          }
+          console.error('Error fetching rent page:', error);
+          
+          if (!isBackgroundUpdate) {
+            // Try to use expired cache if API fails
+            if (typeof window !== 'undefined') {
+              const cachedData = localStorage.getItem(CACHE_KEY);
+              if (cachedData) {
+                try {
+                  const parsedData = JSON.parse(cachedData);
+                  setPage(parsedData.page);
+                  setHeroSrc(parsedData.heroSrc);
+                } catch (parseError) {
+                  console.warn('Error parsing cached rent data:', parseError);
+                }
+              }
+            }
+          }
+        }
+      };
+
+      // Main execution flow
       try {
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        // Try to show cached data immediately
+        const cachedDataShown = showCachedDataImmediately();
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`, {
-          signal: controller.signal,
-        });
+        if (cachedDataShown) {
+          // User sees cached data instantly, now fetch fresh data in background
+          setTimeout(() => fetchFreshData(true), 100); // Small delay to let UI render
+        } else {
+          // No cached data, show loading and fetch fresh data
+          await fetchFreshData(false);
+        }
 
-        // Clear timeout when request completes
-        clearTimeout(timeoutId);
-
-        if (!res.ok) {
-          return;
-        }
-        
-        const page = await res.json();
-        setPage(page);
-        
-        let heroSrcValue = '/';
-        if (page?.backgroundImage) {
-          const cleanPath = page.backgroundImage.replace(/\\/g, '/');
-          heroSrcValue = cleanPath.startsWith('http')
-            ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
-          setHeroSrc(heroSrcValue);
-        }
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.warn('Rent page fetch timeout');
-        }
+      } catch (err) {
+        console.error('Error in fetchPageHero:', err);
       }
     };
 

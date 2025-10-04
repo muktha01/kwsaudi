@@ -494,46 +494,189 @@ const PropertiesContent = () => {
   const [page, setPage] = useState('');
 
   useEffect(() => {
+    const CACHE_KEY = 'new_development_page_data';
+    const CACHE_EXPIRY_KEY = 'new_development_page_data_expiry';
+    const SESSION_CACHE_KEY = 'new_development_page_session';
+    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
     const fetchInitialData = async () => {
-      try {
-        // Fetch both filter options and page hero in parallel
-        const [filtersRes, pageRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`)
-        ]);
+      // Step 1: Show cached page data immediately (if available)
+      const showCachedPageDataImmediately = () => {
+        if (typeof window !== 'undefined') {
+          // Check sessionStorage first for ultra-fast access
+          const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
+          if (sessionData) {
+            try {
+              const parsedData = JSON.parse(sessionData);
+              setPage(parsedData.page);
+              setHeroSrc(parsedData.heroSrc);
+              return true; // Cached data was shown
+            } catch (e) {
+              console.warn('Error parsing session cache:', e);
+            }
+          }
 
-        // Handle filters response
-        if (filtersRes.ok) {
-          const filtersData = await filtersRes.json();
-          if (filtersData.success && filtersData.data) {
-            setFilterOptions({
-              propertyTypes: filtersData.data.propertyTypes || [],
-              cities: filtersData.data.cities || [],
-              subTypes: filtersData.data.subTypes || [],
-              marketCenters: filtersData.data.marketCenters || [],
-              loading: false
-            });
+          // Check localStorage for persistent cache
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+          const now = Date.now();
+
+          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
+            try {
+              const parsedData = JSON.parse(cachedData);
+              // Copy to session storage for ultra-fast next access
+              sessionStorage.setItem(SESSION_CACHE_KEY, cachedData);
+              setPage(parsedData.page);
+              setHeroSrc(parsedData.heroSrc);
+              return true; // Cached data was shown
+            } catch (e) {
+              console.warn('Error parsing localStorage cache:', e);
+            }
           }
         }
+        return false; // No cached data
+      };
 
-        // Handle page response
-        if (pageRes.ok) {
-          const pageData = await pageRes.json();
-          setPage(pageData);
-          if (pageData?.backgroundImage) {
-            const cleanPath = pageData.backgroundImage.replace(/\\/g, '/');
-            setHeroSrc(
-              cleanPath.startsWith('http')
+      // Step 2: Fetch fresh data function
+      const fetchFreshData = async (isBackgroundUpdate = false) => {
+        try {
+          // Fetch both filter options and page hero in parallel
+          const [filtersRes, pageRes] = await Promise.all([
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`, {
+              headers: {
+                'Cache-Control': 'max-age=300', // 5 minutes browser cache
+              }
+            }),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/new-development`, {
+              headers: {
+                'Cache-Control': 'max-age=300', // 5 minutes browser cache
+              }
+            })
+          ]);
+
+          // Handle filters response
+          if (filtersRes.ok) {
+            const filtersData = await filtersRes.json();
+            if (filtersData.success && filtersData.data) {
+              setFilterOptions({
+                propertyTypes: filtersData.data.propertyTypes || [],
+                cities: filtersData.data.cities || [],
+                subTypes: filtersData.data.subTypes || [],
+                marketCenters: filtersData.data.marketCenters || [],
+                loading: false
+              });
+            }
+          }
+
+          let heroSrcValue = '/';
+          let pageData = null;
+
+          // Handle page response
+          if (pageRes.ok) {
+            pageData = await pageRes.json();
+            setPage(pageData);
+            if (pageData?.backgroundImage) {
+              const cleanPath = pageData.backgroundImage.replace(/\\/g, '/');
+              heroSrcValue = cleanPath.startsWith('http')
                 ? cleanPath
-                : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
-            );
+                : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+              setHeroSrc(heroSrcValue);
+            }
+          } else {
+            // Try to use expired cache if API fails
+            if (typeof window !== 'undefined') {
+              const cachedData = localStorage.getItem(CACHE_KEY);
+              if (cachedData) {
+                const parsedData = JSON.parse(cachedData);
+                setPage(parsedData.page);
+                setHeroSrc(parsedData.heroSrc);
+              }
+            }
           }
+
+          // Cache the fresh page data in both localStorage and sessionStorage
+          if (typeof window !== 'undefined' && pageData) {
+            const dataToCache = {
+              page: pageData,
+              heroSrc: heroSrcValue
+            };
+            const now = Date.now();
+            localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
+            localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache));
+          }
+
+          // Show update notification for background updates
+          if (isBackgroundUpdate) {
+            console.log('✅ New development page updated with latest data');
+          }
+
+          // Set filters loading to false regardless of success
+          setFilterOptions(prev => ({ ...prev, loading: false }));
+        } catch (error) {
+          console.error('Error fetching initial data:', error);
+          
+          if (!isBackgroundUpdate) {
+            // Try to use expired cache if API fails
+            if (typeof window !== 'undefined') {
+              const cachedData = localStorage.getItem(CACHE_KEY);
+              if (cachedData) {
+                try {
+                  const parsedData = JSON.parse(cachedData);
+                  setPage(parsedData.page);
+                  setHeroSrc(parsedData.heroSrc);
+                } catch (parseError) {
+                  console.warn('Error parsing cached new development data:', parseError);
+                }
+              }
+            }
+          }
+          
+          setFilterOptions(prev => ({ ...prev, loading: false }));
+        }
+      };
+
+      // Main execution flow
+      try {
+        // Try to show cached page data immediately
+        const cachedPageDataShown = showCachedPageDataImmediately();
+
+        if (cachedPageDataShown) {
+          // User sees cached page data instantly, now fetch fresh data in background
+          setTimeout(() => fetchFreshData(true), 100); // Small delay to let UI render
+        } else {
+          // No cached data, fetch fresh data
+          await fetchFreshData(false);
         }
 
-        // Set filters loading to false regardless of success
-        setFilterOptions(prev => ({ ...prev, loading: false }));
-      } catch (error) {
-        // console.error('Error fetching initial data:', error);
+        // Always fetch filters fresh as they are more dynamic
+        if (!cachedPageDataShown) {
+          // If no cached data was shown, filters are already fetched above
+          return;
+        }
+
+        // If cached data was shown, still fetch filters fresh
+        try {
+          const filtersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
+          if (filtersRes.ok) {
+            const filtersData = await filtersRes.json();
+            if (filtersData.success && filtersData.data) {
+              setFilterOptions({
+                propertyTypes: filtersData.data.propertyTypes || [],
+                cities: filtersData.data.cities || [],
+                subTypes: filtersData.data.subTypes || [],
+                marketCenters: filtersData.data.marketCenters || [],
+                loading: false
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching filters:', error);
+          setFilterOptions(prev => ({ ...prev, loading: false }));
+        }
+
+      } catch (err) {
+        console.error('Error in fetchInitialData:', err);
         setFilterOptions(prev => ({ ...prev, loading: false }));
       }
     };

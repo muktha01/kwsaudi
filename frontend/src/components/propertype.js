@@ -239,6 +239,7 @@ PropertyCard.displayName = "PropertyCard";
     const [currentPage, setCurrentPage] = useState(1);
     const propertiesPerPage = 6;
     const filterPanelRef = useRef(null);
+    const mobileMapRef = useRef(null);
     const [properties, setProperties] = useState([]);
     const [totalCount, setTotalCount] = useState(0); // <-- add this for backend total count
     const [hasNextPage, setHasNextPage] = useState(false);
@@ -574,8 +575,69 @@ PropertyCard.displayName = "PropertyCard";
         const [lng, lat] = hoveredProperty.coordinates_gs.coordinates;
         return { lat: lat + 0.01, lng };
       }
+      
+      // If properties with coordinates are found, center the map to show them
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        // Calculate bounds to show all properties
+        const bounds = calculateMapBounds(propertiesWithCoords);
+        if (bounds) {
+          return bounds.center;
+        }
+      }
+      
       return { lat: 24.7136, lng: 46.6753 };
     };
+
+    // Helper function to calculate optimal map bounds for properties
+    const calculateMapBounds = (propertiesWithCoords) => {
+      if (propertiesWithCoords.length === 0) return null;
+      
+      if (propertiesWithCoords.length === 1) {
+        const coords = propertiesWithCoords[0].property_address.coordinates_gs.coordinates;
+        return {
+          center: { lat: coords[1], lng: coords[0] },
+          zoom: 14
+        };
+      }
+      
+      // Calculate bounds for multiple properties
+      let minLat = Infinity, maxLat = -Infinity;
+      let minLng = Infinity, maxLng = -Infinity;
+      
+      propertiesWithCoords.forEach(property => {
+        const coords = property.property_address.coordinates_gs.coordinates;
+        const lat = coords[1];
+        const lng = coords[0];
+        
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+      });
+      
+      // Add padding to bounds
+      const latPadding = (maxLat - minLat) * 0.1;
+      const lngPadding = (maxLng - minLng) * 0.1;
+      
+      return {
+        center: {
+          lat: (minLat + maxLat) / 2,
+          lng: (minLng + maxLng) / 2
+        },
+        bounds: {
+          north: maxLat + latPadding,
+          south: minLat - latPadding,
+          east: maxLng + lngPadding,
+          west: minLng - lngPadding
+        }
+      };
+    };
+
     const getMapZoom = () => {
       if (
         hoveredProperty &&
@@ -585,6 +647,19 @@ PropertyCard.displayName = "PropertyCard";
       ) {
         return 16; // zoom in when hovering
       }
+      
+      // Auto-adjust zoom based on properties with coordinates
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length === 1) {
+        return 14; // Good zoom for single property
+      } else if (propertiesWithCoords.length > 1) {
+        return 12; // Wider view for multiple properties
+      }
+      
       return 10; // default zoom
     };
 
@@ -604,6 +679,82 @@ PropertyCard.displayName = "PropertyCard";
         desktopMap.setZoom(16);
       }
     }, [hoveredProperty, desktopMap]);
+
+    // Auto-adjust map view when properties with coordinates are found
+    useEffect(() => {
+      if (!desktopMap || hoveredProperty) return; // Don't interfere when property is hovered
+      
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        const mapBounds = calculateMapBounds(propertiesWithCoords);
+        
+        if (mapBounds) {
+          if (propertiesWithCoords.length === 1) {
+            // For single property, center and zoom in
+            desktopMap.panTo(mapBounds.center);
+            desktopMap.setZoom(14);
+          } else {
+            // For multiple properties, fit bounds to show all
+            if (mapBounds.bounds && window.google?.maps) {
+              const bounds = new window.google.maps.LatLngBounds(
+                new window.google.maps.LatLng(mapBounds.bounds.south, mapBounds.bounds.west),
+                new window.google.maps.LatLng(mapBounds.bounds.north, mapBounds.bounds.east)
+              );
+              desktopMap.fitBounds(bounds);
+              
+              // Ensure minimum zoom level for readability
+              const listener = window.google.maps.event.addListener(desktopMap, 'zoom_changed', () => {
+                if (desktopMap.getZoom() > 16) desktopMap.setZoom(16);
+                if (desktopMap.getZoom() < 10) desktopMap.setZoom(10);
+                window.google.maps.event.removeListener(listener);
+              });
+            }
+          }
+        }
+      }
+    }, [properties, desktopMap, hoveredProperty]);
+
+    // Auto-adjust mobile map view when properties with coordinates are found
+    useEffect(() => {
+      if (!mobileMapRef.current) return;
+      
+      const propertiesWithCoords = properties.filter(property => 
+        property.property_address?.coordinates_gs?.coordinates &&
+        property.property_address.coordinates_gs.coordinates.length === 2
+      );
+      
+      if (propertiesWithCoords.length > 0) {
+        const mapBounds = calculateMapBounds(propertiesWithCoords);
+        
+        if (mapBounds) {
+          if (propertiesWithCoords.length === 1) {
+            // For single property, center and zoom in
+            mobileMapRef.current.panTo(mapBounds.center);
+            mobileMapRef.current.setZoom(14);
+          } else {
+            // For multiple properties, fit bounds to show all
+            if (mapBounds.bounds && window.google?.maps) {
+              const bounds = new window.google.maps.LatLngBounds(
+                new window.google.maps.LatLng(mapBounds.bounds.south, mapBounds.bounds.west),
+                new window.google.maps.LatLng(mapBounds.bounds.north, mapBounds.bounds.east)
+              );
+              mobileMapRef.current.fitBounds(bounds);
+              
+              // Ensure minimum zoom level for mobile readability
+              const listener = window.google.maps.event.addListener(mobileMapRef.current, 'zoom_changed', () => {
+                if (mobileMapRef.current.getZoom() > 15) mobileMapRef.current.setZoom(15);
+                if (mobileMapRef.current.getZoom() < 9) mobileMapRef.current.setZoom(9);
+                window.google.maps.event.removeListener(listener);
+              });
+            }
+          }
+        }
+      }
+    }, [properties]);
 
     useEffect(() => {
       if (
@@ -668,11 +819,11 @@ PropertyCard.displayName = "PropertyCard";
                   </button>
                 </div>
               )}
-              {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
+              {/* {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
                 <div className="col-span-full flex justify-center items-center mt-6">
                   <p className="text-gray-500 text-sm font-medium">All properties have been loaded</p>
                 </div>
-              )}
+              )} */}
             </div>
           )}
           {/* Map view for mobile - also disabled for desktop-only component */}
@@ -858,19 +1009,48 @@ PropertyCard.displayName = "PropertyCard";
             </button>
           </div>
         )}
-        {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
+        {/* {!loading && properties.length > 0 && !hasNextPage && totalCount > 0 && (
           <div className="col-span-full md:col-span-2 flex justify-center items-center mt-6">
             <p className="text-gray-500 text-sm font-medium">All properties have been loaded</p>
           </div>
-        )}
+        )} */}
       </div>
     </div>
 
     {/* Right - Map (sticky) */}
     <div className="w-1/2">
       <div className="sticky top-16 w-full h-screen bg-blue-100 overflow-hidden">
-        {/* Lazy load GoogleMap for performance */}
-        {isLoaded && (
+        <div className="relative w-full h-full">
+          {/* Location indicator when properties with coordinates are found */}
+          {(() => {
+            const propertiesWithCoords = properties.filter(property => 
+              property.property_address?.coordinates_gs?.coordinates &&
+              property.property_address.coordinates_gs.coordinates.length === 2
+            );
+            
+            // if (propertiesWithCoords.length > 0) {
+            //   return (
+            //     <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+            //       <div className="flex items-center gap-2">
+            //         <FaMapMarkerAlt className="text-[rgb(206,32,39,255)] text-sm" />
+            //         <span className="text-sm font-medium text-gray-700">
+            //           {propertiesWithCoords.length} {propertiesWithCoords.length === 1 ? t('property') : t('properties')} 
+            //           {' '}{t('with location')} {propertiesWithCoords.length > 1 ? t('found') : t('found')}
+            //         </span>
+            //       </div>
+            //       {propertiesWithCoords.length > 1 && (
+            //         <div className="text-xs text-gray-500 mt-1">
+            //           {t('Map auto-adjusted to show all locations')}
+            //         </div>
+            //       )}
+            //     </div>
+            //   );
+            // }
+            return null;
+          })()}
+          
+          {/* Lazy load GoogleMap for performance */}
+          {isLoaded && (
           <Suspense fallback={<Loader />}>
             <GoogleMap
               mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -1095,7 +1275,7 @@ PropertyCard.displayName = "PropertyCard";
             </GoogleMap>
           </Suspense>
         )}
-
+        </div>
       </div>
     </div>
 </div>
