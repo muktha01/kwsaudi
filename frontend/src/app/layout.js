@@ -1,6 +1,7 @@
 
 import Script from 'next/script';
 import DynamicAnalytics from './DynamicAnalytics';
+import LanguageHandler from '@/components/LanguageHandler';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Dancing_Script } from 'next/font/google'
@@ -38,7 +39,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} language-transition`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <LanguageHandler />
+          {children}
+        </Providers>
         <DynamicAnalytics />
       </body>
     </html>
