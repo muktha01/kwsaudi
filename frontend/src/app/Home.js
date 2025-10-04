@@ -980,24 +980,27 @@ const [pdfs, setPdfs] = useState([]);
   /* Very small mobile screens (320px - 375px) */
   @media (max-width: 375px) {
     .mobile-hero-content {
-      top: 25% !important;
+      top: 50% !important;
+      bottom: 10% !important;
+      display: flex !important;
+      flex-direction: column !important;
       padding: 0.75rem !important;
     }
     
     .mobile-hero-title {
-      font-size: 1.25rem !important;
+      font-size: 1.5rem !important;
       line-height: 1.3 !important;
       margin-bottom: 0.75rem !important;
     }
     
     .mobile-hero-text {
-      font-size: 0.75rem !important;
+      font-size: 0.875rem !important;
       line-height: 1.2 !important;
       margin-bottom: 1rem !important;
     }
     
     .mobile-hero-tabs {
-      font-size: 0.875rem !important;
+      font-size: 0.9375rem !important;
       gap: 0.25rem !important;
       margin-bottom: 0.75rem !important;
     }
@@ -1005,30 +1008,33 @@ const [pdfs, setPdfs] = useState([]);
     .mobile-hero-input {
       width: 8rem !important;
       padding: 0.5rem 0.25rem !important;
-      font-size: 0.75rem !important;
+      font-size: 0.8125rem !important;
     }
     
     .mobile-hero-button {
       padding: 0.5rem 0.375rem !important;
-      font-size: 0.75rem !important;
+      font-size: 0.8125rem !important;
     }
   }
   
   /* Small mobile screens (376px - 414px) */
   @media (min-width: 376px) and (max-width: 414px) {
     .mobile-hero-content {
-      top: 28% !important;
+      top: 50% !important;
+      bottom: 10% !important;
+      display: flex !important;
+      flex-direction: column !important;
       padding: 1rem !important;
     }
     
     .mobile-hero-title {
-      font-size: 1.375rem !important;
+      font-size: 1.625rem !important;
       line-height: 1.3 !important;
       margin-bottom: 1rem !important;
     }
     
     .mobile-hero-text {
-      font-size: 0.8125rem !important;
+      font-size: 0.9375rem !important;
       line-height: 1.25 !important;
       margin-bottom: 1.25rem !important;
     }
@@ -1036,28 +1042,31 @@ const [pdfs, setPdfs] = useState([]);
     .mobile-hero-input {
       width: 9rem !important;
       padding: 0.6rem 0.375rem !important;
-      font-size: 0.8125rem !important;
+      font-size: 0.875rem !important;
     }
     
     .mobile-hero-button {
       padding: 0.6rem 0.5rem !important;
-      font-size: 0.8125rem !important;
+      font-size: 0.875rem !important;
     }
   }
   
   /* Medium mobile screens (415px - 767px) */
   @media (min-width: 415px) and (max-width: 767px) {
     .mobile-hero-content {
-      top: 30% !important;
+      top: 55% !important;
+      bottom: 10% !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
     
     .mobile-hero-title {
-      font-size: 1.5rem !important;
+      font-size: 1.75rem !important;
       line-height: 1.35 !important;
     }
     
     .mobile-hero-text {
-      font-size: 0.875rem !important;
+      font-size: 1rem !important;
       line-height: 1.3 !important;
     }
   }
@@ -1086,9 +1095,11 @@ const [pdfs, setPdfs] = useState([]);
     isRTL ? "md:right-36 right-6" : "md:left-36 left-6"
   }`}
 >
-              <div className="max-w-full  md:max-w-3xl">
-               <h1
-  className={`mobile-hero-title text-xl sm:text-2xl md:text-5xl font-bold md:font-semibold mb-6 md:mb-6 leading-tight ${
+              <div className="max-w-full md:max-w-3xl flex flex-col md:block h-full md:h-auto md:justify-start">
+                {/* Title and Text Container */}
+                <div className="flex-shrink-0 md:block">
+                <h1
+  className={`mobile-hero-title text-xl sm:text-2xl md:text-5xl font-bold md:font-semibold mb-2 md:mb-8 leading-tight ${
     isRTL ? "text-right" : "text-left"
   }`}
 >
@@ -1097,15 +1108,16 @@ const [pdfs, setPdfs] = useState([]);
 </h1>
 
 
-                <p className="mobile-hero-text text-sm sm:text-sm md:text-[1.1rem] font-normal mb-6 md:mb-8 max-w-full md:max-w-2xl">
+                <p className="mobile-hero-text text-sm sm:text-sm md:text-[1.1rem] font-normal mb-2 md:mb-10 max-w-full md:max-w-2xl">
               { t( "Our real estate agents are business owners, not employees, so you get more choice, time, and a better experience. Get expert advice from the largest real estate franchise in the world.")}
                 </p>
+                </div>
 
-                {/* Tabs */}
-                <div className="w-full flex flex-col items-left">
+                {/* Tabs and Inputs Container - Bottom for mobile */}
+                <div className="w-full flex flex-col items-left flex-shrink-0 md:flex-shrink md:mt-0">
 
                   {/* Tab Navigation */}
-                  <div className="mobile-hero-tabs flex flex-col md:flex-row flex-wrap gap-1 md:gap-8 text-sm sm:text-lg md:text-xl font-semibold w-fit mb-3 md:mb-6">
+                  <div className="mobile-hero-tabs flex flex-col md:flex-row flex-wrap gap-1 md:gap-8 text-sm sm:text-lg md:text-xl font-semibold w-fit mb-2 md:mb-8">
                     <span
                       onClick={() => setActiveTab('property')}
                       className={`pb-1 sm:pb-2 cursor-pointer border-b-4 ${activeTab === 'property' ? 'border-[rgb(206,32,39,255)]' : 'border-transparent'
@@ -1125,7 +1137,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
                   {/* Desktop View */}
-                  <div className="hidden md:flex md:max-w-2xl flex-col md:flex-row items-center gap-1 md:gap-1">
+                  <div className="hidden md:flex md:max-w-2xl flex-col md:flex-row items-center gap-1 md:gap-2">
                     {activeTab === "property" ? (
                       <>
                         {/* Property search */}
@@ -1147,7 +1159,7 @@ const [pdfs, setPdfs] = useState([]);
 
                         {/* </div> */}
 
-                        <div className="flex gap-1 md:gap-1">
+                        <div className="flex gap-1 md:gap-2">
                           <button
                             className="cursor-pointer bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-6 sm:px-4 md:px-6 py-3 text-base md:text-xl font-semibold"
                             onClick={() =>
@@ -1207,7 +1219,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
                   {/* Mobile View */}
-                  <div className="flex md:hidden  gap-1 mt-4 ">
+                  <div className="flex md:hidden  gap-1 mt-2 ">
 
                     {activeTab === 'property' ? (
                       <>
