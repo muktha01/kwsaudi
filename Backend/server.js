@@ -54,7 +54,7 @@ const limiter = rateLimit({
   trustProxy: true, // Add this line
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  keyGenerator: (req) => req.ip, // Use real IP addresses
+  // Remove the keyGenerator line - it causes IPv6 errors
 });
 
 // Stricter rate limiting for authentication endpoints
@@ -65,6 +65,7 @@ const authLimiter = rateLimit({
     error: 'Too many authentication attempts, please try again later.',
     retryAfter: '10 minutes'
   },
+  trustProxy: true, // ADD THIS LINE
   skipSuccessfulRequests: true
 });
 
