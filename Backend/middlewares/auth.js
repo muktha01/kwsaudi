@@ -12,10 +12,14 @@ export const authenticateAdmin = async (req, res, next) => {
     } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
       console.log('Token found in Authorization header');
+    } else if (req.headers['x-auth-token']) {
+      // Support custom header for reverse proxy scenarios
+      token = req.headers['x-auth-token'];
+      console.log('Token found in x-auth-token header');
     }
 
     if (!token) {
-      console.log('No token provided');
+      console.log('No token provided - cookies:', !!req.cookies.token, 'auth header:', !!req.headers.authorization, 'origin:', req.get('origin'));
       return res.status(401).json({
         success: false,
         message: 'Access denied. No token provided.'
