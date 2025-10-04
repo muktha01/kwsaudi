@@ -42,12 +42,9 @@ app.use(cors({
     'http://31.97.62.135:3000',       // Frontend server
     'http://31.97.62.135:3001',       // Admin Dashboard server
     'https://www.kwsaudiarabia.com',   // Production domain
-    'https://kw-saudiarabia.com',      // Production domain
-    'kw-saudiarabia.com',              // Production domain without https
+    'https://kw-saudiarabia.com'       // Production domain
   ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
+  credentials: true
 }));
 
 // JSON parsing middleware with error handling
