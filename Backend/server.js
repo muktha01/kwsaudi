@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import compression from 'compression';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +35,33 @@ import apiManagementRoutes from './routes/apiManagement.js';
 dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 
 const app = express();
+
+// Production middleware
+app.use(compression()); // Compress responses
+app.use(helmet()); // Security headers
+
+// Rate limiting for API routes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Stricter rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 login attempts per windowMs
+  message: {
+    error: 'Too many authentication attempts, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  skipSuccessfulRequests: true
+});
 
 // Configure CORS to allow requests from specific origins
 app.use(cors({
@@ -89,8 +119,11 @@ app.get('/api/test', (req, res) => {
     status: 'success'
   });
 });
+// Apply rate limiting
+app.use('/api', limiter); // General API rate limiting
+
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes); // Stricter rate limiting for auth
 app.use('/api', seoRoutes);
 app.use('/api', emailsArabicRoutes);
 app.use('/api', pageRoutes);
