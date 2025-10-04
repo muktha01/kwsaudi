@@ -36,20 +36,25 @@ dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 
 const app = express();
 
+// Add this line to fix proxy issues
+app.set('trust proxy', true);
+
 // Production middleware
 app.use(compression()); // Compress responses
 app.use(helmet()); // Security headers
 
-// Rate limiting for API routes
+// Rate limiting for API routes - UPDATED
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // Increase from 100 to 1000 requests per IP
   message: {
     error: 'Too many requests from this IP, please try again later.',
     retryAfter: '15 minutes'
   },
+  trustProxy: true, // Add this line
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  keyGenerator: (req) => req.ip, // Use real IP addresses
 });
 
 // Stricter rate limiting for authentication endpoints
