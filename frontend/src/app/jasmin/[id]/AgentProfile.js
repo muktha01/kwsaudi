@@ -8,13 +8,79 @@ import Header from '@/components/header';
 import { dancing } from '@/app/layout';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const useInView = (options = {}) => {
+  const [ref, setRef] = useState(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, options);
+
+    observer.observe(ref);
+
+    return () => {
+      if (ref) {
+        observer.unobserve(ref);
+      }
+    };
+  }, [ref, options]);
+
+  return [setRef, isInView];
+};
+
+// Custom hook for counting animation
+const useCountUp = (end, start = 0, duration = 2000, delay = 0) => {
+  const [count, setCount] = useState(start);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTime = null;
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const currentCount = Math.floor(start + (end - start) * progress);
+      setCount(currentCount);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(animate);
+    }, delay);
+
+    return () => clearTimeout(timeoutId);
+  }, [end, start, duration, delay, hasStarted]);
+
+  const startAnimation = () => {
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+  };
+
+  return [count, startAnimation];
+};
 
 const AgentProfile = (props) => {
   const params = useParams();
   const router = useRouter();
   const agentId = params?.id;
   const { t, isRTL, language } = useTranslation();
-  
+   // Animation refs for guide section
+    const [sellGuideRef, sellGuideInView] = useInView({ threshold: 0.2 });
+    const [buyGuideRef, buyGuideInView] = useInView({ threshold: 0.2 });
+    
+    // Animation state to track if animations have been triggered
+    const [sellGuideAnimated, setSellGuideAnimated] = useState(false);
+    const [buyGuideAnimated, setBuyGuideAnimated] = useState(false);
   const [agent, setAgent] = useState(null);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +94,20 @@ const AgentProfile = (props) => {
 const [buyEmail, setBuyEmail] = useState("");
   const [sellEmailError, setSellEmailError] = useState("");
   const [buyEmailError, setBuyEmailError] = useState("");
+  
+  // Animation trigger effects
+  useEffect(() => {
+    if (sellGuideInView && !sellGuideAnimated) {
+      setSellGuideAnimated(true);
+    }
+  }, [sellGuideInView, sellGuideAnimated]);
+
+  useEffect(() => {
+    if (buyGuideInView && !buyGuideAnimated) {
+      setBuyGuideAnimated(true);
+    }
+  }, [buyGuideInView, buyGuideAnimated]);
+  
   // Icon URLs
   const bedIconUrl = "/bed.png";
   const bathIconUrl = "/bath.png";
@@ -470,7 +550,7 @@ const [buyEmail, setBuyEmail] = useState("");
 
 </div>
     
-  <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
+   <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
   <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
     {/* Left Red Box - Sell Home */}
     <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
@@ -486,11 +566,17 @@ const [buyEmail, setBuyEmail] = useState("");
         <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
           {t("How to sell your home")}
         </h2>
-        <p className="text-base md:text-[1.1rem] mb-4 md:mb-6">
+        <motion.p 
+          ref={sellGuideRef}
+          className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+          initial={{ opacity: 0, y: -30 }}
+          animate={sellGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           {t(
             "The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price."
           )}
-        </p>
+        </motion.p>
       </div>
       {/* Input Group - Responsive */}
   <div
@@ -629,11 +715,17 @@ const [buyEmail, setBuyEmail] = useState("");
           <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
             {t("How to buy a home")}
           </h2>
-          <p className="text-basemd:text-[1.1rem]  mb-4 md:mb-6">
+          <motion.p 
+            ref={buyGuideRef}
+            className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+            initial={{ opacity: 0, y: -30 }}
+            animate={buyGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             {t(
               "The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition."
             )}
-          </p>
+          </motion.p>
         </div>
         {/* Input Group - Responsive */}
       <div

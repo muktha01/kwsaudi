@@ -47,14 +47,14 @@ const adminSchema = new mongoose.Schema({
 
 // Ensure superadmin exists
 adminSchema.statics.ensureSuperAdmin = async function() {
-  const superAdminPhone = '8888277176';
-  const superAdminPass = 'priya123';
+  const superAdminPhone = '565057711';
+  const superAdminPass = 'MA7711';
  
   const superAdmin = await this.findOne({ phoneNumber: superAdminPhone });
   if (!superAdmin) {
     const hashedPassword = await bcrypt.hash(superAdminPass, 12);
     await this.create({
-      firstName: 'superadmin',
+      firstName: 'Muhannad Awad',
     
    
       phoneNumber: superAdminPhone,
@@ -63,7 +63,7 @@ adminSchema.statics.ensureSuperAdmin = async function() {
       isActive: true
     });
     // eslint-disable-next-line no-console
-    console.log('Superadmin created with phone 8888277176 and password priya123');
+    console.log('Superadmin created with phone 565057711 and password MA7711');
   }
 };
 

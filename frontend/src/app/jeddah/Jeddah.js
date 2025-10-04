@@ -327,7 +327,7 @@ const Jeddah = () => {
         {/* Google Map */}
         <div className="w-full h-90">
           <iframe
-            src='https://www.google.com/maps?q=Jeddah,+Saudi+Arabia&output=embed'
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3396.8668275722484!2d39.137547399999995!3d21.5490398!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3c581cca01799%3A0x669ff67f01cbe859!2z2YPZitmE2LEg2YjZitmE2YrYp9mF2LIg2KfZhNiz2LnZiNiv2YrYqSB8IEtXIFNhdWRpIEFyYWJpYQ!5e1!3m2!1sen!2sin!4v1759571164153!5m2!1sen!2sin" 
             title={t("Jeddah Location")}
             width="100%"
             height="100%"

@@ -208,13 +208,13 @@ export const getExternalListings = async (req, res) => {
       allListings = externalListingsCache.data.slice();
     }
     // Define exactly what we want to KEEP
-  const allowedListStatuses = ['Active', 'Sold', 'Rented/Leased'];
-  const allowedListCategories = ['For Sale', 'For Rent', 'To Let', 'Sold', 'Rented/Leased'];
+  const allowedListStatuses = ['Active', 'Rented/Leased'];
+  const allowedListCategories = ['For Sale', 'For Rent', 'To Let', 'Rented/Leased'];
     
     // Define what we want to EXCLUDE (remove completely)
-  let blockedStatuses = ['Expired', 'Delete','Draft','Pending', 'Withdrawn', 'Cancelled'];
+  let blockedStatuses = ['Expired', 'Delete','Draft','Pending', 'Withdrawn', 'Cancelled', 'Sold'];
   // If a request explicitly asks for Off Market, do NOT block it for this request
-  let blockedCategories = ['Pending','Delete','Draft', 'Withdrawn', 'Cancelled', 'Expired'];
+  let blockedCategories = ['Pending','Delete','Draft', 'Withdrawn', 'Cancelled', 'Expired', 'Sold'];
     try {
       const requestedCategories = Array.isArray(listCategoryFilter)
         ? listCategoryFilter

@@ -12,6 +12,7 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { FaCheck } from "react-icons/fa";
 import { useTranslation } from '@/contexts/TranslationContext';
 const Franchise = () => {
+  const router = useRouter();
   // Add state to track screen size
   const [isMobile, setIsMobile] = useState(false);
   const [phone, setPhone] = useState('');
@@ -27,7 +28,7 @@ const Franchise = () => {
     promotionalConsent: false,
     personalDataConsent: false
   });
-  const [heroSrc, setHeroSrc] = useState('/');
+  const [heroSrc, setHeroSrc] = useState('/'); // Default fallback image
   const [page, setPage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -76,7 +77,7 @@ const Franchise = () => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing session cache:', e);
+              //console.warn('Error parsing session cache:', e);
             }
           }
 
@@ -94,7 +95,7 @@ const Franchise = () => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing localStorage cache:', e);
+              //console.warn('Error parsing localStorage cache:', e);
             }
           }
         }
@@ -137,14 +138,14 @@ const Franchise = () => {
           const page = await res.json();
           setPage(page);
           
-          let heroSrcValue = '/';
+          let heroSrcValue = '';
           if (page?.backgroundImage) {
             const cleanPath = page.backgroundImage.replace(/\\/g, '/');
             heroSrcValue = cleanPath.startsWith('http')
               ? cleanPath
               : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
-            setHeroSrc(heroSrcValue);
           }
+          setHeroSrc(heroSrcValue);
 
           // Cache the fresh data in both localStorage and sessionStorage
           if (typeof window !== 'undefined') {
@@ -160,14 +161,14 @@ const Franchise = () => {
 
           // Show update notification for background updates
           if (isBackgroundUpdate) {
-            console.log('✅ Franchise page updated with latest data');
+           // console.log('✅ Franchise page updated with latest data');
           }
 
         } catch (error) {
           if (error.name === 'AbortError') {
-            console.warn('Franchise page fetch timeout');
+           // console.warn('Franchise page fetch timeout');
           }
-          console.error('Error fetching franchise page:', error);
+          //console.error('Error fetching franchise page:', error);
           
           if (!isBackgroundUpdate) {
             // Try to use expired cache if API fails
@@ -179,7 +180,7 @@ const Franchise = () => {
                   setPage(parsedData.page);
                   setHeroSrc(parsedData.heroSrc);
                 } catch (parseError) {
-                  console.warn('Error parsing cached franchise data:', parseError);
+                  //console.warn('Error parsing cached franchise data:', parseError);
                 }
               }
             }
@@ -205,7 +206,7 @@ const Franchise = () => {
         }
 
       } catch (err) {
-        console.error('Error in fetchPageHero:', err);
+        //console.error('Error in fetchPageHero:', err);
         setLoading(false);
       }
     };
@@ -222,7 +223,7 @@ const Franchise = () => {
         if (sessionData) {
           const parsedData = JSON.parse(sessionData);
           if (parsedData.page && !page) setPage(parsedData.page);
-          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+          if (parsedData.heroSrc && !heroSrc) {
             setHeroSrc(parsedData.heroSrc);
           }
           return;
@@ -235,14 +236,14 @@ const Franchise = () => {
         if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
           const parsedData = JSON.parse(cachedData);
           if (parsedData.page && !page) setPage(parsedData.page);
-          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
+          if (parsedData.heroSrc && !heroSrc) {
             setHeroSrc(parsedData.heroSrc);
           }
           // Copy to session storage for next access
           sessionStorage.setItem('franchise_page_session', cachedData);
         }
       } catch (e) {
-        console.warn('Error reading cached franchise data in client effect:', e);
+        //console.warn('Error reading cached franchise data in client effect:', e);
       }
     }
   }, [heroSrc,page]); // Run once on mount
@@ -302,8 +303,8 @@ const Franchise = () => {
       <Header />
 
       <Box
-        h3={t(page.backgroundOverlayContent)}
-          src={heroSrc}
+        h3={t(page?.backgroundOverlayContent || "")}
+        src={heroSrc}
         image={
           'https://static.wixstatic.com/media/36a881_d93a5085a707440e9b7a3346a80846a1~mv2.png/v1/fill/w_271,h_180,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/7-removebg-preview.png'
         }

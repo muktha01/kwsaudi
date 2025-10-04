@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   FaSearch, FaBars, FaTimes, FaBuilding,
   FaNetworkWired, FaUserTie, FaKey, FaUser,
-  FaUsers, FaGlobe, FaHome, FaEnvelope, FaPhone,
+  FaUsers, FaHome, FaEnvelope, FaPhone,
   FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube,
   FaTwitter, FaTiktok, FaSnapchatGhost, FaWhatsapp, FaChevronDown, FaChevronUp
 } from "react-icons/fa";
@@ -139,7 +139,10 @@ const Header = () => {
       ]
     },
     {
-      label: t('Search Agent/Market Center'), key: 'searchagent', submenu: [
+      label: t('Search Agent/Market Center'), 
+      mobileLabel: t('Search'),
+      key: 'searchagent', 
+      submenu: [
         { label: t('KW Agent'), href: '/agent' },
         { label: t("Jasmine MC"), href: "/jasmin" },
         { label: t("Jeddah MC"), href: "/jeddah" },
@@ -326,7 +329,7 @@ const Header = () => {
                     className="flex justify-between items-center px-2 text-white hover:text-gray-300 transition-colors cursor-pointer border-b border-gray-700"
                   >
                     <span className={openSubmenu === item.key ? 'text-white font-semibold' : 'text-white'}>
-                      {item.label}
+                      {item.mobileLabel || item.label}
                     </span>
                     {openSubmenu === item.key ? (
                       <FaChevronUp className="text-white" />
@@ -339,7 +342,7 @@ const Header = () => {
                     href={item.href}
                     className="block py-1 font-semibold transition-colors border-b border-gray-700 text-white hover:text-[rgb(206,32,39,255)]"
                   >
-                    {item.label}
+                    {item.mobileLabel || item.label}
                   </Link>
                 )}
 

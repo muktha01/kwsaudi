@@ -1001,7 +1001,7 @@ const PropertiesContent = () => {
       {/* Conditional rendering */}
       {uiState.showMap ? (
         // ✅ Map is outside mx-38 → takes full width
-        <PropertyType />
+        <PropertyType appliedFilters={appliedFilters} />
       ) : (
         <>
           <div className="mx-6 md:mx-38">
@@ -1046,7 +1046,7 @@ const PropertiesContent = () => {
 
           {/* View More Properties Button */}
           {pagination.hasNextPage && !uiState.loading && properties.length % pagination.perPage === 0 && (
-            <div className="flex justify-center items-center my-10">
+            <div className="flex justify-center items-center py-10">
               <button
                 onClick={goToNextPage}
                 disabled={uiState.loadingMore}

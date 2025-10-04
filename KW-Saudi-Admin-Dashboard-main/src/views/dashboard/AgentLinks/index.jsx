@@ -34,10 +34,10 @@ export default function LinksPage() {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/links`);
       setLinks(res.data || []);
-      console.log("Links loaded from backend:", res.data);
+      //console.log("Links loaded from backend:", res.data);
       return true;
     } catch (err) {
-      console.error("Backend not running:", err);
+     // console.error("Backend not running:", err);
       setLinks([]);
       return false;
     }
@@ -56,15 +56,14 @@ export default function LinksPage() {
         selectedLink
       );
       
-      console.log("Link updated successfully in backend");
+      // console.log("Link updated successfully in backend");
       
       // Refetch all links from backend to ensure consistency
       await fetchLinks();
       
       handleClose();
     } catch (err) {
-      console.error("Error updating link in backend:", err);
-      alert("Error updating link. Please try again.");
+      
       handleClose();
     }
   };
@@ -92,21 +91,21 @@ export default function LinksPage() {
   const handleAddSave = async () => {
     try {
       if (!newLink.name || !newLink.url) {
-        alert("Please fill in both name and URL");
+       
         return;
       }
 
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/links`, newLink);
       
-      console.log("Link added successfully:", res.data);
+      // console.log("Link added successfully:", res.data);
       
       // Refetch all links from backend
       await fetchLinks();
       
       handleAddClose();
     } catch (err) {
-      console.error("Error adding link:", err);
-      alert("Error adding link. Please try again.");
+      // console.error("Error adding link:", err);
+    
     }
   };
 

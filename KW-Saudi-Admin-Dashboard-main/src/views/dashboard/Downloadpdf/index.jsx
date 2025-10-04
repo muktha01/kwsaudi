@@ -26,7 +26,7 @@ export default function PdfManager() {
       const data = await res.json();
       setEmails(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       setEmails([]);
     } finally {
       setEmailsLoading(false);
@@ -50,8 +50,8 @@ export default function PdfManager() {
       const data = await res.json();
       setPdfs(Array.isArray(data) ? data : []); // fallback to []
     } catch (err) {
-      console.error(err);
-      alert("Failed to load PDFs");
+    
+    
       setPdfs([]);
     }
   };
@@ -82,11 +82,10 @@ export default function PdfManager() {
         body: formData,
       });
       const data = await res.json();
-      alert(data.message || "Uploaded!");
+    
       fetchPdfs(); // refresh list
     } catch (err) {
-      console.error(err);
-      alert("Upload failed");
+     
     } finally {
       setLoading(false);
     }
@@ -109,8 +108,8 @@ export default function PdfManager() {
 
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
-      alert("Download failed");
+      //console.error(err);
+   
     } finally {
       setLoading(false);
     }
@@ -254,7 +253,7 @@ export default function PdfManager() {
                           if (!res.ok) throw new Error("Delete failed");
                           fetchEmails();
                         } catch (err) {
-                          alert("Delete failed");
+                          
                         } finally {
                           setLoading(false);
                         }

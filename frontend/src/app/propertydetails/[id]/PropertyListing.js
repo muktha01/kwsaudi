@@ -93,7 +93,7 @@ export default function PropertyListing() {
   useEffect(() => {
     if (property && !pageLoading) {
       const loadTime = Date.now() - performanceRef.current.startTime;
-      console.log(`Property ${id} loaded in ${loadTime}ms`);
+    
     }
   }, [property, pageLoading, id]);
   
@@ -176,12 +176,12 @@ export default function PropertyListing() {
         const data = await response.json();
         if (data.success && data.data) {
           cacheManager.set(`property_${propertyId}`, data.data, 'property');
-          console.log(`Prefetched property ${propertyId}`);
+        
         }
       }
     } catch (error) {
       // Silent fail for prefetch
-      console.log(`Prefetch failed for property ${propertyId}:`, error.message);
+    
     }
   }, [cacheManager]);
 
@@ -192,7 +192,7 @@ export default function PropertyListing() {
         localStorage.setItem('selectedProperty', JSON.stringify(propertyData));
         localStorage.setItem('propertyLastViewed', Date.now().toString());
       } catch (error) {
-        console.warn('Failed to cache property in localStorage:', error);
+       
       }
     }
   }, []);
@@ -218,7 +218,7 @@ export default function PropertyListing() {
       if (cachedSimilar) {
         setSimilarProperties(cachedSimilar);
         setLoadingSimilar(false);
-        console.log(`Loaded similar properties from cache for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
+       // console.log(`Loaded similar properties from cache for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
         return;
       }
       
@@ -281,14 +281,14 @@ export default function PropertyListing() {
         // Cleanup old cache entries
         cacheManager.cleanup();
         
-        console.log(`Cached ${filtered.length} similar properties for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
+        //console.log(`Cached ${filtered.length} similar properties for property ${currentProperty._kw_meta?.id || currentProperty.id}`);
       }
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.log('Similar properties fetch aborted');
+        //console.log('Similar properties fetch aborted');
         return;
       }
-      console.error('Error fetching similar properties:', error);
+      //console.error('Error fetching similar properties:', error);
       // Don't show error to user for similar properties, just log it
     } finally {
       setLoadingSimilar(false);
@@ -530,7 +530,7 @@ const [activeTab, setActiveTab] = useState('overview');
           // Still fetch similar properties in background
           fetchSimilarProperties(cachedData);
           setPageLoading(false);
-          console.log(`Loaded property ${id} from cache`);
+          //console.log(`Loaded property ${id} from cache`);
           return;
         }
         
@@ -549,11 +549,11 @@ const [activeTab, setActiveTab] = useState('overview');
                 cacheManager.set(cacheKey, propertyData, 'property');
                 fetchSimilarProperties(propertyData);
                 setPageLoading(false);
-                console.log(`Loaded property ${id} from localStorage and cached`);
+               // console.log(`Loaded property ${id} from localStorage and cached`);
                 return;
               }
             } catch (parseError) {
-              console.warn('Error parsing stored property:', parseError);
+              //console.warn('Error parsing stored property:', parseError);
             }
           }
         }
@@ -579,7 +579,7 @@ const [activeTab, setActiveTab] = useState('overview');
         }
         
         const data = await response.json();
-        console.log('Property fetch response:', { success: data.success, id });
+        //console.log('Property fetch response:', { success: data.success, id });
         
         if (data.success && data.data) {
           setProperty(data.data);
@@ -593,19 +593,19 @@ const [activeTab, setActiveTab] = useState('overview');
           // Cleanup old cache entries
           cacheManager.cleanup();
           
-          console.log(`Fetched and cached property ${id}`);
+          //console.log(`Fetched and cached property ${id}`);
           
           // Fetch similar properties in parallel (non-blocking)
           fetchSimilarProperties(data.data);
         } else {
-          console.error('Property not found with ID:', id);
+          //console.error('Property not found with ID:', id);
         }
       } catch (error) {
         if (error.name === 'AbortError') {
-          console.log('Property fetch aborted');
+         // console.log('Property fetch aborted');
           return;
         }
-        console.error('Error fetching property:', error);
+        //console.error('Error fetching property:', error);
         
         // Enhanced fallback to localStorage on network error
         if (typeof window !== 'undefined') {
@@ -621,10 +621,10 @@ const [activeTab, setActiveTab] = useState('overview');
                 // Cache the fallback data
                 cacheManager.set(cacheKey, propertyData, 'property');
                 fetchSimilarProperties(propertyData);
-                console.log(`Used localStorage fallback for property ${id}`);
+               // console.log(`Used localStorage fallback for property ${id}`);
               }
             } catch (parseError) {
-              console.error('Error parsing stored property:', parseError);
+             // console.error('Error parsing stored property:', parseError);
             }
           }
         }
@@ -739,8 +739,8 @@ const [activeTab, setActiveTab] = useState('overview');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert(t('Enquiry submitted successfully!'));
+    // console.log('Form submitted:', formData);
+   
   };
 
   const handleTabClick = (key) => {

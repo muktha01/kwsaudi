@@ -407,7 +407,7 @@ const AgentMap = React.memo(({
                               e.stopPropagation();
                               handleAgentClick(agent);
                             }}
-                            className="w-full bg-[rgb(206,32,39,255)] text-white text-xs font-medium py-2 px-3 rounded mt-3 hover:bg-[rgb(186,22,29,255)] transition-colors flex items-center justify-center gap-1"
+                            className="w-full bg-[rgb(206,32,39,255)] text-white text-xs font-medium py-2 px-3 rounded mt-3 hover:bg-[rgb(186,22,29,255)] transition-colors flex items-start justify-start gap-1"
                           >
                             <span>{t('View Details & Properties')}</span>
                             <FaChevronRight className="w-3 h-3" />
@@ -477,7 +477,7 @@ const AgentContent = () => {
 
   // Google Maps loader
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyDG48YF2dsvPN0qHX3_vSaTJj6aqg3-Oc4"
+    googleMapsApiKey: "AIzaSyDhQDfHVkov3_YZ_Zt-m9N7Q-ytIxcVpx0"
   });
 
   const [filterName, setFilterName] = useState("");
@@ -1503,25 +1503,33 @@ const AgentContent = () => {
                           />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg sm:text-lg md:text-2xl font-semibold mb-2">{agent.name}</h3>
-                          <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2">
-                            <FaPhoneAlt className="text-gray-600" /> {agent.phone}
-                          </p>
-                          <p className="text-sm sm:text-base mb-4 break-all flex items-center gap-2">
-                            <FaEnvelope className="text-gray-600" /> {agent.email}
-                          </p>
-                          {agent.office && (
-                            <p className="text-sm text-gray-500 mb-2">{t('Office:')} {agent.office}</p>
-                          )}
-                          <button
-                            onClick={() => handleAgentClick(agent)}
-                            className={`hover:text-[rgb(206,32,39,255)] font-semibold transition-colors py-2 sm:py-3 flex items-center ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}
-                            gap-1 sm:gap-2 text-base sm:text-base`}
-                          >
-                            <span data-translate>{t('View Details & Properties')}</span>
-                            <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} w-3 h-3 mt-0.5`} />
-                          </button>
-                        </div>
+  <h3 className="text-lg sm:text-lg md:text-2xl font-semibold mb-2">{agent.name}</h3>
+  
+  <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2">
+    <FaPhoneAlt className="text-gray-600" /> {agent.phone}
+  </p>
+  
+  <p className="text-sm sm:text-base mb-4 break-all flex items-center gap-2">
+    <FaEnvelope className="text-gray-600" /> {agent.email}
+  </p>
+  
+  {agent.office && (
+    <p className="text-sm text-gray-500 mb-2">
+      {t('Office:')} {agent.office}
+    </p>
+  )}
+
+  <button
+    onClick={() => handleAgentClick(agent)}
+    className={`hover:text-[rgb(206,32,39,255)] font-semibold transition-colors py-2 sm:py-3 flex items-center 
+      ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} 
+      gap-1 sm:gap-2 text-xs sm:text-base`}
+  >
+    <span data-translate>{t('View Details & Properties')}</span>
+    <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} md:w-3 md:h-3 w-2 h-2 mt-0.5`} />
+  </button>
+</div>
+
                       </article>
                     );
                   })}
@@ -1585,7 +1593,7 @@ const AgentContent = () => {
             </div>
 
             {/* Right: Sticky Map */}
-            <div className="pl-0 my-6 md:my-10 sticky md:top-20 h-[300px] sm:h-[400px] md:h-[calc(100vh-5rem)]">
+            <div className="hidden md:block pl-0 my-6 md:my-10 sticky md:top-20 h-[300px] sm:h-[400px] md:h-[calc(100vh-5rem)]">
               <div 
                 className="relative w-full overflow-hidden border border-gray-200 h-full"
                 data-testid="agent-map-container"

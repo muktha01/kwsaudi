@@ -26,7 +26,7 @@ export const login = async (req, res) => {
     }
 
     // Special case: superadmin login
-    if (phoneNumber === '8888277176' && password === 'priya123') {
+    if (phoneNumber === '565057711' && password === 'MA7711') {
       let admin = await Admin.findOne({ phoneNumber });
       if (!admin) {
         // Should not happen, but try to create if missing

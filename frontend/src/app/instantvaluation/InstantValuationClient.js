@@ -163,14 +163,14 @@ const InstantValuationClient = () => {
 
       // Show update notification for background updates
       if (isBackgroundUpdate) {
-        console.log('✅ Jasmin page updated with latest data');
+       // console.log('✅ Jasmin page updated with latest data');
       }
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.warn('Jasmin page fetch timeout');
+        // console.warn('Jasmin page fetch timeout');
       }
-      console.error('Error fetching jasmin page:', error);
+      //console.error('Error fetching jasmin page:', error);
       
       if (!isBackgroundUpdate) {
         // Try to use expired cache if API fails
@@ -182,7 +182,7 @@ const InstantValuationClient = () => {
               setPage(parsedData.page);
               setHeroSrc(parsedData.heroSrc);
             } catch (parseError) {
-              console.warn('Error parsing cached jasmin data:', parseError);
+              //console.warn('Error parsing cached jasmin data:', parseError);
             }
           }
         }
@@ -211,7 +211,7 @@ const InstantValuationClient = () => {
           fetchFreshData(true);
           return;
         } catch (error) {
-          console.warn('Error parsing cached data:', error);
+          //console.warn('Error parsing cached data:', error);
         }
       }
     }

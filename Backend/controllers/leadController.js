@@ -174,6 +174,16 @@ export const createLead = async (req, res) => {
     const data = req.body;
     const timestamp = Date.now();
 
+    // Validate consent for franchise forms
+    if (data.formType === 'franchise') {
+      if (!data.personalDataConsent) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Personal data consent is required for franchise applications' 
+        });
+      }
+    }
+
     // Generate slug
     const slug = `${(data.fullName || data.fullname || 'lead')}-${timestamp}`
       .toLowerCase()

@@ -191,9 +191,7 @@ const PropertiesContent = () => {
   const [loadedAll, setLoadedAll] = useState(false);
   const [isSorted, setIsSorted] = useState(false); // Track if properties are already sorted
   
-  // Cache for API responses
-  const cacheRef = useRef(new Map());
-  const filtersCache = useRef(null);
+  // Removed caching functionality
   
   // Filter state - separate from display state
   // Note: sale: false in appliedFilters means no sale filter is applied by default
@@ -223,38 +221,16 @@ const PropertiesContent = () => {
     marketCenter: 'MARKET CENTER'
   });
   
-  // Cached API fetch function for properties
-  const fetchPropertiesWithCache = useCallback(async (page, requestBody) => {
-    const cacheKey = `properties-${JSON.stringify(requestBody)}-page-${page}`;
-    
-    // Check cache first
-    if (cacheRef.current.has(cacheKey)) {
-      // console.log('Using cached properties data for:', cacheKey);
-      return cacheRef.current.get(cacheKey);
+  // Direct filter options fetch without caching
+  const fetchFilterOptions = useCallback(async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch filter options');
     }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-
-    const data = await res.json();
-    
-    // Cache the response (only cache successful responses)
-    if (data.success) {
-      cacheRef.current.set(cacheKey, data);
-      
-      // Limit cache size to prevent memory issues
-      if (cacheRef.current.size > 50) {
-        const firstKey = cacheRef.current.keys().next().value;
-        cacheRef.current.delete(firstKey);
-      }
-    }
-    
-    return data;
+    return await res.json();
   }, []);
- // Reset pagination when filters change
+
+  // Reset pagination when filters change
   const resetPagination = useCallback((newPerPage = perPage) => {
     setCurrentPage(1);
     // Clear all properties and reload first page
@@ -282,22 +258,6 @@ const PropertiesContent = () => {
     });
     // Do NOT fetch data here; useEffect will handle it
   }, [displayFilters, resetPagination]);
-  // Cached filter options fetch
-  const fetchFilterOptionsWithCache = useCallback(async () => {
-    if (filtersCache.current) {
-      // console.log('Using cached filter options');
-      return filtersCache.current;
-    }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/filters`);
-    if (!res.ok) {
-      throw new Error('Failed to fetch filter options');
-    }
-    
-    const data = await res.json();
-    filtersCache.current = data;
-    return data;
-  }, []);
 
   // Debounced apply filters to prevent excessive API calls
   const debouncedApplyFilters = useCallback(() => {
@@ -393,7 +353,7 @@ const applySorting = useCallback((propertiesArray) => {
   }, []);
 
   // Update visible count when properties change
-  // Optimized fetch properties function with hybrid caching
+  // Direct fetch properties function without caching
   const fetchProperties = useCallback(async (page = 1) => {
     const isFirstPage = page === 1;
     
@@ -416,13 +376,6 @@ const applySorting = useCallback((propertiesArray) => {
     // Remove undefined values
     Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
 
-    // Create cache keys
-    const PROPERTIES_CACHE_KEY = `buyer_properties_${JSON.stringify(requestBody)}_page_${page}`;
-    const PROPERTIES_CACHE_EXPIRY_KEY = `${PROPERTIES_CACHE_KEY}_expiry`;
-    const PROPERTIES_SESSION_CACHE_KEY = `${PROPERTIES_CACHE_KEY}_session`;
-    const PROPERTIES_COUNT_KEY = `${PROPERTIES_CACHE_KEY}_count`;
-    const PROPERTIES_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
-
     // Normalize and deduplicate function
     const normalizeAndUnique = (items) => {
       const unique = [];
@@ -443,197 +396,63 @@ const applySorting = useCallback((propertiesArray) => {
       return unique;
     };
 
-    // Apply data to state
-    const applyDataToState = (propertiesData, paginationData) => {
-      setProperties(prev => {
-        if (isFirstPage) {
-          const sorted = applySorting(normalizeAndUnique(propertiesData));
-          setIsSorted(true);
-          return sorted;
-        } else {
-          const combined = [...prev, ...propertiesData];
-          return normalizeAndUnique(combined);
-        }
-      });
-
-      if (paginationData) {
-        setCurrentPage(paginationData.current_page);
-        setTotalPages(paginationData.total_pages);
-        setTotalItems(paginationData.total_items);
-        setPerPage(paginationData.per_page);
-        setHasNextPage(paginationData.has_next_page);
-        setHasPrevPage(paginationData.has_prev_page);
-      }
-
-      if (isFirstPage) {
-        setLoading(false);
-      }
-      setLoadingMore(false);
-    };
-
-    // Step 1: Show cached data immediately (if available)
-    const showCachedDataImmediately = () => {
-      if (typeof window !== 'undefined') {
-        // Check sessionStorage first for ultra-fast access
-        const sessionData = sessionStorage.getItem(PROPERTIES_SESSION_CACHE_KEY);
-        if (sessionData) {
-          try {
-            const parsedData = JSON.parse(sessionData);
-            applyDataToState(parsedData.properties, parsedData.pagination);
-            return true; // Cached data was shown
-          } catch (e) {
-            console.warn('Error parsing session cache:', e);
-          }
-        }
-
-        // Check localStorage for persistent cache
-        const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
-        const cachedExpiry = localStorage.getItem(PROPERTIES_CACHE_EXPIRY_KEY);
-        const now = Date.now();
-
-        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
-          try {
-            const parsedData = JSON.parse(cachedData);
-            // Copy to session storage for ultra-fast next access
-            sessionStorage.setItem(PROPERTIES_SESSION_CACHE_KEY, cachedData);
-            applyDataToState(parsedData.properties, parsedData.pagination);
-            return true; // Cached data was shown
-          } catch (e) {
-            console.warn('Error parsing localStorage cache:', e);
-          }
-        }
-      }
-      return false; // No cached data
-    };
-
-    // Step 2: Check for updates in background
-    const checkForUpdatesInBackground = async () => {
-      try {
-        // Lightweight API call to check if data has changed
-        const countRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/count/properties`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        });
-        
-        if (countRes.ok) {
-          const countData = await countRes.json();
-          const cachedCount = localStorage.getItem(PROPERTIES_COUNT_KEY);
-          
-          // If count changed, data has been updated on server
-          if (countData.total !== parseInt(cachedCount || '0')) {
-            console.log('🔄 New buyer properties detected, refreshing cache...');
-            
-            // Clear cache and fetch fresh data
-            localStorage.removeItem(PROPERTIES_CACHE_KEY);
-            localStorage.removeItem(PROPERTIES_CACHE_EXPIRY_KEY);
-            sessionStorage.removeItem(PROPERTIES_SESSION_CACHE_KEY);
-            
-            // Fetch fresh data silently
-            await fetchFreshData(true);
-          }
-        }
-      } catch (error) {
-        // Silently fail - user still sees cached data
-        console.log('Background update check failed:', error);
-      }
-    };
-
-    // Step 3: Fetch fresh data function
-    const fetchFreshData = async (isBackgroundUpdate = false) => {
-      try {
-        if (!isBackgroundUpdate && isFirstPage) {
-          setLoading(true);
-          setError(null);
-        } else if (!isBackgroundUpdate && !isFirstPage) {
-          setLoadingMore(true);
-        }
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Cache-Control': 'max-age=300',
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        if (!res.ok) {
-          // Try to use expired cache if API fails
-          if (typeof window !== 'undefined') {
-            const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
-            if (cachedData) {
-              const parsedData = JSON.parse(cachedData);
-              applyDataToState(parsedData.properties, parsedData.pagination);
-              return;
-            }
-          }
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
-        
-        if (data.success) {
-          let fetched = Array.isArray(data?.data) ? data.data : [];
-          
-          // Cache the fresh data
-          if (typeof window !== 'undefined') {
-            const dataToCache = {
-              properties: fetched,
-              pagination: data.pagination
-            };
-            const now = Date.now();
-            localStorage.setItem(PROPERTIES_CACHE_KEY, JSON.stringify(dataToCache));
-            localStorage.setItem(PROPERTIES_CACHE_EXPIRY_KEY, (now + PROPERTIES_CACHE_DURATION).toString());
-            localStorage.setItem(PROPERTIES_COUNT_KEY, data.pagination?.total_items?.toString() || '0');
-            sessionStorage.setItem(PROPERTIES_SESSION_CACHE_KEY, JSON.stringify(dataToCache));
-          }
-          
-          // Apply fresh data to state
-          applyDataToState(fetched, data.pagination);
-          
-          // Show update notification for background updates
-          if (isBackgroundUpdate) {
-            console.log('✅ Buyer properties updated with latest data');
-            // You can add a toast notification here if desired
-          }
-        } else {
-          throw new Error(data.message || 'Failed to load properties');
-        }
-      } catch (err) {
-        console.error('Error fetching fresh buyer properties:', err);
-        if (!isBackgroundUpdate) {
-          setError('Failed to load properties. Please try again.');
-          if (isFirstPage) {
-            setLoading(false);
-          }
-          setLoadingMore(false);
-        }
-      }
-    };
-
-    // Main execution flow
     try {
       setError(null);
-
-      // Try to show cached data immediately
-      const cachedDataShown = showCachedDataImmediately();
-
-      if (cachedDataShown) {
-        // User sees cached data instantly, now check for updates in background
-        setTimeout(() => checkForUpdatesInBackground(), 100); // Small delay to let UI render
+      
+      if (isFirstPage) {
+        setLoading(true);
       } else {
-        // No cached data, show loading and fetch fresh data
-        if (isFirstPage) {
-          setLoading(true);
-        } else {
-          setLoadingMore(true);
-        }
-        await fetchFreshData(false);
+        setLoadingMore(true);
       }
 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/list/properties`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      
+      if (data.success) {
+        let fetched = Array.isArray(data?.data) ? data.data : [];
+        
+        // Apply data to state
+        setProperties(prev => {
+          if (isFirstPage) {
+            const sorted = applySorting(normalizeAndUnique(fetched));
+            setIsSorted(true);
+            return sorted;
+          } else {
+            // For subsequent pages, just append without re-sorting to maintain pagination order
+            const combined = [...prev, ...fetched];
+            return normalizeAndUnique(combined);
+          }
+        });
+
+        if (data.pagination) {
+          setCurrentPage(data.pagination.current_page);
+          setTotalPages(data.pagination.total_pages);
+          setTotalItems(data.pagination.total_items);
+          setPerPage(data.pagination.per_page);
+          setHasNextPage(data.pagination.has_next_page);
+          setHasPrevPage(data.pagination.has_prev_page);
+        }
+
+        if (isFirstPage) {
+          setLoading(false);
+        }
+        setLoadingMore(false);
+      } else {
+        throw new Error(data.message || 'Failed to load properties');
+      }
     } catch (err) {
-      console.error('Error in fetchProperties:', err);
+      console.error('Error fetching properties:', err);
       setError('Failed to load properties. Please try again.');
       if (isFirstPage) {
         setLoading(false);
@@ -727,64 +546,23 @@ const applySorting = useCallback((propertiesArray) => {
       // Note: setLoadingMore(false) will be handled in the useEffect when properties are loaded
     }
   }, [hasNextPage, currentPage, loadingMore]);
-  const [heroSrc, setHeroSrc] = useState('/')
-  const[page,setPage]=useState('');
+  const [heroSrc, setHeroSrc] = useState('/');
+  const [page, setPage] = useState('');
+  
   useEffect(() => {
-    const CACHE_KEY = 'buyer_properties_page_data';
-    const CACHE_EXPIRY_KEY = 'buyer_properties_page_data_expiry';
-    const SESSION_CACHE_KEY = 'buyer_properties_page_session';
-    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
-
     const fetchPageHero = async () => {
       try {
-        // Only check cache if we're in the browser to avoid hydration errors
-        if (typeof window !== 'undefined') {
-          // First check sessionStorage for ultra-fast access
-          const sessionData = sessionStorage.getItem(SESSION_CACHE_KEY);
-          if (sessionData) {
-            const parsedSessionData = JSON.parse(sessionData);
-            setPage(parsedSessionData.page || '');
-            setHeroSrc(parsedSessionData.heroSrc || '/');
-            return;
-          }
-
-          // Then check localStorage for persistent cache
-          const cachedData = localStorage.getItem(CACHE_KEY);
-          const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
-          const now = Date.now();
-
-          if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
-            const parsedData = JSON.parse(cachedData);
-            sessionStorage.setItem(SESSION_CACHE_KEY, cachedData); // Cache in session for ultra-fast next access
-            setPage(parsedData.page || '');
-            setHeroSrc(parsedData.heroSrc || '/');
-            return;
-          }
-        }
-
         // Create AbortController for timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/page/slug/rental-search`, {
           signal: controller.signal,
-          headers: {
-            'Cache-Control': 'max-age=300', // 5 minutes browser cache
-          }
         });
 
         clearTimeout(timeoutId);
 
         if (!res.ok) {
-          // Try to use expired cache if available
-          if (typeof window !== 'undefined') {
-            const cachedData = localStorage.getItem(CACHE_KEY);
-            if (cachedData) {
-              const parsedData = JSON.parse(cachedData);
-              setPage(parsedData.page || '');
-              setHeroSrc(parsedData.heroSrc || '/');
-            }
-          }
           return;
         }
         
@@ -799,78 +577,20 @@ const applySorting = useCallback((propertiesArray) => {
             : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
           setHeroSrc(heroSrcValue);
         }
-
-        // Cache the data in both localStorage and sessionStorage
-        if (typeof window !== 'undefined') {
-          const dataToCache = {
-            page: pageData,
-            heroSrc: heroSrcValue
-          };
-          const now = Date.now();
-          localStorage.setItem(CACHE_KEY, JSON.stringify(dataToCache));
-          localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
-          sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(dataToCache)); // Session cache for ultra-fast access
-        }
       } catch (e) {
-        // On error, try to use cached data if available
-        if (typeof window !== 'undefined') {
-          const cachedData = localStorage.getItem(CACHE_KEY);
-          if (cachedData) {
-            try {
-              const parsedData = JSON.parse(cachedData);
-              setPage(parsedData.page || '');
-              setHeroSrc(parsedData.heroSrc || '/');
-            } catch (parseError) {
-              console.warn('Error parsing cached buyer properties page data:', parseError);
-            }
-          }
-        }
+        console.warn('Error fetching buyer properties page data:', e);
       }
     };
 
     fetchPageHero();
   }, []);
 
-  // Client-side cache initialization effect to avoid hydration errors
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        // Check sessionStorage first for ultra-fast access
-        const sessionData = sessionStorage.getItem('buyer_properties_page_session');
-        if (sessionData) {
-          const parsedData = JSON.parse(sessionData);
-          if (parsedData.page && !page) setPage(parsedData.page);
-          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
-            setHeroSrc(parsedData.heroSrc);
-          }
-          return;
-        }
-
-        // Fallback to localStorage
-        const cachedData = localStorage.getItem('buyer_properties_page_data');
-        const cachedExpiry = localStorage.getItem('buyer_properties_page_data_expiry');
-        const now = Date.now();
-        if (cachedData && cachedExpiry && now < parseInt(cachedExpiry)) {
-          const parsedData = JSON.parse(cachedData);
-          if (parsedData.page && !page) setPage(parsedData.page);
-          if (parsedData.heroSrc && parsedData.heroSrc !== '/' && (!heroSrc || heroSrc === '/')) {
-            setHeroSrc(parsedData.heroSrc);
-          }
-          // Copy to session storage for next access
-          sessionStorage.setItem('buyer_properties_page_session', cachedData);
-        }
-      } catch (e) {
-        console.warn('Error reading cached buyer properties page data in client effect:', e);
-      }
-    }
-  }, [heroSrc,page]); // Run once on mount
-
   // Fetch filter options from backend
   useEffect(() => {
-    const fetchFilterOptions = async () => {
+    const fetchFilterOptionsData = async () => {
       try {
         setFiltersLoading(true);
-        const data = await fetchFilterOptionsWithCache();
+        const data = await fetchFilterOptions();
         
         if (data.success && data.data) {
           setAllPropertyTypes(data.data.propertyTypes || []);
@@ -884,8 +604,8 @@ const applySorting = useCallback((propertiesArray) => {
         setFiltersLoading(false);
       }
     };
-    fetchFilterOptions();
-  }, [fetchFilterOptionsWithCache]);
+    fetchFilterOptionsData();
+  }, [fetchFilterOptions]);
 
  
   return (
@@ -1272,6 +992,7 @@ const applySorting = useCallback((propertiesArray) => {
       {appliedFilters.propertySubType && appliedFilters.propertySubType !== '' && appliedFilters.propertySubType !== 'No Preference' && (
         <span className="bg-gray-300 text-black px-3 py-1 rounded-full text-sm font-medium">
           {t("Subtype:")} {appliedFilters.propertySubType}
+          
         </span>
       )}
       {appliedFilters.city && appliedFilters.city !== 'CITY' && (
@@ -1326,8 +1047,8 @@ const applySorting = useCallback((propertiesArray) => {
 
       {/* Conditional rendering */}
       {showMap ? (
-        // ✅ Map is outside mx-38 → takes full width
-        <PropertyType />
+        // ✅ Map is outside mx-38 → takes full width with applied filters
+        <PropertyType appliedFilters={appliedFilters} />
       ) : (
         <>
           <div className="mx-6 md:mx-38">
@@ -1363,8 +1084,8 @@ const applySorting = useCallback((propertiesArray) => {
           </div>
 
           {/* View More Properties Button */}
-          {hasNextPage && !loading && properties.length % perPage === 0 && (
-            <div className="flex justify-center items-center my-10">
+          {hasNextPage && !loading && (
+            <div className="flex justify-center items-center py-10">
               <button
                 onClick={goToNextPage}
                 disabled={loadingMore}

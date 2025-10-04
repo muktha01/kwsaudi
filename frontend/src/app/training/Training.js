@@ -34,7 +34,7 @@ export default function Training() {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing session cache:', e);
+              //console.warn('Error parsing session cache:', e);
             }
           }
 
@@ -52,7 +52,7 @@ export default function Training() {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing localStorage cache:', e);
+              //console.warn('Error parsing localStorage cache:', e);
             }
           }
         }
@@ -118,14 +118,14 @@ export default function Training() {
 
           // Show update notification for background updates
           if (isBackgroundUpdate) {
-            console.log('✅ Training page updated with latest data');
+            //console.log('✅ Training page updated with latest data');
           }
 
         } catch (error) {
           if (error.name === 'AbortError') {
-            console.warn('Training page fetch timeout');
+           // console.warn('Training page fetch timeout');
           }
-          console.error('Error fetching training page:', error);
+          //console.error('Error fetching training page:', error);
           
           if (!isBackgroundUpdate) {
             // Try to use expired cache if API fails
@@ -137,7 +137,7 @@ export default function Training() {
                   setPage(parsedData.page);
                   setHeroSrc(parsedData.heroSrc);
                 } catch (parseError) {
-                  console.warn('Error parsing cached training data:', parseError);
+                  //console.warn('Error parsing cached training data:', parseError);
                 }
               }
             }
@@ -163,7 +163,7 @@ export default function Training() {
         }
 
       } catch (err) {
-        console.error('Error in fetchPageHero:', err);
+       // console.error('Error in fetchPageHero:', err);
         setLoading(false);
       }
     };
@@ -200,7 +200,7 @@ export default function Training() {
           sessionStorage.setItem('training_page_session', cachedData);
         }
       } catch (e) {
-        console.warn('Error reading cached training data in client effect:', e);
+        //console.warn('Error reading cached training data in client effect:', e);
       }
     }
   }, [heroSrc,page]); // Run once on mount
@@ -210,9 +210,9 @@ export default function Training() {
       <Box
         h3={page.pageName}
          src={heroSrc}
-        image={
-          '/ourculture2.jpg'
-        }
+        // image={
+        //   '/ourculture2.jpg'
+        // }
       />
 
       <section className="bg-white  md:pb-16 mb-4  text-center">
@@ -265,7 +265,7 @@ export default function Training() {
             <h2 className="text-xl md:text-3xl md:font-semibold font-semibold text-[rgb(206,32,39,255)] mb-6">{t("In Person & Online Sessions")}</h2>
             <p className="md:text-[1.3rem] text-[0.8rem] text-gray-700 mb-8 mx-6 md:mx-0 md:px-20">{t("At KW Saudi Arabia, we provide flexible training to suit your needs. Join in-person events to connect and learn from top talent, or access online sessions for world-class training anytime. Elevate your career—explore our sessions today!")}</p>
          <div className="flex justify-center md:justify-center">
-  <button className="cursor-pointer md:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 text-xs md:text-sm  relative overflow-hidden group rounded-full transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/ourCulture/whyKW')}>
+  <button className="cursor-pointer md:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 text-xs md:text-sm  relative overflow-hidden group rounded-full transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/contactUs')}>
                                   <span className="inline-block md:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
                                   {t("CONTACT US")}
                                   </span>
@@ -280,7 +280,7 @@ export default function Training() {
           <h2 className="text-xl md:text-3xl md:font-semibold font-semibold text-[rgb(206,32,39,255)] mb-6">{t("Events")}</h2>
           <p className="md:text-[1.3rem] text-[0.8rem] text-gray-700 mx-6 md:mx-0 mb-8 md:px-20">{t("Network and learn with top real estate talent at Keller Williams events. From Family Reunion to Mega Agent Camp and Masterminds, connect with top producers, bold thinkers, and market makers. No other event compares.")}</p>
           <div className="flex justify-center md:justify-center">
-   <button className="cursor-pointer md:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 text-xs md:text-sm  relative overflow-hidden group rounded-full transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/ourCulture/whyKW')}>
+   <button className="cursor-pointer md:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 text-xs md:text-sm  relative overflow-hidden group rounded-full transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/ourCulture/events')}>
                                    <span className="inline-block md:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
                                {t("LEARN MORE")}
                                    </span>
