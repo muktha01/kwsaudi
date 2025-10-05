@@ -732,7 +732,7 @@ const applySorting = useCallback((propertiesArray) => {
   {/* Hero Section */}
   <div className="relative bg-gray-100 md:pb-10">
   
-    <section className={`relative w-full ${showFilters ? 'h-[120vh] md:h-[125vh]' : 'h-screen md:h-screen'} text-white overflow-hidden transition-all duration-500 ease-in-out`}>
+    <section className={`relative w-full ${showFilters ? 'h-[130vh] md:h-[125vh]' : 'h-screen md:h-screen'} text-white overflow-hidden transition-all duration-500 ease-in-out`}>
       {/* Background Image with previous blurring out and next coming in */}
       <Image
                 src={heroSrc}
@@ -1245,3 +1245,4 @@ const Properties = () => {
 };
 
 export default Properties;
+
