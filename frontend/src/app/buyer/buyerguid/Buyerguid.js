@@ -278,18 +278,14 @@ useEffect(() => {
               {/* Zigzag pattern for mobile/iPad: alternate left/right by index */}
               {index % 2 === 0 ? (
                 <div className="mx-4 lg:hidden mb-4 text-left">
-                  <div className="flex items-center mb-1">
-                    <span className="text-gray-500 text-2xl font-normal block">{`${index + 1}.`}</span>
-                  </div>
-                  <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block">{t(step.title)}</h2>
+                  <span className="text-gray-500 text-2xl font-normal block mb-1">{`${index + 1}.`}</span>
+                  <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block mt-0">{t(step.title)}</h2>
                   <p className="whitespace-pre-line mt-2 text-md">{t(step.content)}</p>
                 </div>
               ) : (
                 <div className="mx-4 lg:hidden mb-4 text-right">
-                  <div className="flex items-center justify-end mb-1">
-                    <span className="text-gray-500 text-2xl font-normal block">{`${index + 1}.`}</span>
-                  </div>
-                  <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block">{t(step.title)}</h2>
+                  <span className="text-gray-500 text-2xl font-normal block mb-1">{`${index + 1}.`}</span>
+                  <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block mt-0">{t(step.title)}</h2>
                   <p className="whitespace-pre-line mt-2 text-md">{t(step.content)}</p>
                 </div>
               )}
