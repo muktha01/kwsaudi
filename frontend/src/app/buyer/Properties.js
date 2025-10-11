@@ -1148,7 +1148,7 @@ const applySorting = useCallback((propertiesArray) => {
           </select>
 
           <button
-            className="cursor-pointer border border-gray-400 p-2 bg-white text-black"
+            className="cursor-pointer hidden lg:inline-block border border-gray-400 p-2 bg-white text-black"
             onClick={() => setShowMap(!showMap)}
           >
             {showMap ? t("Hide Map") : t("Map View")}

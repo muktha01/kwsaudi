@@ -120,7 +120,7 @@ export default function News(){
 
       {/* Blog Cards */}
       {!loading && !error && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 py-4 mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 py-4 mx-10 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
     {blogs.length === 0 ? (
       <div className="col-span-full text-center py-20">
         <div className="text-lg text-gray-600">{t('No news articles found.')}</div>

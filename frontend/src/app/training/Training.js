@@ -345,7 +345,7 @@ export default function Training() {
             width={200}
             height={150}
             className={`bottom-0 w-[220px] h-[140px] md:w-[320px] md:h-[210px] lg:w-[450px] lg:h-[300px] rotate-[-6deg]
-              ${isRTL ? 'lg:-mr-63 md:-mr-50 -mr-36 z-0' : 'lg:-ml-74 md:-ml-50 -ml-40 z-30'}`}
+              ${isRTL ? 'lg:-mr-63 md:-mr-50 -mr-36 z-0' : 'lg:-ml-74 md:-ml-52 -ml-40 z-30'}`}
           />
         </div>
       </div>
