@@ -660,7 +660,7 @@ export default function Home() {
   {/* Footer Links */}
   <div className="flex flex-wrap justify-center gap-1 text-gray-600 text-sm mt-6 ">
     <Link href="/TermsofUse">{t('Terms of Use')} | </Link>
-    <a href="https://stonedtailor.wixstudio.com/kwsaudiarabia/privacypolicy">{t('Privacy Policy')} | </a>
+  <Link href="/PrivacyPolicy" className="mx-2">{t('Privacy Policy')}</Link> | 
     <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
                   <a href='#' className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</a>
   </div>
