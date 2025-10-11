@@ -220,12 +220,12 @@ const WhyKW = () => {
       />
 
       
-<main className="px-4 py-4 md:py-12">
+<main className="px-4 py-4 lg:py-12">
         <div className="max-w-full mx-auto text-center">
         
          
-          <p className="text-2xl font-semibold md:text-3xl">{t("WHY KW?")}</p>
-           <hr className="w-32 md:w-80 mx-auto bg-[rgb(206,32,39,255)] h-[2px] border-0 mt-4 md:mt-8" />
+          <p className="text-2xl font-semibold lg:text-3xl">{t("WHY KW?")}</p>
+           <hr className="w-32 lg:w-80 mx-auto bg-[rgb(206,32,39,255)] h-[2px] border-0 mt-4 lg:mt-8" />
         
         </div>
       </main>
@@ -237,16 +237,16 @@ const WhyKW = () => {
         {sections.map((section, index) => (
           <React.Fragment key={index}>
             {/* Mobile: stacked vertical layout */}
-            <div className={`md:hidden px-4 py-6 mx-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`lg:hidden px-4 py-6 mx-6 ${isRTL ? 'text-right' : 'text-left'}`}> 
               <div className="text-3xl py-2 text-gray-400 font-normal mb-1">{section.number}</div>
-              <div className={`text-2xl font-semibold text-black mb-4 tracking-[0.1em] md:tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.title)}</div>
+              <div className={`text-2xl font-semibold text-black mb-4 tracking-[0.1em] lg:tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.title)}</div>
               <div className={`text-sm leading-relaxed text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.description)}</div>
             </div>
             {/* Desktop: grid layout */}
-            <div className="hidden md:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[120px]">
+            <div className="hidden lg:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[120px]">
               {/* Number */}
               <div
-  className={`md:ml-30 col-span-2 md:col-span-1 flex items-center justify-center text-5xl text-gray-500 group-hover:text-black font-normal ${
+  className={`lg:ml-30 col-span-2 lg:col-span-1 flex items-center justify-center text-5xl text-gray-500 group-hover:text-black font-normal ${
     isRTL ? "mr-30" : "mr-0"
   }`}
 >
@@ -256,7 +256,7 @@ const WhyKW = () => {
 
               {/* Title */}
               <div
-  className={`md:ml-46 col-span-4 md:col-span-4 flex items-center text-xl font-semibold tracking-wide text-black group-hover:text-white ${
+  className={`lg:ml-46 col-span-4 lg:col-span-4 flex items-center text-xl font-semibold tracking-wide text-black group-hover:text-white ${
     isRTL ? "text-right mr-46" : "text-left ml-10"
   }`}
 >
@@ -266,11 +266,11 @@ const WhyKW = () => {
 
                {/* Vertical Line Between Title and Description - disappears on hover */}
               <div className="col-span-1 flex justify-center">
-                <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto md:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
+                <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto lg:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
               </div>
 
               {/* Description */}
-              <div className={`col-span-5 md:col-span-6 flex items-center text-[0.6rem] md:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`col-span-5 lg:col-span-6 flex items-center text-[0.6rem] lg:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4 ${isRTL ? 'text-right' : 'text-left'}`}> 
                 {t(section.description)}
               </div>
             </div>
@@ -282,12 +282,12 @@ const WhyKW = () => {
         ))}
       </div>
 
-       <main className="px-4 md:py-12 py-6 text-center">
+  <main className="px-4 lg:py-12 py-6 text-center">
         <div className="max-w-full mx-auto">
         
          
-          <p className="text-2xl font-semibold md:text-3xl">{t('WHY KELLER WILLIAMS SAUDI ?')}</p>
-           <hr className="w-32 md:w-80 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 mt-4 md:mt-8" />
+          <p className="text-2xl font-semibold lg:text-3xl">{t('WHY KELLER WILLIAMS SAUDI ?')}</p>
+           <hr className="w-32 lg:w-80 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 mt-4 lg:mt-8" />
         
         </div>
       </main>
@@ -298,16 +298,16 @@ const WhyKW = () => {
         {sections2.map((section, index) => (
           <React.Fragment key={index}>
             {/* Mobile: stacked vertical layout */}
-            <div className={`md:hidden px-4 py-6 mx-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`lg:hidden px-4 py-6 mx-6 ${isRTL ? 'text-right' : 'text-left'}`}> 
               <div className="text-3xl py-2 text-gray-400 font-normal mb-1">{section.number}</div>
-              <div className={`text-2xl font-semibold text-black mb-4 tracking-[0.1em] md:tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.title)}</div>
+              <div className={`text-2xl font-semibold text-black mb-4 tracking-[0.1em] lg:tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.title)}</div>
               <div className={`text-sm leading-relaxed text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>{t(section.description)}</div>
             </div>
             {/* Desktop: grid layout */}
-            <div className="hidden md:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[120px]">
+            <div className="hidden lg:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[120px]">
               {/* Number */}
               <div
-  className={`md:ml-30 col-span-2 md:col-span-1 flex items-center justify-center text-5xl text-gray-500 group-hover:text-black font-normal ${
+  className={`lg:ml-30 col-span-2 lg:col-span-1 flex items-center justify-center text-5xl text-gray-500 group-hover:text-black font-normal ${
     isRTL ? "mr-30" : "mr-0"
   }`}
 >
@@ -316,7 +316,7 @@ const WhyKW = () => {
 
               {/* Title */}
               <div
-  className={`md:ml-46 col-span-4 md:col-span-4 flex items-center text-xl font-semibold tracking-wide text-black group-hover:text-white ${
+  className={`lg:ml-46 col-span-4 lg:col-span-4 flex items-center text-xl font-semibold tracking-wide text-black group-hover:text-white ${
     isRTL ? "text-right mr-46" : "text-left ml-10"
   }`}
 >
@@ -325,11 +325,11 @@ const WhyKW = () => {
 
                {/* Vertical Line Between Title and Description - disappears on hover */}
               <div className="col-span-1 flex justify-center">
-                <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto md:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
+                <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto lg:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
               </div>
 
               {/* Description */}
-              <div className={`col-span-5 md:col-span-6 flex items-center text-[0.6rem] md:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`col-span-5 lg:col-span-6 flex items-center text-[0.6rem] lg:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t(section.description)}
               </div>
             </div>
@@ -341,17 +341,17 @@ const WhyKW = () => {
         ))}
       </div>
 
- <div className="flex flex-col items-center justify-center py-4 md:py-16">
+ <div className="flex flex-col items-center justify-center py-4 lg:py-16">
         <Image
           src="/howwillyouthink.png"
           alt={t("How Will You Thrive")}
           width={800}
           height={400}
-          className="w-70 h-20 md:w-[800px] md:h-[400px] object-contain"
+          className="w-70 h-20 lg:w-[800px] lg:h-[400px] object-contain"
         />
       </div>
 
-                {/* <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto md:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div> */}
+                {/* <div className=" ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto lg:h-28 my-4 group-hover:opacity-0 transition-opacity duration-300"></div> */}
      
       <Footer />
     </div>

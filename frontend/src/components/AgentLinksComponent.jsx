@@ -52,7 +52,7 @@ const AgentLinksComponent = () => {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-6">Agent Resources</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-4">
         {links.map((link) => (
           <div
             key={link._id}

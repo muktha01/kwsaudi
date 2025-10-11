@@ -1,12 +1,17 @@
 import React from 'react';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { useEffect, useState } from 'react';
+import { loadGoogleMaps } from '../utils/googleMapsLoader';
 
 const DEFAULT_CENTER = { lat: 24.7136, lng: 46.6753 }; // Riyadh
 
 export default function AgentMap({ lat, lng }) {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyDG48YF2dsvPN0qHX3_vSaTJj6aqg3-Oc4',
-  });
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    loadGoogleMaps({
+      apiKey: 'AIzaSyDG48YF2dsvPN0qHX3_vSaTJj6aqg3-Oc4',
+    }).then(() => setIsLoaded(true));
+  }, []);
 
   const center = lat && lng ? { lat, lng } : DEFAULT_CENTER;
   const zoom = lat && lng ? 14 : 6;

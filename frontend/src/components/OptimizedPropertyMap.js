@@ -162,7 +162,7 @@ const OptimizedPropertyMap = ({ property, isVisible = false }) => {
   }
 
   return (
-    <div className="w-full h-64 md:h-80 lg:h-[400px] overflow-hidden shadow-md rounded-lg relative">
+    <div className="w-full h-64 lg:h-80 lg:h-[400px] overflow-hidden shadow-md rounded-lg relative">
       {/* Loading state */}
       {isLoading && !hasError && renderLoading()}
       

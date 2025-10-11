@@ -87,24 +87,24 @@ const RiyadhJedah = (props) => {
          
         {/* Combined Section */}
       <div className="bg-gray-200 rounded-2xl border-gray-200 my-8 overflow-hidden">
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col lg:flex-row">
           {/* Left Side (Map + Address) */}
          <div className="flex-1 p-6 flex justify-center items-center">
-  <div className="w-full md:max-w-full">
+  <div className="w-full lg:max-w-full">
   <div className="text-center mb-4">
   <div className="font-bold uppercase tracking-widest text-sm flex justify-between max-w-xs mx-auto pb-4">
     <span>EMAIL</span>
     <span>TELEPHONE</span>
   </div>
   <hr className="border-t border-[rgb(206,32,39,255)] w-120 mx-auto mb-4" />
-  <p className="text-[0.6rem] md:text-sm font-medium mt-2 tracking-wide">
+  <p className="text-[0.6rem] lg:text-sm font-medium mt-2 tracking-wide">
     {props.address}
   </p>
 </div>
 
 
     {/* Map */}
-    <div className="w-full h-[300px] mt-15 md:px-15">
+    <div className="w-full h-[300px] mt-15 lg:px-15">
       <iframe
         src={props.map}
         className="w-full h-full rounded"
@@ -115,15 +115,15 @@ const RiyadhJedah = (props) => {
 </div>
 
           {/* Vertical Line */}
-          <div className="hidden md:flex items-stretch">
+          <div className="hidden lg:flex items-stretch">
             <div className="w-[2px] bg-gray-300 mx-1"></div>
           </div>
 
           {/* Right Side (Form) */}
 <div className="flex-1 p-6 flex justify-center items-center">
-  <form className="w-full md:max-w-full space-y-4 py-10 md:px-15" onSubmit={handleSubmit}>
+  <form className="w-full lg:max-w-full space-y-4 py-10 lg:px-15" onSubmit={handleSubmit}>
     <div>
-      <label className="block mb-1 md:text-base text-base font-sm">First Name</label>
+      <label className="block mb-1 lg:text-base text-base font-sm">First Name</label>
       <input
         type="text"
         name="firstName"
@@ -135,7 +135,7 @@ const RiyadhJedah = (props) => {
       />
     </div>
     <div className='py-2'>
-      <label className="block mb-1 md:text-base text-base font-sm">Last Name</label>
+      <label className="block mb-1 lg:text-base text-base font-sm">Last Name</label>
       <input
         type="text"
         name="lastName"
@@ -147,7 +147,7 @@ const RiyadhJedah = (props) => {
       />
     </div>
     <div className='py-2'>
-      <label className="block mb-1 md:text-base text-base font-sm">Email *</label>
+      <label className="block mb-1 lg:text-base text-base font-sm">Email *</label>
       <input
         type="email"
         name="email"
@@ -159,7 +159,7 @@ const RiyadhJedah = (props) => {
       />
     </div>
     <div className='py-2'>
-      <label className="block mb-1 md:text-base text-base font-sm">Address To</label>
+      <label className="block mb-1 lg:text-base text-base font-sm">Address To</label>
       <select
         name="addressTo"
         value={form.addressTo}
@@ -173,7 +173,7 @@ const RiyadhJedah = (props) => {
       </select>
     </div>
     <div className='py-2'>
-      <label className="block mb-1  md:text-base text-base font-sm">Message *</label>
+      <label className="block mb-1  lg:text-base text-base font-sm">Message *</label>
       <textarea
         name="message"
         value={form.message}
@@ -186,7 +186,7 @@ const RiyadhJedah = (props) => {
     </div>
     <button
       type="submit"
-      className="w-full md:w-32 bg-[rgb(206,32,39,255)] text-white py-2 rounded-full text-base font-semibold hover:bg-gray-600 transition"
+      className="w-full lg:w-32 bg-[rgb(206,32,39,255)] text-white py-2 rounded-full text-base font-semibold hover:bg-gray-600 transition"
     >
       Submit
     </button>
@@ -201,45 +201,45 @@ const RiyadhJedah = (props) => {
 
         </div>
       </div>
-        <div className="min-h-screen bg-white mt-4 md:mt-20">
+        <div className="min-h-screen bg-white mt-4 lg:mt-20">
         {/* Changed outer container to stack on mobile */}
-        <div className="flex flex-col md:flex-row border-t border-b border-r border-black">
+        <div className="flex flex-col lg:flex-row border-t border-b border-r border-black">
           
           {/* Left Section - Full width on mobile, sticky 50% on desktop */}
-          <div className="w-full md:w-1/2 flex justify-center items-center 
-                         md:sticky md:top-0 top-20 h-auto md:h-screen 
-                         border-b md:border-b-0 md:border-r border-black
-                         py-4 md:py-0">
+          <div className="w-full lg:w-1/2 flex justify-center items-center 
+                         lg:sticky lg:top-0 top-20 h-auto lg:h-screen 
+                         border-b lg:border-b-0 lg:border-r border-black
+                         py-4 lg:py-0">
             <div className="text-center px-4">
               <h2 className="text-3xl font-semibold mb-2">OUR TEAM</h2>
-              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] mb-2 mx-auto border-0 mt-4 md:mt-10"></div>
-              <p className="text-sm tracking-wider mt-4 md:mt-10 text-gray-600">{props.p}</p>
+              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] mb-2 mx-auto border-0 mt-4 lg:mt-10"></div>
+              <p className="text-sm tracking-wider mt-4 lg:mt-10 text-gray-600">{props.p}</p>
             </div>
           </div>
       
           {/* Right Section - Full width on mobile, 50% on desktop */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full lg:w-1/2">
             {teamMembers.map((member, index) => (
               <div key={index}>
                 {/* Changed to vertical layout on mobile */}
-                <div className="flex flex-col md:flex-row gap-6 p-6">
+                <div className="flex flex-col lg:flex-row gap-6 p-6">
                   <Image
                     src={member.image}
                     alt={member.name}
                     width={200}
                     height={200}
-                    className="rounded-xl object-cover w-full max-w-[200px] mx-auto md:mx-0"
+                    className="rounded-xl object-cover w-full max-w-[200px] mx-auto lg:mx-0"
                   />
-                  <div className="pt-2 text-center md:text-left">
-                  <p className="font-sans font-normal no-underline text-[18px] md:text-[22px] leading-[1.2] tracking-normal">
+                  <div className="pt-2 text-center lg:text-left">
+                  <p className="font-sans font-normal no-underline text-[18px] lg:text-[22px] leading-[1.2] tracking-normal">
                       {member.name}
                     </p>
-                    <hr className="w-37 md:w-60 h-[1px] bg-[rgba(202,3,32,1)] border-0 my-2 mx-auto" />
+                    <hr className="w-37 lg:w-60 h-[1px] bg-[rgba(202,3,32,1)] border-0 my-2 mx-auto" />
 
                     <p className=" font-normal  no-underline text-[0.8rem] leading-[1.6] tracking-normal">
                       {member.title}
                     </p>
-                    <p className="text-sm mb-1 text-gray-600 mt-8 md:mt-16">{member.email}</p>
+                    <p className="text-sm mb-1 text-gray-600 mt-8 lg:mt-16">{member.email}</p>
                     <p className="text-sm text-gray-600">{member.phone}</p>
                   </div>
                 </div>
@@ -253,16 +253,16 @@ const RiyadhJedah = (props) => {
           </div>
         </div>
       </div>
-             <div className="flex justify-center py:4 md:py-16">
+             <div className="flex justify-center py:4 lg:py-16">
                     <Image
                       src="/howwillyouthink.png"
                       alt="How Will You Thrive"
                       width={800}
                       height={400}
-                      className="w-70 h-20 md:w-[950px] md:h-[400px] object-contain"
+                      className="w-70 h-20 lg:w-[950px] lg:h-[400px] object-contain"
                     />
                   </div>
-                   <hr className="w-8/12 md:w-6/12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-10 mb-10" />
+                   <hr className="w-8/12 lg:w-6/12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-10 mb-10" />
           <Footer></Footer>
         </div>
     );

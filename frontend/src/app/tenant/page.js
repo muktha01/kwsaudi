@@ -56,9 +56,9 @@ const Tenant = () => {
       />
 
       {/* Intro */}
-      <main className="px-4 py-6 md:mt-2 mt-10">
+      <main className="px-4 py-6 lg:mt-2 mt-10">
         <div className="max-w-full mx-auto text-center">
-          <p className="text-xs md:text-base">
+          <p className="text-xs lg:text-base">
           Before You Start Your Search For A Rental Property It&rsquo;s Worth Asking Yourself
           </p>
         </div>
@@ -70,27 +70,27 @@ const Tenant = () => {
         {sections.map((section, index) => (
           <React.Fragment key={index}>
             {/* Mobile: stacked vertical layout */}
-            <div className="md:hidden px-4 py-6 mx-6">
+            <div className="lg:hidden px-4 py-6 mx-6">
               <div className="text-3xl py-2 text-gray-400 font-normal mb-1">{section.number}</div>
-              <div className="text-sm font-semibold text-black mb-4 tracking-[0.1em] md:tracking-tight">{section.title}</div>
+              <div className="text-sm font-semibold text-black mb-4 tracking-[0.1em] lg:tracking-tight">{section.title}</div>
               <div className="text-xs leading-relaxed text-gray-700">{section.description}</div>
             </div>
             {/* Desktop: grid layout */}
-            <div className="hidden md:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[200px]">
+            <div className="hidden lg:grid grid-cols-12 items-stretch hover:bg-[rgb(206,32,39,255)] group transition duration-300 px-4 min-h-[200px]">
               {/* Number */}
-              <div className="md:ml-30 col-span-2 md:col-span-1 flex items-center justify-center text-5xl  text-gray-500 group-hover:text-black font-normal">
+              <div className="lg:ml-30 col-span-2 lg:col-span-1 flex items-center justify-center text-5xl  text-gray-500 group-hover:text-black font-normal">
                 {section.number}
               </div>
               {/* Title */}
-              <div className="md:ml-46 col-span-4 md:col-span-4 flex items-center text-base font-semibold tracking-wide text-black group-hover:text-white">
+              <div className="lg:ml-46 col-span-4 lg:col-span-4 flex items-center text-base font-semibold tracking-wide text-black group-hover:text-white">
                 {section.title}
               </div>
               {/* Vertical Line Between Title and Description - disappears on hover */}
               <div className="col-span-1 flex justify-center">
-                <div className="ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto md:h-40 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
+                <div className="ml-22 w-[1px] bg-[rgb(206,32,39,255)] h-auto lg:h-40 my-4 group-hover:opacity-0 transition-opacity duration-300"></div>
               </div>
               {/* Description */}
-              <div className="col-span-5 md:col-span-6 flex items-center text-[0.6rem] md:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4">
+              <div className="col-span-5 lg:col-span-6 flex items-center text-[0.6rem] lg:text-[1rem]  leading-relaxed text-gray-700 group-hover:text-white py-4">
                 {section.description}
               </div>
             </div>
@@ -102,16 +102,16 @@ const Tenant = () => {
         ))}
       </div>
 
-       <main className="hidden md:block px-4 py-6 md:mt-2 mt-2">
-        <div className="max-w-full mx-auto text-center md:mt-16">
-          <p className="text-xl md:text-4xl font-normal">KW SAUDI ARABIA</p>
-          <hr className="w-32 md:w-68 mx-auto border-0 bg-[rgb(206,32,39,255)] h-[1.5px] mt-4 md:mt-8" />
-          <p className="mt-2 md:mt-8 text-xs md:text-base">Together We Do More</p>
-          <p className="px-4 md:px-0 text-xs md:text-base">
+       <main className="hidden lg:block px-4 py-6 lg:mt-2 mt-2">
+        <div className="max-w-full mx-auto text-center lg:mt-16">
+          <p className="text-xl lg:text-4xl font-normal">KW SAUDI ARABIA</p>
+          <hr className="w-32 lg:w-68 mx-auto border-0 bg-[rgb(206,32,39,255)] h-[1.5px] mt-4 lg:mt-8" />
+          <p className="mt-2 lg:mt-8 text-xs lg:text-base">Together We Do More</p>
+          <p className="px-4 lg:px-0 text-xs lg:text-base">
             Keller Williams is there to help at every big step in the realestate journey.
           </p>
         
-            <div className="flex justify-center md:justify-center mt-8 md:mt-16">
+            <div className="flex justify-center lg:justify-center mt-8 lg:mt-16">
   <button className="
     w-56 bg-[rgb(206,32,39,255)] text-white py-3 rounded-full text-base
     relative 
@@ -134,15 +134,15 @@ const Tenant = () => {
         </div>
       </main>
 
-      <div className="order-1 md:order-2 mt-10 flex flex-col items-center justify-center">
+      <div className="order-1 lg:order-2 mt-10 flex flex-col items-center justify-center">
     <Image
       src="/howwillyouthink.png"
       alt="How Will You Thrive"
       width={800}
       height={400}
-      className="w-70 h-20 md:w-[950px] md:h-[400px] object-contain"
+      className="w-70 h-20 lg:w-[950px] lg:h-[400px] object-contain"
     />
-    <button className="bg-[rgb(206,32,39,255)] w-40 text-white px-8 py-1.5 text-xs font-semibold rounded-full block mx-auto md:hidden mt-4 mb-4"  onClick={() => router.push('/contactUs')}> 
+    <button className="bg-[rgb(206,32,39,255)] w-40 text-white px-8 py-1.5 text-xs font-semibold rounded-full block mx-auto lg:hidden mt-4 mb-4"  onClick={() => router.push('/contactUs')}> 
       JOIN US
     </button>
   </div>

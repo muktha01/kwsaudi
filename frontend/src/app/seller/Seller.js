@@ -215,13 +215,13 @@ useEffect(() => {
     
 
       {/* Main Content Section */}
-      <main className="px-4 md:px-40 py-2  md:mt-2">
+  <main className="px-4 lg:px-40 py-2  lg:mt-2">
       <div className=" max-w-full mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8">
-            <div className="w-full md:w-auto text-center">
-            <h1 className="text-2xl md:text-3xl md:py-8 py-4">{t('Five Steps To Sell')}</h1>
-            {/* <hr className="w-8/12 md:w-5/12 mx-auto border-0 bg-[rgb(206,32,39,255)] h-[1.5px] mt-2 md:mt-10 mb-10" /> */}
-<p className={`text-md md:text-lg `}>
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-4 mb-8">
+            <div className="w-full lg:w-auto text-center">
+            <h1 className="text-2xl lg:text-3xl lg:py-8 py-4">{t('Five Steps To Sell')}</h1>
+            {/* <hr className="w-8/12 lg:w-5/12 mx-auto border-0 bg-[rgb(206,32,39,255)] h-[1.5px] mt-2 lg:mt-10 mb-10" /> */}
+<p className={`text-md lg:text-lg `}>
   {t(`You're Ready To Sell Your Property. And, While You're Looking Forward To Seeing The Word "SOLD" Posted From The Curb, You Know There's A Lot To Consider Along The Way. One Of Your First Decisions Is To Select A Real Estate Company And Real Estate Agent Who'll Join You In The Process.`)}
 </p>
 
@@ -234,11 +234,11 @@ useEffect(() => {
       {/* Timeline Section */}
       <div ref={timelineRef} className="relative bg-white pt-2 pb-10">
         {/* Center Vertical Line - hidden on mobile */}
-        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
+  <div className="hidden lg:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
 
        
         {/* Red Marker over vertical line */}
-  <div className="hidden md:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
+  <div className="hidden lg:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
     <div
       className="absolute left-1/2 transform -translate-x-1/2"
       style={{
@@ -253,27 +253,31 @@ useEffect(() => {
     </div>
       </div>
       {/* Content Sections */}
-        <div className="max-w-full mx-auto space-y-12 md:space-y-48">
+  <div className="max-w-full mx-auto space-y-12 lg:space-y-48">
         {steps.map((step, index) => (
   <div
     key={index}
-    className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start px-4 md:px-8 lg:px-24"
+  className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start px-4 lg:px-8 lg:px-24"
   >
     {/* ✅ MOBILE ONLY */}
-    <div className={`md:hidden mx-4 mb-4 `}>
-      {/* Step Number */}
-      <div className={`flex `}>
-        <span className="text-gray-500 text-2xl font-normal block mb-1">{`${index + 1}.`}</span>
-      </div>
-
-      {/* Title - Same align as number for RTL */}
-      <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-        <h2 className="text-[rgb(206,32,39,255)] text-2xl md:text-3xl font-normal  inline-block">
-          {step.title}
-        </h2>
+    {/* Zigzag pattern for mobile/iPad: alternate left/right by index */}
+    {index % 2 === 0 ? (
+      <div className="lg:hidden mx-4 mb-4 text-left">
+        <div className="flex items-center mb-1">
+          <span className="text-gray-500 text-2xl font-normal block">{`${index + 1}.`}</span>
+        </div>
+        <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block">{step.title}</h2>
         <p className="whitespace-pre-line mt-2 text-md">{step.content}</p>
       </div>
-    </div>
+    ) : (
+      <div className="lg:hidden mx-4 mb-4 text-right">
+        <div className="flex items-center justify-end mb-1">
+          <span className="text-gray-500 text-2xl font-normal block">{`${index + 1}.`}</span>
+        </div>
+        <h2 className="text-[rgb(206,32,39,255)] text-2xl font-normal inline-block">{step.title}</h2>
+        <p className="whitespace-pre-line mt-2 text-md">{step.content}</p>
+      </div>
+    )}
 
     {/* ✅ DESKTOP ONLY */}
     {isRTL ? (
@@ -281,28 +285,28 @@ useEffect(() => {
       step.align === 'right' ? (
         <>
           {/* Empty div for the right side */}
-          <div className="hidden md:block"></div>
+          <div className="hidden lg:block"></div>
           {/* Content on the left side for RTL (opposite of English right) */}
-          <div className="hidden md:block text-right px-0 md:px-8">
+          <div className="hidden lg:block text-right px-0 lg:px-8">
             <span className="text-gray-500 text-4xl font-normal">{`${index + 1}.`}</span>
-            <h2 className="text-[rgb(206,32,39,255)] md:text-3xl text-xl font-normal mt-4">
+            <h2 className="text-[rgb(206,32,39,255)] lg:text-3xl text-xl font-normal mt-4">
               {step.title}
             </h2>
-            <p className="whitespace-pre-line mt-2 md:mt-4 leading-7 text-lg">{step.content}</p>
+            <p className="whitespace-pre-line mt-2 lg:mt-4 leading-7 text-lg">{step.content}</p>
           </div>
         </>
       ) : (
         <>
           {/* Content on the right side for RTL (opposite of English left) */}
-          <div className="hidden md:block text-right px-0 md:px-8">
+          <div className="hidden lg:block text-right px-0 lg:px-8">
             <span className="text-gray-500 text-4xl font-normal">{`${index + 1}.`}</span>
-            <h2 className="text-[rgb(206,32,39,255)] md:text-3xl text-xl font-normal mt-4">
+            <h2 className="text-[rgb(206,32,39,255)] lg:text-3xl text-xl font-normal mt-4">
               {step.title}
             </h2>
-            <p className="whitespace-pre-line mt-2 leading-7 md:mt-4 text-lg">{step.content}</p>
+            <p className="whitespace-pre-line mt-2 leading-7 lg:mt-4 text-lg">{step.content}</p>
           </div>
           {/* Empty div for the left side */}
-          <div className="hidden md:block"></div>
+          <div className="hidden lg:block"></div>
         </>
       )
     ) : (
@@ -310,22 +314,22 @@ useEffect(() => {
       step.align === 'right' ? (
         <>
           {/* Empty div for the left side */}
-          <div className="hidden md:block"></div>
-          <div className="hidden md:block text-left px-0 md:px-8">
+          <div className="hidden lg:block"></div>
+          <div className="hidden lg:block text-left px-0 lg:px-8">
             <span className="text-gray-500 text-4xl font-normal">{`${index + 1}.`}</span>
-            <h2 className="text-[rgb(206,32,39,255)] text-xl md:text-3xl font-normal mt-4">{step.title}</h2>
-            <p className="whitespace-pre-line mt-2 md:mt-4 md:text-lg text-md">{step.content}</p>
+            <h2 className="text-[rgb(206,32,39,255)] text-xl lg:text-3xl font-normal mt-4">{step.title}</h2>
+            <p className="whitespace-pre-line mt-2 lg:mt-4 lg:text-lg text-md">{step.content}</p>
           </div>
         </>
       ) : (
         <>
-          <div className="hidden md:block text-right px-0 md:px-8">
+          <div className="hidden lg:block text-right px-0 lg:px-8">
             <span className="text-gray-500 text-4xl font-normal">{`${index + 1}.`}</span>
-            <h2 className="text-[rgb(206,32,39,255)] text-xl md:text-3xl font-normal mt-4">{step.title}</h2>
-            <p className="whitespace-pre-line mt-2 md:mt-4 md:text-lg text-md">{step.content}</p>
+            <h2 className="text-[rgb(206,32,39,255)] text-xl lg:text-3xl font-normal mt-4">{step.title}</h2>
+            <p className="whitespace-pre-line mt-2 lg:mt-4 lg:text-lg text-md">{step.content}</p>
           </div>
           {/* Empty div for the right side */}
-          <div className="hidden md:block"></div>
+          <div className="hidden lg:block"></div>
         </>
       )
     )}
@@ -334,16 +338,14 @@ useEffect(() => {
 </div>
 </div>
 
-<div className="order-1 md:order-2 flex flex-col items-center justify-center">
+<div className="order-1 lg:order-2 flex flex-col items-center justify-center">
     <Image
       src="/howwillyouthink.png"
       alt={t("How Will You Thrive")}
       width={800}
       height={400}
-      className="w-70 h-20 md:w-[950px] md:h-[400px] object-contain"
-      
+      className="w-70 h-20 lg:w-[950px] lg:h-[400px] object-contain"
     />
-   
   </div>
  
       

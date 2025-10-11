@@ -39,27 +39,27 @@ const MarketCenter = () => {
 
   return (
     <div>
-      <div className="relative p-4 sm:p-6 md:p-8">
+      <div className="relative p-4 sm:p-6 lg:p-8">
         <Header />
 
-        <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+        <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
         <div className="relative bg-gray-100">
-          <div className="pt-32 sm:pt-32 md:pt-44">
-            <h1 className="text-start font-semibold text-2xl sm:text-3xl md:text-[40px] mx-4 sm:mx-10 md:mx-36 text-gray-700">
+          <div className="pt-32 sm:pt-32 lg:pt-44">
+            <h1 className="text-start font-semibold text-2xl sm:text-3xl lg:text-[40px] mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36 text-gray-700">
               {t('Find a Market Center')}
             </h1>
           </div>
 
-          <div className="bg-white shadow-lg mx-4 sm:mx-10 md:mx-36">
-            <div className="grid grid-cols-1 md:grid-cols-2 my-6 sm:my-8 md:my-10 p-4 sm:px-6 md:px-10 gap-6 sm:gap-8">
+          <div className="bg-white shadow-lg mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
+            <div className="grid grid-cols-1 lg:grid-cols-2 my-6 sm:my-8 lg:my-10 p-4 sm:px-6 lg:px-10 gap-6 sm:gap-8">
 
               {/* Left */}
-              <div className="space-y-6 md:pr-6">
+              <div className="space-y-6 lg:pr-6">
                 <div className="grid grid-cols-1 gap-6">
 
                   {/* Search by City */}
-                  <div className="sticky top-12 sm:top-14 md:top-15 bg-white z-10 py-3 sm:py-4">
+                  <div className="sticky top-12 sm:top-14 lg:top-15 bg-white z-10 py-3 sm:py-4">
                     <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 mb-3 sm:mb-4 text-gray-700 text-sm sm:text-base">
                       <span className="font-medium">{t('Search by:')}</span>
                       <label className="flex items-center gap-1 sm:gap-2 cursor-pointer">
@@ -104,12 +104,12 @@ const MarketCenter = () => {
         key={idx}
         className="p-3 sm:p-4 flex flex-col gap-2"
       >
-        <h3 className="text-lg sm:text-lg md:text-2xl font-semibold mb-2">{t(center.name)}</h3>
-        <p className="text-sm md:text-base mb-2 sm:mb-4">{t(center.address)}</p>
-        <p className="text-sm md:text-base break-all flex items-center gap-2">
+        <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold mb-2">{t(center.name)}</h3>
+        <p className="text-sm lg:text-base mb-2 sm:mb-4">{t(center.address)}</p>
+        <p className="text-sm lg:text-base break-all flex items-center gap-2">
           <FaPhoneAlt className="text-gray-600" /> {center.phone}
         </p>
-        <p className="text-sm md:text-base break-all flex items-center gap-2">
+        <p className="text-sm lg:text-base break-all flex items-center gap-2">
           <FaEnvelope className="text-gray-600" /> {center.email}
         </p>
         <a
@@ -132,7 +132,7 @@ const MarketCenter = () => {
               </div>
 
               {/* Right: Sticky Map */}
-              <div className="pl-0 my-6 md:my-10 sticky md:top-20 h-[300px] sm:h-[400px] md:h-[calc(100vh-5rem)]">
+              <div className="pl-0 my-6 lg:my-10 sticky lg:top-20 h-[300px] sm:h-[400px] lg:h-[calc(100vh-5rem)]">
                 <div className="relative w-full overflow-hidden border border-gray-200 h-full">
                   <iframe
                     title={t('Saudi Arabia Map')}

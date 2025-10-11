@@ -175,7 +175,7 @@ const Header = () => {
         }}
       >
         {/* Desktop Logo */}
-        <div className="hidden md:flex flex-shrink-0 items-center h-[63.5px]">
+        <div className="hidden lg:flex flex-shrink-0 items-center h-[63.5px]">
           <Link href="/" className="block h-full">
             <Image
               src={language === 'ar' ? "/logoarebic.png" : "/headerlogo.png"}
@@ -189,7 +189,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Logo */}
-        <div className="flex md:hidden flex-shrink-0 items-center h-[63.5px]">
+        <div className="flex lg:hidden flex-shrink-0 items-center h-[63.5px]">
           <Link href="/" className="block h-full">
             <Image
               src="/kwline.png"
@@ -203,14 +203,14 @@ const Header = () => {
         </div>
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center header-nav">
+        <nav className="hidden lg:flex items-center header-nav">
           {menuItems.map(item => (
             <div key={item.key} className="relative group">
               {item.submenu ? (
                 <>
                   <button
                     type="button"
-                    className={`flex items-center gap-1 text-[0.9rem] text-white font-semibold transition-colors focus:outline-none
+                    className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem]  text-white font-semibold transition-colors focus:outline-none
                       ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)]' : ''}
                       group-hover:text-white group-hover:bg-red-700 group-hover:border-red-700
                       px-4 h-[63.5px] border border-transparent
@@ -225,7 +225,7 @@ const Header = () => {
                       <React.Fragment key={sub.href}>
                         <Link
                           href={sub.href}
-                          className="block px-3 py-1 font-semibold text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)] whitespace-nowrap transition-colors"
+                          className="block px-3 py-1 font-semibold text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] whitespace-nowrap transition-colors"
                         >
                           {sub.label}
                         </Link>
@@ -239,7 +239,7 @@ const Header = () => {
               ) : (
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-1 text-[0.9rem] font-semibold transition-colors px-4 h-[63.5px] border border-transparent
+                  className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem] font-semibold transition-colors px-4 h-[63.5px] border border-transparent
                     ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)] hover:text-white hover:bg-red-700 hover:border-red-700' : 'text-white hover:text-white hover:bg-red-700 hover:border-red-700'}
                   `}
                 >
@@ -254,7 +254,7 @@ const Header = () => {
             <div className="relative group">
               <button
                 type="button"
-                className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 text-[0.9rem] border border-gray-700 hover:bg-gray-300 hover:text-black"
+                className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 xl:text-[0.9rem] lg:text-[0.7rem] border border-gray-700 hover:bg-gray-300 hover:text-black"
                 data-no-translate="true"
                 key={`lang-btn-${language}`}
               >
@@ -269,7 +269,7 @@ const Header = () => {
     <button
         onClick={() => handleLanguageSwitch('en')}
         disabled={language === 'en'}
-        className="w-full text-left px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
+        className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
     >
         {t('English')}
     </button>
@@ -277,7 +277,7 @@ const Header = () => {
     <button
         onClick={() => handleLanguageSwitch('ar')}
         disabled={language === 'ar'}
-        className="w-full text-left px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
+        className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
     >
         {t('عربي')}
     </button>
@@ -289,7 +289,7 @@ const Header = () => {
             <div className="relative group">
               <button
                 type="button"
-                className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-red-700 text-[0.9rem] border border-red-700 border-l-0"
+                className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-red-700 xl:text-[0.9rem] lg:text-[0.7rem] border border-red-700 border-l-0"
               >
                 {t('Contact')}
                 <FaChevronDown className={`ml-1 ${isRTL ? 'rtl-ml-1' : ''}`} />
@@ -297,9 +297,9 @@ const Header = () => {
               <div className="absolute left-0 top-full min-w-[160px] bg-gray-950/95 shadow-lg z-40
                 opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none
                 transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent group-hover:border-red-700 font-semibold">
-                <Link href="/agent" className="block px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)]">{t('KW Agent')}</Link>
+                <Link href="/agent" className="block px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)]">{t('KW Agent')}</Link>
                 <div className="h-px bg-gray-700 my-1 w-full" />
-                <Link href="/contactUs" className="block px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)]">{t('Contact Us')}</Link>
+                <Link href="/contactUs" className="block px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)]">{t('Contact Us')}</Link>
               </div>
             </div>
           </div>
@@ -308,7 +308,7 @@ const Header = () => {
         {/* Mobile Menu Toggle */}
         <button
           ref={buttonRef}
-          className="md:hidden text-white focus:outline-none p-2"
+          className="lg:hidden text-white focus:outline-none p-2"
           onClick={toggleMenu}
           aria-label={isMenuOpen ? t('Close menu') : t('Open menu')}
         >
@@ -319,7 +319,7 @@ const Header = () => {
         {isMenuOpen && (
           <div
             ref={menuRef}
-            className="absolute md:hidden top-full left-0 right-0 py-4 ml-24 mr-2 px-4 space-y-4 shadow-lg bg-black backdrop-blur-sm z-50 border-t-4 border-[rgb(206,32,39,255)]"
+            className="absolute lg:hidden top-full left-0 right-0 py-4 ml-24 mr-2 px-4 space-y-4 shadow-lg bg-black backdrop-blur-sm z-50 border-t-4 border-[rgb(206,32,39,255)]"
           >
             {menuItems.map(item => (
               <div key={item.key}>

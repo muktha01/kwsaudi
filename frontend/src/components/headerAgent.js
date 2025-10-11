@@ -100,7 +100,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
         }}
       >
         {/* Desktop Logo */}
-        <div className="hidden md:flex flex-shrink-0 items-center h-[63.5px]">
+        <div className="hidden lg:flex flex-shrink-0 items-center h-[63.5px]">
           <Link href="/" className="block h-full">
             <Image
               src={language === 'ar' ? "/logoarebic.png" : "/headerlogo.png"}
@@ -114,7 +114,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
         </div>
 
         {/* Mobile Logo */}
-        <div className="flex md:hidden flex-shrink-0 items-center h-[63.5px]">
+        <div className="flex lg:hidden flex-shrink-0 items-center h-[63.5px]">
           <Link href="/" className="block h-full">
             <Image
               src="/kwline.png"
@@ -128,13 +128,13 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
         </div>
 
         {/* Desktop Controls */}
-        <div className="hidden md:flex justify-end items-center ">
+        <div className="hidden lg:flex justify-end items-center ">
           {/* Language Dropdown */}
           <div className="relative group">
             <button
               type="button"
               disabled={isTranslating}
-              className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 text-[0.9rem] border border-gray-700 hover:bg-gray-300 hover:text-black disabled:opacity-50"
+              className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 xl:text-[0.9rem] lg:text-[0.7rem]  border border-gray-700 hover:bg-gray-300 hover:text-black disabled:opacity-50"
             >
               {isTranslating ? t('Translating...') : (language === 'ar' ? 'عربي' : 'English')}
               <FaChevronDown className="ml-1" />
@@ -143,7 +143,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
               <button
                 onClick={() => handleLanguageSwitch('en')}
                 disabled={isTranslating || language === 'en'}
-                className="block w-full text-left px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)] transition-colors"
+                className="block w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem]  hover:text-[rgb(206,32,39,255)] transition-colors"
               >
                 English
               </button>
@@ -151,7 +151,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
               <button
                 onClick={() => handleLanguageSwitch('ar')}
                 disabled={isTranslating || language === 'ar'}
-                className="block w-full text-left px-3 py-1 text-white text-[0.9rem] hover:text-[rgb(206,32,39,255)] transition-colors"
+                className="block w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem]  hover:text-[rgb(206,32,39,255)] transition-colors"
               >
                 عربي
               </button>
@@ -161,7 +161,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
           {/* Sign Out */}
           <button
             onClick={handleSignOut}
-            className="bg-[rgb(206,32,39)] text-white px-4 h-[63.5px] text-[0.9rem] font-semibold transition cursor-pointer border border-[rgb(206,32,39)]"
+            className="bg-[rgb(206,32,39)] text-white px-4 h-[63.5px] xl:text-[0.9rem] lg:text-[0.7rem]  font-semibold transition cursor-pointer border border-[rgb(206,32,39)]"
           >
             {t('Sign Out')}
           </button>
@@ -170,7 +170,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
         {/* Mobile Menu Toggle */}
         <button
           ref={buttonRef}
-          className="md:hidden text-white focus:outline-none p-2"
+          className="lg:hidden text-white focus:outline-none p-2"
           onClick={toggleMenu}
         >
           {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -180,7 +180,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
         {isMenuOpen && (
           <div
             ref={menuRef}
-            className="absolute md:hidden top-full left-0 right-0 py-4 px-4 space-y-4 shadow-lg bg-black backdrop-blur-sm z-50 border-t-4 border-[rgb(206,32,39,255)]"
+            className="absolute lg:hidden top-full left-0 right-0 py-4 px-4 space-y-4 shadow-lg bg-black backdrop-blur-sm z-50 border-t-4 border-[rgb(206,32,39,255)]"
           >
             {/* Language Dropdown in Mobile */}
             <div
@@ -212,7 +212,7 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
             {/* Sign Out in Mobile */}
             <button
               onClick={handleSignOut}
-              className="w-full bg-[rgb(206,32,39)] text-white py-2 text-[0.9rem] font-semibold border border-[rgb(206,32,39)]"
+              className="w-full bg-[rgb(206,32,39)] text-white py-2 xl:text-[0.9rem] lg:text-[0.7rem]  font-semibold border border-[rgb(206,32,39)]"
             >
               {t('Sign Out')}
             </button>

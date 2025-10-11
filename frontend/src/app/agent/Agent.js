@@ -569,7 +569,8 @@ const AgentContent = () => {
         const savedCache = localStorage.getItem('agents-cache');
         const savedTimestamp = localStorage.getItem('agents-cache-timestamp');
         const now = Date.now();
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+
         
         if (savedCache && savedTimestamp && (now - parseInt(savedTimestamp)) < CACHE_DURATION) {
           const parsedCache = JSON.parse(savedCache);
@@ -1213,27 +1214,27 @@ const AgentContent = () => {
 
   return (
     <div>
-    <div className="relative p-4 sm:p-6 md:p-8">
+  <div className="relative p-4 sm:p-6 lg:p-8">
       <Header />
 
-      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+  <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
       <div className="relative bg-gray-100">
-        <div className="pt-32 sm:pt-32 md:pt-44">
-          <h1 className="text-start font-semibold text-2xl sm:text-3xl md:text-[40px] mx-4 sm:mx-10 md:mx-36 text-gray-700" data-translate>
+  <div className="pt-32 sm:pt-32 lg:pt-44">
+          <h1 className="text-start font-semibold text-2xl sm:text-3xl lg:text-[40px] mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36 text-gray-700" data-translate>
             {t('Find a local estate agent')}
           </h1>
         </div>
 
-        <div className="bg-white shadow-lg mx-4 sm:mx-10 md:mx-36">
-          <div className="grid grid-cols-1 md:grid-cols-2 my-6 sm:my-8 md:my-10 p-4 sm:px-6 md:px-10 gap-6 sm:gap-8">
+  <div className="bg-white shadow-lg mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
+          <div className="grid grid-cols-1 lg:grid-cols-2 my-6 sm:my-8 lg:my-10 p-4 sm:px-6 lg:px-10 gap-6 sm:gap-8">
 
             {/* Left */}
-            <div className="space-y-6 md:pr-6">
+            <div className="space-y-6 lg:pr-6">
               <div className="grid grid-cols-1 gap-6">
 
                 {/* Sticky Search */}
-                <div className="sticky top-12 sm:top-14 md:top-15 bg-white z-10 py-3 sm:py-4">
+                <div className="sticky top-12 sm:top-14 lg:top-15 bg-white z-10 py-3 sm:py-4">
                   <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 mb-3 sm:mb-4 text-gray-700 text-sm sm:text-base">
                     <span className="font-medium" data-translate>{t('Search by:')}</span>
                     <label className="flex items-center gap-1 sm:gap-2 cursor-pointer">
@@ -1503,7 +1504,7 @@ const AgentContent = () => {
                           />
                         </div>
                         <div className="flex-1">
-  <h3 className="text-lg sm:text-lg md:text-2xl font-semibold mb-2">{agent.name}</h3>
+  <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold mb-2">{agent.name}</h3>
   
   <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2">
     <FaPhoneAlt className="text-gray-600" /> {agent.phone}
@@ -1526,7 +1527,7 @@ const AgentContent = () => {
       gap-1 sm:gap-2 text-xs sm:text-base`}
   >
     <span data-translate>{t('View Details & Properties')}</span>
-    <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} md:w-3 md:h-3 w-2 h-2 mt-0.5`} />
+  <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} lg:w-3 lg:h-3 w-2 h-2 mt-0.5`} />
   </button>
 </div>
 
@@ -1540,7 +1541,7 @@ const AgentContent = () => {
                       idx !== marketCenters.length - 1 ? 'border-b border-gray-300' : ''
                     }`}>
                       <div className="flex-1">
-                        <h3 className="text-lg sm:text-lg md:text-2xl font-semibold mb-2">{t(center.name)}</h3>
+                        <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold mb-2">{t(center.name)}</h3>
                         <p className="text-sm sm:text-base mb-6 break-all text-gray-700">{t(center.address)}</p>
                         <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2">
                           <FaPhoneAlt className="text-gray-600" /> {center.phone}
@@ -1593,7 +1594,7 @@ const AgentContent = () => {
             </div>
 
             {/* Right: Sticky Map */}
-            <div className="hidden md:block pl-0 my-6 md:my-10 sticky md:top-20 h-[300px] sm:h-[400px] md:h-[calc(100vh-5rem)]">
+            <div className="hidden lg:block pl-0 my-6 lg:my-10 sticky lg:top-20 h-[300px] sm:h-[400px] lg:h-[calc(100vh-5rem)]">
               <div 
                 className="relative w-full overflow-hidden border border-gray-200 h-full"
                 data-testid="agent-map-container"

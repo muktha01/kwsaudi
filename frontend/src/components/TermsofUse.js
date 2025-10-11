@@ -4,21 +4,21 @@ import Footer from "./newfooter";
 import Header from "./header";
 export default function TermsOfUse() {
   return (
-    <div className="relative p-4 sm:p-6 md:p-8">
+    <div className="relative p-4 sm:p-6 lg:p-8">
       <Header />
 
-      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
       <div className="relative bg-gray-100">
-        <div className="pt-32 sm:pt-32 md:pt-44">
+        <div className="pt-32 sm:pt-32 lg:pt-44">
     
-    <div className="min-h-screen  py-10 px-4 md:px-20">
+    <div className="min-h-screen  py-10 px-4 lg:px-20">
       <div className=" mx-auto p-8 space-y-12">
         
         {/* English Section */}
         <div>
-                <h2 className="md:text-4xl text-2xl font-semibold mb-4 tracking-wider  ">Terms of Use</h2>
-          <h2 className="md:text-2xl text-xl font-semibold mb-4 uppercase text-[rgb(206,32,39,255)]">Language - English</h2>
+                <h2 className="lg:text-4xl text-2xl font-semibold mb-4 tracking-wider  ">Terms of Use</h2>
+          <h2 className="lg:text-2xl text-xl font-semibold mb-4 uppercase text-[rgb(206,32,39,255)]">Language - English</h2>
           <div className="prose prose-lg max-w-none text-justify">
            <p>
   The website located at <strong>[www.kwsaudiarabia.com]</strong> (the

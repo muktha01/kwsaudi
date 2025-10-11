@@ -160,9 +160,9 @@ const Franchise = () => {
           }
 
           // Show update notification for background updates
-          if (isBackgroundUpdate) {
-           // console.log('✅ Franchise page updated with latest data');
-          }
+          // if (isBackgroundUpdate) {
+          //  console.log('✅ Franchise page updated with latest data');
+          // }
 
         } catch (error) {
           if (error.name === 'AbortError') {
@@ -317,16 +317,16 @@ const Franchise = () => {
         
        
             {/* Big Life Box */}
-            <main className="px-4 md:py-10 py-2 ">
+            <main className="px-4 lg:py-10 py-2 ">
   <div className="mx-auto text-center ">
-    <h1 className="text-2xl md:text-3xl font-semibold md:font-semibold tracking-[0.05em] md:tracking-[0.1em] text-gray-800 leading-snug">
+    <h1 className="text-2xl lg:text-3xl font-semibold lg:font-semibold tracking-[0.05em] lg:tracking-[0.1em] text-gray-800 leading-snug">
       {t("WE WANT YOU TO")} <span className="text-[rgb(206,32,39,255)]">{t("LIVE A BIG LIFE")}</span>
     </h1>
 
-    <hr className="w-32 sm:w-48 md:w-60 lg:w-72 border-0 mx-auto bg-[rgb(206,32,39,255)] h-[2px] mt-6 md:mt-14" />
+    <hr className="w-32 sm:w-48 lg:w-60 lg:w-72 border-0 mx-auto bg-[rgb(206,32,39,255)] h-[2px] mt-6 lg:mt-14" />
 
-    <div className="mt-6 sm:mt-10 px-2 sm:px-6 md:px-34">
-      <p className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-700">
+    <div className="mt-6 sm:mt-10 px-2 sm:px-6 lg:px-34">
+      <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-gray-700">
         {t(`Our Mission Is To Help You To Build Careers Worth Having, Businesses Worth Owning, Lives Worth Living, Experiences Worth Giving And Legacies Worth Leaving. To That End We Want This To Be The Most Amazing Place To Be An Estate Agent In The UK And Globally. And We Want The Best Leadership For Our Market Centres.`)}
       </p>
     </div>
@@ -334,7 +334,7 @@ const Franchise = () => {
 </main>
 
             {/* Black Strip Section */}
-            <div className="relative min-h-[40vh] md:min-h-screen flex items-center justify-center overflow-hidden">
+            <div className="relative min-h-[40vh] lg:min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background video */}
       <video
         ref={videoRef}
@@ -351,29 +351,29 @@ const Franchise = () => {
 
       {/* Foreground content */}
       <main className={`relative z-10 px-4 py-6 text-center text-white `}>
-        <p className="md:text-sm text-xs tracking-widest">{t("WHERE")}</p>
+        <p className="lg:text-sm text-xs tracking-widest">{t("WHERE")}</p>
 
-        <h1 className="text-xl md:text-4xl font-normal mt-4">
+        <h1 className="text-xl lg:text-4xl font-normal mt-4">
           {t("TRUE FINANCIAL FREEDOM BEGINS")}
         </h1>
 
-        <hr className="w-48 md:w-[30rem] border-0 mx-auto bg-[rgb(206,32,39)] h-[2px] rounded-full mt-6 md:mt-14" />
+        <hr className="w-48 lg:w-[30rem] border-0 mx-auto bg-[rgb(206,32,39)] h-[2px] rounded-full mt-6 lg:mt-14" />
 
         <div className="mt-10">
-          <p className="text-xs md:text-base max-w-2xl mx-auto">
+          <p className="text-xs lg:text-base max-w-2xl mx-auto">
             {t(`As A Company Founded On Proven Systems And Models, Keller Williams Provides The Blueprint For Building A Big Business And An Even Bigger Life.`)}
           </p>
 
-          <div className="flex justify-center mt-6 md:mt-10">
+          <div className="flex justify-center mt-6 lg:mt-10">
             <button
-              className="cursor-pointer md:px-10 px-4 bg-[rgb(206,32,39)] text-white py-2 md:py-3 text-xs md:text-sm mt-6 relative overflow-hidden group rounded-full transition-all duration-300 hover:px-12"
+              className="cursor-pointer lg:px-10 px-4 bg-[rgb(206,32,39)] text-white py-2 lg:py-3 text-xs lg:text-sm mt-6 relative overflow-hidden group rounded-full transition-all duration-300 hover:px-12"
               onClick={() => router.push("/ourCulture/whyKW")}
             >
-              <span className="inline-block md:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
+              <span className="inline-block lg:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
                 {t("GET STARTED")}
               </span>
               <span className={`absolute ${isRTL ? 'left-4 group-hover:translate-x-0 translate-x-[-4]' : 'right-4 group-hover:translate-x-0 translate-x-4'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-white`}>
-                {isRTL ? <ChevronLeft className="h-4 w-4 md:h-6 md:w-6" /> : <ChevronRight className="h-4 w-4 md:h-6 md:w-6" />}
+                  <ChevronRight className={`text-white w-4 h-4 lg:w-6 lg:h-6 ${isRTL ? 'rotate-180' : ''}`} />
               </span>
             </button>
           </div>
@@ -383,26 +383,26 @@ const Franchise = () => {
       
      
 
-      <div className="w-full py-6  md:py-12 px-8">
-      <div className="mx-auto grid md:grid-cols-2 gap-10">
+      <div className="w-full py-6  lg:py-12 px-8">
+      <div className="mx-auto grid lg:grid-cols-2 gap-10">
         
         {/* Left Section */}
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h2 className="md:text-3xl text-2xl  font-semibold leading-snug">
+          <h2 className="lg:text-3xl text-2xl  font-semibold leading-snug">
             {t("WE WANT")} <span className="text-[rgb(206,32,39,255)]">{t("YOU TO LIVE")}</span><br /> {t("A BIG LIFE")}
           </h2>
-          <p className="mt-8 text-base md:text-lg leading-relaxed ">
+          <p className="mt-8 text-base lg:text-lg leading-relaxed ">
             {t(`At Keller Williams Saudi Arabia, we empower entrepreneurs to build thriving businesses, create lasting legacies, and achieve true financial freedom. Our Franchise model is designed to give you the tools, training, and support you need to lead in your market and grow beyond it.`)}
           </p>
 
-          <h3 className="mt-8 font-bold md:text-xl text-lg text-[rgb(206,32,39,255)]">{t("WHY PARTNER WITH US?")}</h3>
+          <h3 className="mt-8 font-bold lg:text-xl text-lg text-[rgb(206,32,39,255)]">{t("WHY PARTNER WITH US?")}</h3>
   <ul className="mt-6 space-y-6 text-sm">
     <li>
-    <span className="flex items-center gap-2 md:text-lg text-base font-semibold">
+    <span className="flex items-center gap-2 lg:text-lg text-base font-semibold">
     <FaCheck className="text-[rgb(206,32,39,255)] text-lg" />
     {t("Competitive Investment Costs")}
   </span>
-      <span className="md:text-base text-sm">{t("Start your franchise with one of the most cost-effective models in the industry.")}</span>
+      <span className="lg:text-base text-sm">{t("Start your franchise with one of the most cost-effective models in the industry.")}</span>
     </li>
     <li>
     <span className={`flex items-center gap-2  text-lg font-semibold `}>
@@ -410,54 +410,54 @@ const Franchise = () => {
     {t("Limitless Earning Potential")}
   </span>
       
-      <span className="md:text-base text-sm">{t("Your success is only limited by your ambition and effort.")}</span>
+      <span className="lg:text-base text-sm">{t("Your success is only limited by your ambition and effort.")}</span>
     </li>
     <li>
-    <span className={`flex items-center gap-2  md:text-lg text-base font-semibold`}>
+    <span className={`flex items-center gap-2  lg:text-lg text-base font-semibold`}>
     <FaCheck className="text-[rgb(206,32,39,255)] text-lg" />
     {t("24/7 Training & Support")}
   </span>
       
-      <span className="md:text-base text-sm">{t("Access world-class coaching, mentorship, and operational guidance anytime.")}</span>
+      <span className="lg:text-base text-sm">{t("Access world-class coaching, mentorship, and operational guidance anytime.")}</span>
     </li>
     <li>
-    <span className={`flex items-center gap-2  md:text-lg text-base font-semibold `}>
+    <span className={`flex items-center gap-2  lg:text-lg text-base font-semibold `}>
     <FaCheck className="text-[rgb(206,32,39,255)] text-lg" />
     {t("Industry-Leading Technology")}
   </span>
       
-      <span className="md:text-base text-sm">{t("Stay ahead with innovative tools that drive efficiency and growth.")}</span>
+      <span className="lg:text-base text-sm">{t("Stay ahead with innovative tools that drive efficiency and growth.")}</span>
     </li>
     <li>
-    <span className={`flex items-center gap-2  md:text-lg text-base font-semibold `}>
+    <span className={`flex items-center gap-2  lg:text-lg text-base font-semibold `}>
     <FaCheck className="text-[rgb(206,32,39,255)] text-lg" />
     {t("Additional Growth Opportunities")}
   </span>
       
-      <span className="md:text-base text-sm">{t("Expand your business with multiple revenue streams and service offerings.")}</span>
+      <span className="lg:text-base text-sm">{t("Expand your business with multiple revenue streams and service offerings.")}</span>
     </li>
     <li>
-    <span className={`flex items-center gap-2 md:text-lg text-base font-semibold`}>
+    <span className={`flex items-center gap-2 lg:text-lg text-base font-semibold`}>
     <FaCheck className="text-[rgb(206,32,39,255)] text-lg" />
     {t("One-of-a-Kind Culture")}
   </span>
       
-      <span className="md:text-base text-sm">{t("Join a collaborative, success-driven network that celebrates your wins.")}</span>
+      <span className="lg:text-base text-sm">{t("Join a collaborative, success-driven network that celebrates your wins.")}</span>
     </li>
   </ul>
 
 
           <h1 className="mt-8">
-            <span className="font-bold text-[rgb(206,32,39,255)] md:text-xl text-lg">{t("SHAPE YOUR FUTURE IN REAL ESTATE")}</span>
-            <p className={`text-base md:text-lg mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <span className="font-bold text-[rgb(206,32,39,255)] lg:text-xl text-lg">{t("SHAPE YOUR FUTURE IN REAL ESTATE")}</span>
+            <p className={`text-base lg:text-lg mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
             {t(`Ready to own a piece of the world's largest real estate franchise? Fill out the Franchise Application and take your first step toward building a business that offers both financial rewards and personal fulfillment.`)}
             </p>
           </h1>
         </div>
 
         {/* Right Section - Form */}
-        <div className={`bg-white text-black p-8 shadow-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-          <h3 className="text-2xl font-medium mb-6 flex justify-center">{t("Franchise Application")}</h3>
+        <div className={`bg-white text-black p-8 shadow-lg `}>
+          <h3 className="text-2xl font-medium mb-6 flex justify-center ">{t("Franchise Application")}</h3>
           
         
 

@@ -13,7 +13,7 @@ const InstantValuationClient = () => {
   const [loading, setLoadingProperties] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const { language, isRTL, t } = useTranslation();
-  const [heroSrc, setHeroSrc] = useState('/instant-valuation-default.jpg'); 
+  const [heroSrc, setHeroSrc] = useState('/'); 
   const [page, setPage] = useState('');
 
   // Cache configuration
@@ -221,12 +221,12 @@ const InstantValuationClient = () => {
 
   return (
     <div>
-      <div className="relative p-6 md:p-8">
+      <div className="relative p-6 lg:p-8">
         <Header />
-        <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+        <div className="absolute top-0 left-0 w-[100px] h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
         <div className="relative bg-white">
-          <div className="grid md:grid-cols-3 gap-8 items-start">
-            <div className="md:col-span-1 space-y-8">
+          <div className="grid lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-1 space-y-8">
               {pageLoading ? (
                 <div className="w-full h-[500px] bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
                   <div className="text-gray-500">{t('Loading image...')}</div>
@@ -244,28 +244,28 @@ const InstantValuationClient = () => {
                   
                 />
               )}
-              <div className={`text-gray-700 ${isRTL ? 'md:pl-30' : 'md:pr-30'} md:text-lg text-md leading-relaxed mx-2 md:mx-0 mt-6`}>
+              <div className={`text-gray-700 ${isRTL ? 'lg:pl-20 lg:pl-0' : 'lg:pr-0 lg:pr-20'} lg:text-lg text-md leading-relaxed mx-2 lg:mx-0 mt-6`}>
                 <p>
                   {t('Your valuation is based on millions of pieces of data, from sold house prices in your area to current market trends and the size of your home.')}
                 </p>
                 <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                  <p className="mt-6 font-semibold md:text-lg text-base">
+                  <p className="mt-6 font-semibold lg:text-lg text-base">
                     {t('Included with your valuation :')}
                   </p>
                   <ul className="mt-4 space-y-2">
                     <li className={`flex items-start gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <FaPlus className="text-[rgb(206,32,39,255)] mt-1" />
-                      <span className="md:text-lg text-base">{t('Agent will contact you')}</span>
+                      <span className="lg:text-lg text-base">{t('Agent will contact you')}</span>
                     </li>
                     <li className={`flex items-start gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <FaPlus className="text-[rgb(206,32,39,255)] mt-1" />
-                      <span className="md:text-lg text-base">{t('We help you sell your property')}</span>
+                      <span className="lg:text-lg text-base">{t('We help you sell your property')}</span>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
-            <div className="md:col-span-2 p-8 mt-0 md:mt-20 mr-10">
+            <div className="lg:col-span-2 p-8 mt-0 lg:mt-20 mr-10">
               <h3 className={`text-xl font-bold mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t('Your Free, Online Valuation Starts Here..')}
               </h3>

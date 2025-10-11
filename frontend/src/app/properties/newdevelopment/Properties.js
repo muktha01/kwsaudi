@@ -1,4 +1,3 @@
-
 'use client'
 import React, { useState, useEffect, Suspense, useCallback, useMemo, memo } from 'react';
 import Image from 'next/image';
@@ -33,7 +32,7 @@ const PropertyCard = memo(({ property, index, iconUrls, formatPrice, generatePro
       onClick={handleCardClick}
     >
       {/* Image Section */}
-      <div className="relative w-full h-50 md:h-60">
+      <div className="relative w-full h-50 lg:h-60">
         <Image
           src={(() => {
             const img =
@@ -146,7 +145,7 @@ PropertyCard.displayName = 'PropertyCard';
 const PropertyCardSkeleton = memo(() => (
   <div className="bg-white shadow-2xl overflow-hidden w-full animate-pulse">
     {/* Image Skeleton */}
-    <div className="relative w-full h-50 md:h-60 bg-gray-300"></div>
+    <div className="relative w-full h-50 lg:h-60 bg-gray-300"></div>
     
     {/* Details Skeleton */}
     <div className="p-4 py-6">
@@ -205,7 +204,7 @@ const PropertiesContent = () => {
 
   const [properties, setProperties] = useState([]);
   const [isSorted, setIsSorted] = useState(false);
-  
+   const [showMap, setShowMap] = useState(false);
   // Combined filter states
   const [appliedFilters, setAppliedFilters] = useState({
     selected: { sale: false, rent: false, commercial: false },
@@ -497,7 +496,7 @@ const PropertiesContent = () => {
     const CACHE_KEY = 'new_development_page_data';
     const CACHE_EXPIRY_KEY = 'new_development_page_data_expiry';
     const SESSION_CACHE_KEY = 'new_development_page_session';
-    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+    const CACHE_DURATION = 50 * 60 * 1000; // 15 minutes in milliseconds
 
     const fetchInitialData = async () => {
       // Step 1: Show cached page data immediately (if available)
@@ -707,33 +706,35 @@ const PropertiesContent = () => {
 
  
   return (
-    <div className="relative p-6 md:p-8 ">
+    <div className="relative p-6 lg:p-8 ">
     
     {/* Sticky Header */}
    
       <Header />
   
   
-      <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)]  z-0"></div>
+      <div className="absolute top-0 left-0 w-[100px] h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)]  z-0"></div>
   
   {/* Hero Section */}
-  <div className="relative bg-gray-100 md:pb-10">
+  <div className="relative bg-gray-100 lg:pb-10">
   
-    <section className={`relative w-full ${uiState.showFilters ? 'h-[120vh] md:h-[125vh]' : 'h-screen md:h-screen'} text-white overflow-hidden transition-all duration-500 ease-in-out`}>
+    <section className={`relative w-full ${uiState.showFilters ? 'h-[135vh] lg:h-[125vh]' : 'h-screen lg:h-screen'} text-white overflow-hidden transition-all duration-500 ease-in-out`}>
       {/* Background Image with previous blurring out and next coming in */}
       <Image
-                src={heroSrc}
-              alt="Hero Background"
-              fill
-              objectPosition="center"
-              priority={false}
-              loading="lazy"
-              className={`z-0 transition-all duration-500 object-cover ${uiState.showFilters ? 'scale-110' : 'scale-100'}` }
-            />
+                          src={heroSrc}
+                        alt="Rented Properties Hero Background"
+                        layout="fill"
+                        sizes="100vw"
+                        objectPosition="center"
+                        priority={false}
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                        className={`z-0 transition-all duration-500 object-cover ${uiState.showFilters ? 'scale-110' : 'scale-100'}` }
+                      />
              {/* Content */}
-             <div className={`absolute ${uiState.showFilters ? 'bottom-0' : 'bottom-20'}  md:bottom-0 left-0 w-full z-10 flex flex-col items-center text-center text-white py-2 md:py-14 px-4`}>
+             <div className={`absolute ${uiState.showFilters ? 'bottom-0' : 'bottom-20'}  lg:bottom-0 left-0 w-full z-10 flex flex-col items-center text-center text-white py-2 lg:py-14 px-4`}>
   {/* Title */}
-  <h2 className="text-3xl font-semibold md:pb-8 pb-4">
+  <h2 className="text-3xl font-semibold lg:pb-8 pb-4">
     {uiState.loading
       ? t('Loading...')
       : `${pagination.totalItems} ${t('Properties')}`}
@@ -741,11 +742,11 @@ const PropertiesContent = () => {
   
   
   {/* Line 1 - For Sale + To Rent */}
- <div className="flex md:gap-4 gap-2 md:pb-4 pb-2">
+ <div className="flex lg:gap-4 gap-2 lg:pb-4 pb-2">
   {/* For Sale */}
   <button
     onClick={() => updateSelectedFilter('sale')}
-    className={`flex items-center md:gap-8 gap-2 px-4 py-2 font-semibold border ${
+    className={`flex items-center lg:gap-8 gap-2 px-4 py-2 font-semibold border ${
       displayFilters.selected.sale
         ? "bg-[rgb(206,32,39,255)] border-[rgb(206,32,39,255)] text-white"
         : "bg-white border-gray-300 text-black"
@@ -766,7 +767,7 @@ const PropertiesContent = () => {
   {/* To Rent */}
   <button
     onClick={() => updateSelectedFilter('rent')}
-    className={`flex items-center md:gap-8 gap-2 px-4 py-2 font-semibold border ${
+    className={`flex items-center lg:gap-8 gap-2 px-4 py-2 font-semibold border ${
       displayFilters.selected.rent
         ? "bg-[rgb(206,32,39,255)] border-[rgb(206,32,39,255)] text-white"
         : "bg-white border-gray-300 text-black"
@@ -789,7 +790,7 @@ const PropertiesContent = () => {
 <div className="mb-4">
   <button
     onClick={() => updateSelectedFilter('commercial')}
-    className={`flex items-center md:gap-8 gap-2 px-4 py-2 font-semibold border ${
+    className={`flex items-center lg:gap-8 gap-2 px-4 py-2 font-semibold border ${
       displayFilters.selected.commercial
         ? "bg-[rgb(206,32,39,255)] border-[rgb(206,32,39,255)] text-white"
         : "bg-white border-gray-300 text-black"
@@ -895,13 +896,13 @@ const PropertiesContent = () => {
 
   {/* Additional Filters */}
   <div
-    className={`overflow-hidden transition-all md:mt-6 mt-2 duration-500 ease-in-out ${
-      uiState.showFilters ? "max-h-[2000px] md:max-h-96 opacity-100" : "max-h-0 opacity-0"
+    className={`overflow-hidden transition-all lg:mt-6 mt-2 duration-500 ease-in-out ${
+      uiState.showFilters ? "max-h-[2000px] lg:max-h-96 opacity-100" : "max-h-0 opacity-0"
     }`}
   >
     <div>
       {/* First row of dropdowns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 w-full md:w-4xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 w-full lg:w-4xl">
        
         {/* Type Dropdown */}
 <div>
@@ -968,9 +969,9 @@ const PropertiesContent = () => {
 
 
       {/* Checkboxes */}
-      <div className={`flex flex-col md:flex-row md:gap-6 gap-2 mb-6 ${isRTL ? 'justify-end' : 'justify-center'} items-center`}>
+      <div className={`flex flex-col lg:flex-row lg:gap-6 gap-2 mb-6 ${isRTL ? 'justify-center' : 'justify-center'} items-center`}>
   {/* Include new homes */}
-  <div className={`flex flex-col gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+  <div className={`flex flex-col gap-2 `}>
     <span className="font-medium">{t("Include new homes?")}</span>
     <div className="flex gap-4">
       {/* YES Option */}
@@ -1120,8 +1121,9 @@ const PropertiesContent = () => {
 
     <div className="min-h-screen">
       {/* Filters always inside margin */}
-      <div className={`${isRTL ? 'mx-2 md:mx-38 text-right' : 'mx-6 md:mx-38 text-left'}`}>
-        <div className={`py-6 mt-10 gap-2 flex flex-col md:flex-row justify-start`}>
+       <div className={`${uiState.showMap ? "lg:mx-2" : "mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36"}`}>
+  
+        <div className={`py-6 mt-10 gap-2 flex flex-col lg:flex-row justify-start`}>
           <select
             className="border border-gray-400 p-2 bg-white text-black"
             value={sortOption}
@@ -1133,21 +1135,29 @@ const PropertiesContent = () => {
           </select>
 
           <button
-            className="cursor-pointer hidden md:inline-block border border-gray-400 p-2 bg-white text-black"
+            className="cursor-pointer hidden lg:inline-block border border-gray-400 p-2 bg-white text-black"
             onClick={() => setUiState(prev => ({ ...prev, showMap: !prev.showMap }))}
           >
             {uiState.showMap ? t("Hide Map") : t("Map View")}
           </button>
         </div>
       </div>
+  
 
       {/* Conditional rendering */}
       {uiState.showMap ? (
         // ✅ Map is outside mx-38 → takes full width
-        <PropertyType appliedFilters={appliedFilters} />
+ <PropertyType 
+          appliedFilters={appliedFilters}
+          properties={properties}
+          isChildComponent={true}
+          hasNextPage={pagination.hasNextPage}
+          loadingMore={uiState.loadingMore}
+          onLoadMore={goToNextPage}
+        />
       ) : (
         <>
-          <div className="mx-6 md:mx-38">
+          <div className="mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
            {/* Properties Count Display */}
   {uiState.loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1193,7 +1203,7 @@ const PropertiesContent = () => {
               <button
                 onClick={goToNextPage}
                 disabled={uiState.loadingMore}
-                className={`cursor-pointer md:w-80 w-50 md:py-3 py-2 px-6 text-white text-base md:text-lg font-semibold  transition-all duration-200 shadow-lg ${
+                className={`cursor-pointer lg:w-80 w-50 lg:py-3 py-2 px-6 text-white text-base lg:text-lg font-semibold  transition-all duration-200 shadow-lg ${
                   uiState.loadingMore 
                     ? 'bg-gray-400 cursor-not-allowed opacity-75' 
                     : 'bg-gray-500 hover:shadow-xl'
@@ -1229,7 +1239,7 @@ const Properties = () => {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-[rgb(206,32,39,255)]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-[rgb(206,32,39,255]"></div>
       </div>
     }>
       <PropertiesContent />

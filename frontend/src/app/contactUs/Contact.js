@@ -40,7 +40,7 @@ const Contact = () => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing session cache:', e);
+             // console.warn('Error parsing session cache:', e);
             }
           }
 
@@ -58,7 +58,7 @@ const Contact = () => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing localStorage cache:', e);
+              //console.warn('Error parsing localStorage cache:', e);
             }
           }
         }
@@ -123,15 +123,15 @@ const Contact = () => {
           }
 
           // Show update notification for background updates
-          if (isBackgroundUpdate) {
-            console.log('✅ Contact page updated with latest data');
-          }
+          // if (isBackgroundUpdate) {
+          //   console.log('✅ Contact page updated with latest data');
+          // }
 
         } catch (error) {
           if (error.name === 'AbortError') {
-            console.warn('Contact page fetch timeout');
+            //console.warn('Contact page fetch timeout');
           }
-          console.error('Error fetching contact page:', error);
+         // console.error('Error fetching contact page:', error);
           
           if (!isBackgroundUpdate) {
             // Try to use expired cache if API fails
@@ -143,7 +143,7 @@ const Contact = () => {
                   setPage(parsedData.page);
                   setHeroSrc(parsedData.heroSrc);
                 } catch (parseError) {
-                  console.warn('Error parsing cached contact data:', parseError);
+                 // console.warn('Error parsing cached contact data:', parseError);
                 }
               }
             }
@@ -169,7 +169,7 @@ const Contact = () => {
         }
 
       } catch (err) {
-        console.error('Error in fetchPageHero:', err);
+        //console.error('Error in fetchPageHero:', err);
         setLoading(false);
       }
     };
@@ -206,7 +206,7 @@ const Contact = () => {
           sessionStorage.setItem('contact_page_session', cachedData);
         }
       } catch (e) {
-        console.warn('Error reading cached contact data in client effect:', e);
+        //console.warn('Error reading cached contact data in client effect:', e);
       }
     }
   }, [page,heroSrc]); // Run once on mount
@@ -263,7 +263,7 @@ const Contact = () => {
       />
 
       {/* Contact Form */}
-      <div className="w-full md:px-70 px-10 py-10">
+      <div className="w-full lg:px-70 px-10 py-10">
         <form className="space-y-8" onSubmit={handleSubmit}>
           {/* Full Name */}
           <div className="relative">
@@ -293,7 +293,7 @@ const Contact = () => {
           </div>
 
           {/* Phone + Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="relative">
               <input
                 type="tel"

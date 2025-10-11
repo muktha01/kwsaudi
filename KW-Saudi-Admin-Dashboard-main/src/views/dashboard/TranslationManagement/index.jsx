@@ -52,7 +52,7 @@ const TranslationManagement = () => {
       fetchTranslations();
       handleCloseDialog();
     } catch (err) {
-      console.error('Error saving translation:', err);
+      //console.error('Error saving translation:', err);
       setError(err);
     }
   };
@@ -62,7 +62,7 @@ const TranslationManagement = () => {
       await translationService.deleteTranslation(id);
       fetchTranslations();
     } catch (err) {
-      console.error('Error deleting translation:', err);
+      //console.error('Error deleting translation:', err);
       setError(err);
     }
   };

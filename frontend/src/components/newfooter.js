@@ -284,19 +284,19 @@ export default function Home() {
      
 
       {/* Footer */}
-      <footer className="mt-auto md:mt-10 md:mx-8">
+      <footer className="mt-auto lg:mt-10 lg:mx-8">
         {/* Desktop Footer */}
-        <div className="border-t border-gray-300 hidden md:block">
+        <div className="border-t border-gray-300 hidden lg:block">
           {/* Top Footer */}
          {/* Top Footer */}
-<div className="md:mx-10 mx-4 py-10 hidden md:flex justify-between gap-10">
+<div className="lg:mx-10 mx-4 py-10 hidden lg:flex justify-between gap-10">
   
   {/* Logo */}
   <div className="flex-shrink-0">
     <Image
       src={language === 'ar' ? "/logoarebic.png" : "/headerlogo.png"}
       alt="Keller Williams"
-      width={250}
+      width={180}
       height={180}
     />
   </div>
@@ -379,7 +379,7 @@ export default function Home() {
     className="w-full px-3 py-2 pr-10 bg-white text-black text-sm outline-none border border-gray-300 cursor-pointer"
     onKeyPress={(e) => {
       if (e.key === 'Enter') {
-        handleManualLogin(agentEmail, false);
+      login();
       }
     }}
   />
@@ -427,11 +427,11 @@ export default function Home() {
 
           {/* Bottom Footer */}
           <div className="border-t border-gray-300 mt-6">
-  <div className="md:mx-8 mx-auto py-6">
-    <div className="flex flex-col md:flex-row md:justify-between items-start text-sm text-gray-600">
+  <div className="lg:mx-8 mx-auto py-6">
+    <div className="flex flex-col lg:flex-row lg:justify-between items-start text-sm text-gray-600">
 
       {/* Left Text */}
-      <div className="flex flex-col space-y-1 md:space-y-0 md:mr-4">
+      <div className="flex flex-col space-y-1 lg:space-y-0 lg:mr-4">
         <div>
           <Link href='/TermsofUse'>{t('Terms of Use')}</Link> | 
           <Link href="/PrivacyPolicy" className="mx-2">{t('Privacy Policy')}</Link> | 
@@ -446,7 +446,7 @@ export default function Home() {
       </div>
 
       {/* Social Icons */}
-      <div className="flex flex-row md:items-end mt-4 md:mt-0 space-x-4  text-xl">
+      <div className="flex flex-row lg:items-end mt-4 lg:mt-0 space-x-4  text-xl">
         <a href="https://www.snapchat.com/add/kwsaudiarabia?invite_id=uOPm-ny1&locale=en_SA%40calendar%3Dgregorian&share_id=AYEA3l8WSMqsIdDUTwPzow&sid=26f1fc0b18b4498197cf201797833561">
           <i className="fab fa-snapchat"></i>
         </a>
@@ -476,7 +476,7 @@ export default function Home() {
 </div>
 
        {/* Mobile Footer */}
-<div className="  p-6 md:hidden">
+<div className="  p-6 lg:hidden">
   {/* Menu Sections */}
   <div className="space-y-3">
     {/* OUR CULTURE */}
@@ -602,13 +602,13 @@ export default function Home() {
             <input
               type="email"
               value={mobileAgentEmail}
-                 readOnly
+              readOnly
               onChange={e => setMobileAgentEmail(e.target.value)}
               placeholder={t('Enter your email')}
               className="w-full px-3 py-2 pr-10 bg-white text-black text-sm outline-none border border-gray-300"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  handleManualLogin(mobileAgentEmail, true);
+                  login();
                 }
               }}
             />
@@ -664,7 +664,7 @@ export default function Home() {
     <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
                   <a href='#' className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</a>
   </div>
-  <p className="text-sm mx-2 text-gray-500 mt-3 text-center md:text-left mb-2">
+  <p className="text-sm mx-2 text-gray-500 mt-3 text-center lg:text-left mb-2">
                 {t('Copyright © 1998-2025 Keller Williams Realty, LLC')} <br />
                 {t('Keller Williams Realty, LLC, a franchise company, is an Equal Opportunity Employer and supports the Fair Housing Act. Each Keller Williams® office is independently owned and operated.')}
               </p>

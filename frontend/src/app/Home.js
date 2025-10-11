@@ -303,8 +303,8 @@ const [pdfs, setPdfs] = useState([]);
   };
 
   // Handle download
+  // Pure download function, no loading state
   const handleDownload = async (pdfName) => {
-    setLoading(true);
     try {
       let url, downloadName;
       if (language === 'ar') {
@@ -332,9 +332,7 @@ const [pdfs, setPdfs] = useState([]);
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-     
-    } finally {
-      setLoading(false);
+      // Optionally handle error
     }
   };
 
@@ -383,7 +381,9 @@ const [pdfs, setPdfs] = useState([]);
   const [buyEmail, setBuyEmail] = useState("");
   const [sellEmailError, setSellEmailError] = useState("");
   const [buyEmailError, setBuyEmailError] = useState("");
-  const [loading, setLoading] = useState(false);
+  // Separate loading states for Sell and Buy download buttons
+  const [loadingSell, setLoadingSell] = useState(false);
+  const [loadingBuy, setLoadingBuy] = useState(false);
 
   const [clear, setClear] = useState(false)
 
@@ -848,14 +848,14 @@ const [pdfs, setPdfs] = useState([]);
 
   return (
     <div>
-      <div className="relative p-6 md:p-8">
+      <div className="relative p-6 lg:p-8">
 
         {/* Sticky Header */}
 
         <Header />
 
 
-        <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+        <div className="absolute top-0 left-0 w-[100px] h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
         {/* Hero Section */}
         <div className="relative ">
@@ -863,7 +863,7 @@ const [pdfs, setPdfs] = useState([]);
 
           {/* Background Image with previous blurring out and next coming in */}
 
-          <section className="relative w-full h-[86vh] md:h-[120vh] text-white">
+          <section className="relative w-full h-screen lg:h-[120vh] text-white">
             {/* Background Image Transition */}
             <div 
               className="absolute inset-0 z-0 overflow-hidden"
@@ -999,13 +999,13 @@ const [pdfs, setPdfs] = useState([]);
 
             {/* Content */}
           <div
-  className={`absolute inset-0 md:top-60 top-30 custom-centered px-4 ${
-    isRTL ? "md:right-36 right-6" : "md:left-36 left-6"
-  }`}
->
-              <div className="max-w-full  md:max-w-3xl">
+                      className={`absolute inset-0 flex items-center custom-centered px-4 ${
+                        isRTL ? "lg:right-36 right-6" : "lg:left-36 left-6"
+                      }`}
+                    >
+              <div className="max-w-md  lg:max-w-3xl">
                <h1
-  className={`text-3xl sm:text-2xl md:text-5xl font-bold md:font-semibold mb-10 md:mb-6 leading-tight ${
+  className={`text-3xl  lg:text-5xl  font-bold sm:font-semibold lg:font-semibold mb-10 sm:mb-8 lg:mb-6 leading-tight ${
     isRTL ? "text-right" : "text-left"
   }`}
 >
@@ -1014,7 +1014,7 @@ const [pdfs, setPdfs] = useState([]);
 </h1>
 
 
-                <p className="text-base sm:text-sm md:text-[1.1rem] font-normal mb-10 md:mb-8 max-w-full md:max-w-2xl">
+                <p className="text-base sm:text-[1.1rem] lg:text-[1.1rem]  font-normal mb-10 lg:mb-8 max-w-full lg:max-w-2xl">
               { t( "Our real estate agents are business owners, not employees, so you get more choice, time, and a better experience. Get expert advice from the largest real estate franchise in the world.")}
                 </p>
 
@@ -1022,7 +1022,7 @@ const [pdfs, setPdfs] = useState([]);
                 <div className="w-full flex flex-col items-left">
 
                   {/* Tab Navigation */}
-                  <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-8 text-lg sm:text-lg md:text-xl font-semibold w-fit mb-4 md:mb-6">
+                  <div className="flex flex-col lg:flex-row flex-wrap gap-2 lg:gap-8 text-lg sm:text-lg lg:text-xl font-semibold w-fit mb-4 lg:mb-6">
                     <span
                       onClick={() => setActiveTab('property')}
                       className={`pb-1 sm:pb-2 cursor-pointer border-b-4 ${activeTab === 'property' ? 'border-[rgb(206,32,39,255)]' : 'border-transparent'
@@ -1042,12 +1042,12 @@ const [pdfs, setPdfs] = useState([]);
 
 
                   {/* Desktop View */}
-                  <div className="hidden md:flex md:max-w-2xl flex-col md:flex-row items-center gap-1 md:gap-1">
+                  <div className="hidden lg:flex lg:max-w-2xl flex-col lg:flex-row items-center gap-1 lg:gap-1">
                     {activeTab === "property" ? (
                       <>
                         {/* Property search */}
                         {/* <div className="relative "> */}
-                        {/* <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 md:text-xl text-sm" /> */}
+                        {/* <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 lg:text-xl text-sm" /> */}
                         <input
                           type="text"
                           value={propertySearchTerm}
@@ -1059,14 +1059,14 @@ const [pdfs, setPdfs] = useState([]);
                             }
                           }}
                           placeholder={t("City, Area or Street")}
-                          className="w-full md:w-85 px-4 py-2 md:py-3 bg-white shadow-lg text-black text-base md:text-xl outline-none "
+                          className="w-full lg:w-85 px-4 py-2 lg:py-3 bg-white shadow-lg text-black text-base lg:text-xl outline-none "
                         />
 
                         {/* </div> */}
 
-                        <div className="flex gap-1 md:gap-1">
+                        <div className="flex gap-1 lg:gap-1">
                           <button
-                            className="cursor-pointer bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-6 sm:px-4 md:px-6 py-3 text-base md:text-xl font-semibold"
+                            className="cursor-pointer bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-6 sm:px-4 lg:px-6 py-3 text-base lg:text-xl font-semibold"
                             onClick={() =>
                               router.push(
                                 `/buyer?city=${encodeURIComponent(propertySearchTerm)}&category=sale`
@@ -1076,7 +1076,7 @@ const [pdfs, setPdfs] = useState([]);
                             {t('Sale')}
                           </button>
                           <button
-                            className=" cursor-pointer bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-6 sm:px-4 md:px-6 py-3 text-base md:text-xl font-semibold"
+                            className=" cursor-pointer bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-6 sm:px-4 lg:px-6 py-3 text-base lg:text-xl font-semibold"
                             onClick={() =>
                               router.push(
                                 `/buyer?city=${encodeURIComponent(propertySearchTerm)}&category=rent`
@@ -1092,7 +1092,7 @@ const [pdfs, setPdfs] = useState([]);
                       <>
                         {/* Agent search */}
                         <div className="relative ">
-                          {/* <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 md:text-xl text-sm" /> */}
+                          {/* <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 lg:text-xl text-sm" /> */}
                           <input
                             type="text"
                             value={agentSearchTerm}
@@ -1103,12 +1103,12 @@ const [pdfs, setPdfs] = useState([]);
                               }
                             }}
                             placeholder={t("Name or City")}
-                            className="w-full md:w-85 px-4 py-2 md:py-3 bg-white shadow-lg text-black text-base md:text-xl outline-none "
+                            className="w-full lg:w-85 px-4 py-2 lg:py-3 bg-white shadow-lg text-black text-base lg:text-xl outline-none "
                           />
                         </div>
 
                         <button
-                          className=" bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-15 py-3 text-sm sm:text-base md:text-xl font-semibold mt-2 md:mt-0"
+                          className=" bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white px-15 py-3 text-sm sm:text-base lg:text-xl font-semibold mt-2 lg:mt-0"
                           onClick={() => {
                             if (agentSearchTerm.trim()) {
                               router.push(`/agent?search=${encodeURIComponent(agentSearchTerm.trim())}`);
@@ -1124,7 +1124,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
                   {/* Mobile View */}
-                  <div className="flex md:hidden  gap-1 mt-4 ">
+                  <div className="flex lg:hidden  gap-1 mt-4 ">
 
                     {activeTab === 'property' ? (
                       <>
@@ -1139,7 +1139,7 @@ const [pdfs, setPdfs] = useState([]);
                             }
                           }}
                           placeholder={t("City, Area or Street")}
-                          className="py-3 px-2 shadow-2xl text-black  w-40  bg-white text-base outline-none"
+                          className="py-3 px-2 shadow-2xl text-black  w-full  bg-white text-base outline-none"
                         />
 
                         {/* Buttons stay side by side */}
@@ -1155,7 +1155,7 @@ const [pdfs, setPdfs] = useState([]);
                       </>
                     ) : (
                       <>
-                        <div className="flex md:hidden w-full  items-center gap-1 ">
+                        <div className="flex lg:hidden w-full  items-center gap-1 ">
                           {/* Input takes available width */}
                           <input
                             type="text"
@@ -1167,7 +1167,7 @@ const [pdfs, setPdfs] = useState([]);
                               }
                             }}
                             placeholder={t("Name or City")}
-                            className="py-3 px-2 shadow-2xl text-black w-40  bg-white text-normal outline-none"
+                            className="py-3 px-2 shadow-2xl text-black w-full  bg-white text-normal outline-none"
                           />
 
                           {/* Search button */}
@@ -1194,15 +1194,15 @@ const [pdfs, setPdfs] = useState([]);
         </div>
  
         <section className="w-full bg-white py-20" ref={statsRef}>
-          <div className="md:mx-40 mx-8 text-center">
+          <div className="lg:mx-40 mx-8 sm:mx-8  text-center">
             {/* Heading */}
             <motion.h2
-              className="text-3xl md:text-[34px] font-semibold md:font-semibold text-gray-800"
+              className="text-3xl lg:text-[34px] font-semibold lg:font-semibold text-gray-800"
               initial={{ opacity: 0, y: 50 }}
               animate={animationTriggered ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <span className="text-[rgb(206,32,39,255)] font-semibold md:font-semibold">{t('Keller Williams.')}</span>{" "}
+              <span className="text-[rgb(206,32,39,255)] font-semibold lg:font-semibold">{t('Keller Williams.')}</span>{" "}
               <span className="text-gray-600">{t('We focus on the customer not the competition.')}</span>
             </motion.h2>
 
@@ -1217,7 +1217,7 @@ const [pdfs, setPdfs] = useState([]);
             </motion.p>
 
             {/* Stats with dividers */}
-            <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-500 py-2 md:py-18">
+            <div className="grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-gray-500 py-2 lg:py-18">
               {/* Item 1 */}
               <motion.div
                 className="flex flex-col items-center text-center py-6 px-4"
@@ -1235,7 +1235,7 @@ const [pdfs, setPdfs] = useState([]);
                     alt={t("Worldwide Associates")}
                     width={100}
                     height={100}
-                    className="md:mb-6 mb-10"
+                    className="lg:mb-6 mb-10"
                   />
                 </motion.div>
                 <h3 className="text-4xl font-bold">{count212000.toLocaleString()}</h3>
@@ -1259,7 +1259,7 @@ const [pdfs, setPdfs] = useState([]);
                     alt={t("Global Transactions")}
                     width={100}
                     height={100}
-                    className="md:mb-6 mb-10"
+                    className="lg:mb-6 mb-10"
                   />
                 </motion.div>
                 <h3 className="text-4xl font-bold">1.1m</h3>
@@ -1283,7 +1283,7 @@ const [pdfs, setPdfs] = useState([]);
                     alt={t("Global Exchanges")}
                     width={100}
                     height={100}
-                    className="md:mb-6 mb-10"
+                    className="lg:mb-6 mb-10"
                   />
                 </motion.div>
                 <h3 className="text-4xl font-bold">4,300</h3>
@@ -1307,7 +1307,7 @@ const [pdfs, setPdfs] = useState([]);
                     alt={t("Exchanges Per Hour")}
                     width={100}
                     height={100}
-                    className="md:mb-6 mb-10"
+                    className="lg:mb-6 mb-10"
                   />
                 </motion.div>
                 <h3 className="text-4xl font-bold">180</h3>
@@ -1317,37 +1317,37 @@ const [pdfs, setPdfs] = useState([]);
           </div>
         </section>
 
-        <div className="text-center mx-8 md:mx-0">
-          <h1 className="text-2xl md:text-4xl font-semibold mb-2">
+        <div className="text-center mx-8 sm:mx-2 lg:mx-0">
+          <h1 className="text-2xl lg:text-4xl font-semibold mb-2">
             {t('About Keller Williams')}
           </h1>
 
 
-          <p className="text-base md:text-lg font-semibold py-4 md:py-4">{t('You come FIRST with Keller Williams. Your trust is our business.')}</p>
-          <hr className="w-40 md:w-40 my-6 mx-auto border-[rgb(206,32,39,255)] border-2" />
-          <p className="my-2 text-base md:text-lg mx-2 md:mx-40 leading-relaxed"> {t("Maya Angelou said, \"People may not remember exactly what you did, or what you said, but they will always remember how you made them feel.\" By building understanding, trust, and respect, we can do what it takes to make things happen for you. We know how to deliver a dedicated and bespoke service. We want you to know, but more importantly, feel that we are there for every step of the property journey. Because we will be. Whether you need us today, or in the coming years, we are here to serve. As your local agent, we hope to become your go-to property adviser for life. As we are also part of the global Keller Williams' family, our local hands have a global reach.")}</p>
-          <p className="text-base md:text-lg font-semibold py-4 md:py-6">{t('One call could build you a better tomorrow.')}</p>
+          <p className="text-base lg:text-lg font-semibold py-4 lg:py-4">{t('You come FIRST with Keller Williams. Your trust is our business.')}</p>
+          <hr className="w-40 lg:w-40 my-6 mx-auto border-[rgb(206,32,39,255)] border-2" />
+          <p className="my-2 text-base lg:text-lg mx-2 lg:mx-40 sm:mx-4 leading-relaxed"> {t("Maya Angelou said, \"People may not remember exactly what you did, or what you said, but they will always remember how you made them feel.\" By building understanding, trust, and respect, we can do what it takes to make things happen for you. We know how to deliver a dedicated and bespoke service. We want you to know, but more importantly, feel that we are there for every step of the property journey. Because we will be. Whether you need us today, or in the coming years, we are here to serve. As your local agent, we hope to become your go-to property adviser for life. As we are also part of the global Keller Williams' family, our local hands have a global reach.")}</p>
+          <p className="text-base lg:text-lg font-semibold py-4 lg:py-6">{t('One call could build you a better tomorrow.')}</p>
 
-          <button className="cursor-pointer md:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 text-xs md:text-sm mt-6 md:mt-10 relative overflow-hidden group transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/ourCulture/whyKW')}>
-            <span className="inline-block md:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
+          <button className="cursor-pointer lg:px-10 px-4  bg-[rgb(206,32,39,255)] text-white py-2 lg:py-3 text-xs lg:text-sm mt-6 lg:mt-10 relative overflow-hidden group transition-all duration-300 hover:pr-10 hover:pl-10" onClick={() => router.push('/ourCulture/whyKW')}>
+            <span className="inline-block lg:text-base text-sm font-semibold transition-all duration-300 group-hover:-translate-x-3">
               {t('Why Choose Keller Williams')}
             </span>
             <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 text-white group-hover:translate-x-0 translate-x-4">
-              <ChevronRight className={`h-4 w-4 md:h-6 md:w-6 transition-transform duration-300 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+              <ChevronRight className={`h-4 w-4 lg:h-6 lg:w-6 transition-transform duration-300 ${isRTL ? 'scale-x-[-1]' : ''}`} />
             </span>
           </button>
         </div>
         {/* </div> */}
 
 
-        <div className="flex flex-col items-center justify-center my-8 md:my-20  text-center px-2  md:px-4 md:mb-30 bg-gray-100 border border-gray-100">
-          <h1 className="text-2xl md:text-[2.5rem] mt-6 md:mt-10 font-bold mb-2 md:mb-4">
+        <div className="flex flex-col items-center justify-center my-8 lg:my-20  text-center px-2  lg:px-4 lg:mb-30 bg-gray-100 border border-gray-100">
+          <h1 className="text-2xl lg:text-[2.5rem] mt-6 lg:mt-10 font-bold mb-2 lg:mb-4">
           <span className={`text-[rgb(206,32,39,255)] ${isRTL ? 'inline-block scale-x-[1]' : ''}`}>
   {t('Recent ')}{' '}
 </span>
 {t('Properties')}
           </h1>
-          <h2 className="text-base md:text-xl font-semibold text-gray-600 mb-4 md:mb-6">
+          <h2 className="text-base lg:text-xl font-semibold text-gray-600 mb-4 lg:mb-6">
 {t('Start your search ')}
 <span
   className={`text-[rgb(206,32,39,255)] ${isRTL ? 'inline-block scale-x-[-1]' : ''}`}
@@ -1356,18 +1356,18 @@ const [pdfs, setPdfs] = useState([]);
 </span>
           </h2>
 
-          <div className="hidden md:flex  flex-col md:flex-row  gap-1 md:gap-1 ">
+          <div className="hidden lg:flex  flex-col lg:flex-row  gap-1 lg:gap-1 ">
             <input
               type="text"
               value={propertySearchTerm}
               onChange={(e) => setPropertySearchTerm(e.target.value)}
               placeholder={t("City, Area or Street")}
-              className="w-full md:w-80 px-4 py-2 md:py-3 bg-white shadow-lg text-black text-base md:text-xl outline-none "
+              className="w-full lg:w-80 px-4 py-2 lg:py-3 bg-white shadow-lg text-black text-base lg:text-xl outline-none "
             />
-            <div className="flex gap-1 md:gap-1 w-full md:w-auto">
+            <div className="flex gap-1 lg:gap-1 w-full lg:w-auto">
               <button
                 onClick={() => setFilterCategory(filterCategory === "Sale" ? null : "Sale")}
-                className={`flex-1 md:flex-none cursor-pointer px-4 sm:px-6 md:px-6 py-2 md:py-3 text-base md:text-xl font-semibold transition-colors ${filterCategory === "Sale"
+                className={`flex-1 lg:flex-none cursor-pointer px-4 sm:px-6 lg:px-6 py-2 lg:py-3 text-base lg:text-xl font-semibold transition-colors ${filterCategory === "Sale"
                   ? "bg-red-950 text-white"
                   : "bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white"
                   }`}
@@ -1376,7 +1376,7 @@ const [pdfs, setPdfs] = useState([]);
               </button>
               <button
                 onClick={() => setFilterCategory(filterCategory === "Rent" ? null : "Rent")}
-                className={`flex-1 md:flex-none cursor-pointer px-4 sm:px-6 md:px-6 py-2 md:py-3 text-base md:text-xl font-semibold transition-colors ${filterCategory === "Rent"
+                className={`flex-1 lg:flex-none cursor-pointer px-4 sm:px-6 lg:px-6 py-2 lg:py-3 text-base lg:text-xl font-semibold transition-colors ${filterCategory === "Rent"
                   ? "bg-red-950 text-white"
                   : "bg-[rgb(206,32,39,255)] hover:bg-red-950 text-white"
                   }`}
@@ -1387,7 +1387,7 @@ const [pdfs, setPdfs] = useState([]);
           </div>
 
 
-          <div className="flex md:hidden  p-2 items-center gap-1  ">
+          <div className="flex lg:hidden  p-2 items-center gap-1  ">
             <input
               type="text"
               value={mobilePropertySearchTerm}
@@ -1418,7 +1418,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
          {/* First Home Block */}
-<div className="w-full py-10 px-4 md:px-16">
+<div className="w-full py-10 px-4 lg:px-16">
   <div>
     <div className="relative">
       <div
@@ -1456,7 +1456,7 @@ const [pdfs, setPdfs] = useState([]);
             <div
               key={index}
               data-card="true"
-              className="flex-shrink-0 w-[270px] md:w-[400px] border bg-white shadow-2xl border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col snap-start"
+              className="flex-shrink-0 w-[270px] lg:w-[400px] border bg-white shadow-2xl border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col snap-start"
               onClick={() => {
                 if (typeof window !== "undefined") {
                   localStorage.setItem(
@@ -1472,7 +1472,7 @@ const [pdfs, setPdfs] = useState([]);
               }}
             >
               {/* Property Image */}
-              <div className="md:h-70 h-40 relative">
+              <div className="lg:h-70 h-40 relative">
                 {property.image ||
                 (Array.isArray(property.images) && property.images[0]) ||
                 (Array.isArray(property.photos) &&
@@ -1627,7 +1627,7 @@ const [pdfs, setPdfs] = useState([]);
 </div>
 
 {/* Scroll Buttons BELOW cards */}
-<div className="flex justify-end gap-6 w-full px-4 md:px-16 mt-4">
+<div className="flex justify-end gap-6 w-full px-4 lg:px-16 mt-4">
   <div className="flex gap-2">
     {isRTL ? (
       <>
@@ -1679,22 +1679,22 @@ const [pdfs, setPdfs] = useState([]);
 
 
 
-        <div className="bg-gray-100 mt-10 md:mt-0  mx-2 md:mx-10 border-gray-100   flex flex-col md:flex-row">
+        <div className="bg-gray-100 mt-10 lg:mt-0  mx-2 lg:mx-10 border-gray-100   flex flex-col lg:flex-row">
 
           {/* Mobile Version: Stacked */}
-          <div className="md:hidden flex flex-col">
+          <div className="lg:hidden flex flex-col">
 
             {/* Overlapping Text Box */}
-            <div className="bg-gray-100 md:p-4 p-8 border-gray-100">
-              <p className="md:text-xl text-xl font-bold text-gray-600">
+            <div className="bg-gray-100 lg:p-4 p-8 border-gray-100">
+              <p className="lg:text-xl text-xl font-bold text-gray-600">
                 <span className="text-[rgb(206,32,39,255)]">{t('Join us.')}</span> {t('Our dynamic energy and innovative spirit bring the best and brightest together.')}
               </p>
             </div>
 
             {/* Image */}
-            <div className="hidden md:block relative h-[200px] w-full">
+            <div className="hidden lg:block relative h-[200px] w-full">
               <Image
-                src="/"
+                src="/4.jpg"
                 alt={t("Full Height Image")}
                 fill
                 className="object-cover "
@@ -1705,14 +1705,14 @@ const [pdfs, setPdfs] = useState([]);
 
             {/* Left Red Box */}
             <div className="bg-[rgb(206,32,39,255)] text-white flex items-center justify-center w-full h-32">
-              <p className={`md:text-xl text-xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+              <p className={`lg:text-xl text-xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t('Want to be an ')} <br /> {t('AGENT?')}
               </p>
             </div>
 
             {/* Right Transparent Box */}
             <div className="bg-white/80 shadow-md p-4 w-full">
-              <p className=" text-xl md:text-xl font-bold py-8 md:py-0 text-gray-800 md:leading-relaxed">
+              <p className=" text-xl lg:text-xl font-bold py-8 lg:py-0 text-gray-800 lg:leading-relaxed">
                {t("We offer the greatest rewards for")}
                 <span className="text-[rgb(206,32,39,255)] font-bold"> {t("exceptional customer care.")}</span>
               </p>
@@ -1730,16 +1730,16 @@ const [pdfs, setPdfs] = useState([]);
           </div>
 
           {/* Laptop Version: Original Layout */}
-          <div className="hidden md:flex w-full relative">
-      {/* Box with half-overlap */}
+          <div className="hidden lg:flex w-full relative">
+   
       <div className="absolute top-0 z-10 bg-gray-100 p-6 w-120 border-gray-100">
-        <p className={`text-3xl leading-10 font-bold text-gray-800 ${isRTL ? "text-right" : "text-left"}`}>
+        <p className={`xl:text-3xl lg:text-2xl leading-10 font-bold text-gray-800 ${isRTL ? "text-right" : "text-left"}`}>
           <span className="text-[rgb(206,32,39,255)]">{t("Join us.")}</span>{" "}
           {t("Our dynamic energy and innovative spirit bring the best and brightest together.")}
         </p>
       </div>
 
-      {/* Background image */}
+   
       <div className={`h-[80vh] w-screen relative ${isRTL ? "mr-70 ml-0" : "ml-70"}`}>
         <Image
           src="/4.jpg"
@@ -1750,24 +1750,23 @@ const [pdfs, setPdfs] = useState([]);
         <div className="absolute inset-0 bg-gray-500/50"></div>
       </div>
 
-      {/* Red box */}
+   
       <div
-        className={`absolute top-60 z-10 bg-[rgb(206,32,39,255)] text-white flex items-center justify-center w-70 h-65 ${
+        className={`absolute xl:top-60 md:top-50 z-10 bg-[rgb(206,32,39,255)] text-white flex items-center justify-center w-70 h-65 ${
           isRTL ? "right-0" : "left-0"
         }`}
       >
-        <p className={`text-3xl font-bold ${isRTL ? "text-right" : "text-left"}`}>
+        <p className={`xl:text-3xl lg:text-2xl font-bold ${isRTL ? "text-right" : "text-left"}`}>
           {t("Want to be an ")} <br /> {t("AGENT?")}
         </p>
       </div>
 
-      {/* White box with text and button */}
       <div
-        className={`absolute top-60 z-10 bg-white/80 p-6 w-[700px] h-65 ${
+        className={`absolute xl:top-60 md:top-50 z-10 bg-white/80 p-6 xl:w-[700px] lg:w-[500px] h-65 ${
           isRTL ? "right-70" : "left-70"
         }`}
       >
-        <p className={`text-3xl mt-14 font-bold text-gray-800 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+        <p className={`xl:text-3xl lg:text-2xl mt-14 font-bold text-gray-800 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
           {t("We offer the greatest rewards for")} <br />
           <span className="text-[rgb(206,32,39,255)] font-bold">
             {t("exceptional customer care.")}
@@ -1777,7 +1776,7 @@ const [pdfs, setPdfs] = useState([]);
         <button
           onClick={() => router.push("/marketCenter")}
           className={`cursor-pointer bg-[rgb(206,32,39,255)] text-white px-6 py-3 text-base font-semibold flex items-center gap-2 ${
-            isRTL ? "mr-132" : "ml-132"
+            isRTL ? "xl:mr-132 lg:mr-80" : "xl:ml-132 lg:ml-80"
           }`}
         >
           <span className="whitespace-nowrap">{t("Market Centre Search")}</span>
@@ -1801,25 +1800,25 @@ const [pdfs, setPdfs] = useState([]);
 
         </div>
 
-  <div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
-  <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
+  <div className="flex justify-center items-stretch mx-2 lg:mx-10 bg-white py-10 lg:py-30 ">
+  <div className="grid grid-cols-1 lg:grid-cols-2 w-full ">
     {/* Left Red Box - Sell Home */}
-    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[4z20px] min-h-[400px]">
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 lg:p-14 relative flex flex-col lg:min-h-[4z20px] min-h-[400px]">
       {/* Content */}
       <div className="pb-24">
         <p
-          className={`text-base md:text-[1.4rem] font-normal mb-2 pl-3 ${
+          className={`text-base lg:text-[1.4rem] font-normal mb-2 pl-3 ${
             isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
           } border-white`}
         >
           {t("Download guide")}
         </p>
-        <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
+        <h2 className="text-2xl lg:text-[2.1rem] font-bold mb-4 lg:mb-6">
           {t("How to sell your home")}
         </h2>
         <motion.p 
           ref={sellGuideRef}
-          className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+          className="text-base lg:text-[1.1rem] mb-4 lg:mb-6"
           initial={{ opacity: 0, y: -30 }}
           animate={sellGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -1831,14 +1830,14 @@ const [pdfs, setPdfs] = useState([]);
       </div>
       {/* Input Group - Responsive */}
   <div
-  className={`absolute md:bottom-24 bottom-16 w-full ${
+  className={`absolute lg:bottom-20 lg:bottom-6 bottom-16 ${
     isRTL
-      ? "md:right-14 md:left-auto right-2 left-auto text-right"
-      : "md:left-14 md:right-6 left-2 right-auto text-left"
+      ? "lg:right-14 lg:left-14 right-2 left-2 text-right"
+      : "lg:left-14 lg:right-14 left-2 right-2 text-left"
   }`}
 >
 
-        <div className="hidden md:flex w-full  md:max-w-lg items-center">
+        <div className="hidden lg:flex w-full items-center">
           <input
             type="text"
             value={sellEmail}
@@ -1852,7 +1851,7 @@ const [pdfs, setPdfs] = useState([]);
                 setSellEmailError(t("Please enter a valid email."));
                 return;
               }
-              setLoading(true);
+              setLoadingSell(true);
               setSellEmailError("");
               try {
                 let pdfName = "pdf1";
@@ -1877,18 +1876,18 @@ const [pdfs, setPdfs] = useState([]);
               } catch (e) {
                 setSellEmailError(t("Failed to save email."));
               } finally {
-                setLoading(false);
+                setLoadingSell(false);
               }
             }}
-            disabled={loading}
+            disabled={loadingSell}
             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
           >
-            {loading ? t("Downloading...") : t("Download")}
+            {loadingSell ? t("Downloading...") : t("Download")}
           </button>
         </div>
       <div
-  className={`flex md:hidden w-65 flex-col gap-2 ${
-    isRTL ? "mr-2 text-right" : " text-left ml-2 "
+  className={`flex lg:hidden w-full px-2 lg:px-0 flex-col gap-2 ${
+    isRTL ? " text-right" : " text-left "
   }`}
 >
           <input
@@ -1904,7 +1903,7 @@ const [pdfs, setPdfs] = useState([]);
                 setSellEmailError(t("Please enter a valid email."));
                 return;
               }
-              setLoading(true);
+              setLoadingSell(true);
               setSellEmailError("");
               try {
                 let pdfName = "pdf1";
@@ -1929,13 +1928,13 @@ const [pdfs, setPdfs] = useState([]);
               } catch (e) {
                 setSellEmailError(t("Failed to save email."));
               } finally {
-                setLoading(false);
+                setLoadingSell(false);
               }
             }}
-            disabled={loading}
+            disabled={loadingSell}
             className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
           >
-            {loading ? t("Downloading...") : t("Download")}
+            {loadingSell ? t("Downloading...") : t("Download")}
           </button>
         </div>
         {sellEmailError && (
@@ -1945,7 +1944,7 @@ const [pdfs, setPdfs] = useState([]);
     </div>
 
     {/* Right Image Box - Buy Home */}
-    <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="relative flex flex-col lg:min-h-[420px] min-h-[400px]">
       <Image
         src="/3.jpg"
         alt={t("Home")}
@@ -1953,22 +1952,22 @@ const [pdfs, setPdfs] = useState([]);
         className="object-cover grayscale"
       />
       <div className="absolute inset-0 bg-gray-500/50"></div>
-      <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
+      <div className="absolute inset-0 bg-opacity-40 p-4 lg:p-14 text-white flex flex-col h-full">
         {/* Content */}
         <div className="pb-24">
           <p
-            className={`text-base  md:text-[1.4rem] font-normal mb-2 pl-3 ${
+            className={`text-base  lg:text-[1.4rem] font-normal mb-2 pl-3 ${
               isRTL ? "border-r-8 pr-3" : "border-l-8 pl-3"
             } border-white`}
           >
             {t("Download guide")}
           </p>
-          <h2 className="text-2xl md:text-[2.1rem] font-bold mb-4 md:mb-6">
+          <h2 className="text-2xl lg:text-[2.1rem] font-bold mb-4 lg:mb-6">
             {t("How to buy a home")}
           </h2>
           <motion.p 
             ref={buyGuideRef}
-            className="text-base md:text-[1.1rem] mb-4 md:mb-6"
+            className="text-base lg:text-[1.1rem] mb-4 lg:mb-6"
             initial={{ opacity: 0, y: -30 }}
             animate={buyGuideAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -1980,14 +1979,14 @@ const [pdfs, setPdfs] = useState([]);
         </div>
         {/* Input Group - Responsive */}
       <div
-  className={`absolute md:bottom-22 bottom-16 w-full ${
+ className={`absolute lg:bottom-20 lg:bottom-6 bottom-16 ${
     isRTL
-      ? "md:right-14 md:left-auto right-2 left-auto text-right"
-      : "md:left-14 md:right-6 left-2 right-auto text-left"
+      ? "lg:right-14 lg:left-14 right-2 left-2 text-right"
+      : "lg:left-14 lg:right-14 left-2 right-2 text-left"
   }`}
 >
 
-          <div className="hidden md:flex w-full  md:max-w-lg items-center">
+          <div className="hidden lg:flex w-full items-center">
             <input
               type="text"
               value={buyEmail}
@@ -2001,7 +2000,7 @@ const [pdfs, setPdfs] = useState([]);
                   setBuyEmailError(t("Please enter a valid email."));
                   return;
                 }
-                setLoading(true);
+                setLoadingBuy(true);
                 setBuyEmailError("");
                 try {
                   let pdfName = "pdf2";
@@ -2026,17 +2025,17 @@ const [pdfs, setPdfs] = useState([]);
                 } catch (e) {
                   setBuyEmailError(t("Failed to save email."));
                 } finally {
-                  setLoading(false);
+                  setLoadingBuy(false);
                 }
               }}
-              disabled={loading}
-              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 md:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
+              disabled={loadingBuy}
+              className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-4 lg:px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
             >
-              {loading ? t("Downloading...") : t("Download")}
+              {loadingBuy ? t("Downloading...") : t("Download")}
             </button>
           </div>
-          <div className={`flex md:hidden w-65 flex-col gap-2 ${
-    isRTL ? "mr-2  text-right" : " text-left ml-2 "
+          <div className={`flex lg:hidden w-full px-2 lg:px-0 flex-col gap-2 ${
+    isRTL ? " text-right" : " text-left  "
   }`}
 >
             <input
@@ -2052,7 +2051,7 @@ const [pdfs, setPdfs] = useState([]);
                   setBuyEmailError(t("Please enter a valid email."));
                   return;
                 }
-                setLoading(true);
+                setLoadingBuy(true);
                 setBuyEmailError("");
                 try {
                   let pdfName = "pdf2";
@@ -2077,13 +2076,13 @@ const [pdfs, setPdfs] = useState([]);
                 } catch (e) {
                   setBuyEmailError(t("Failed to save email."));
                 } finally {
-                  setLoading(false);
+                  setLoadingBuy(false);
                 }
               }}
-              disabled={loading}
+              disabled={loadingBuy}
               className="cursor-pointer hover:text-black bg-black hover:bg-gray-300 text-white px-8 py-2 text-base font-semibold border-black disabled:opacity-50"
             >
-              {loading ? t("Downloading...") : t("Download")}
+              {loadingBuy ? t("Downloading...") : t("Download")}
             </button>
           </div>
           {buyEmailError && (
@@ -2097,7 +2096,7 @@ const [pdfs, setPdfs] = useState([]);
 
 
 
-        <div className="relative w-full h-[120vh] md:h-[90vh] flex items-center justify-center bg-gray-500/50 overflow-hidden border border-gray-100">
+        <div className="relative w-full h-[120vh] lg:h-[90vh] flex items-center justify-center bg-gray-500/50 overflow-hidden border border-gray-100">
 
           {/* Background Image */}
           <Image
@@ -2112,13 +2111,13 @@ const [pdfs, setPdfs] = useState([]);
 
           {/* Testimonial Box */}
          <div
-  className={`relative bg-white p-6 md:p-20 max-w-full md:max-w-3xl md:mx-auto mx-4 shadow-lg z-10 transition-all duration-500 ease-in-out ${
+  className={`relative bg-white p-6 lg:p-20 max-w-full lg:max-w-3xl lg:mx-auto mx-4 shadow-lg z-10 transition-all duration-500 ease-in-out ${
     isRTL ? "text-right" : "text-left"
   }`}
 >
   <FaQuoteRight
-    className={`absolute text-4xl md:text-7xl text-[rgb(206,32,39,255)] -top-4 md:-top-8 mb-4 leading-none ${
-      isRTL ? "right-4 md:right-8" : "left-4 md:left-8"
+    className={`absolute text-4xl lg:text-7xl text-[rgb(206,32,39,255)] -top-4 lg:-top-8 mb-4 leading-none ${
+      isRTL ? "right-4 lg:right-8" : "left-4 lg:left-8"
     }`}
   />
 
@@ -2130,7 +2129,7 @@ const [pdfs, setPdfs] = useState([]);
       exit={{ opacity: 0, y: isRTL ? 50 : -50 }}
       transition={{ duration: 0.8 }}
     >
-      <p className="py-4 mb-4 md:mb-8 leading-relaxed">
+      <p className="py-4 mb-4 lg:mb-8 leading-relaxed">
         {t(testimonials[currentIndex].quote)}
       </p>
       <p className="text-[rgb(206,32,39,255)] font-bold mb-2">
@@ -2144,13 +2143,13 @@ const [pdfs, setPdfs] = useState([]);
 
   {/* Dots */}
   <div
-    className={`flex justify-center mt-8 md:mt-6 space-x-2 `}
+    className={`flex justify-center mt-8 lg:mt-6 space-x-2 `}
   >
     {testimonials.map((_, idx) => (
       <button
         key={idx}
         onClick={() => handleDotClick(idx)}
-        className={`h-2 w-2 md:h-2 md:w-2 rounded-full ${
+        className={`h-2 w-2 lg:h-2 lg:w-2 rounded-full ${
           idx === currentIndex
             ? "bg-[rgb(206,32,39,255)]"
             : "bg-gray-300"
@@ -2161,8 +2160,8 @@ const [pdfs, setPdfs] = useState([]);
 </div>
 
         </div>
-        {/* <div className="flex justify-center items-center col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-8 md:mb-0">
-          <hr className="md:w-170 w-44 my-8 md:my-12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[2px]" />
+        {/* <div className="flex justify-center items-center col-span-2 sm:col-span-3 lg:col-span-4 lg:col-span-8 lg:mb-0">
+          <hr className="lg:w-170 w-44 my-8 lg:my-12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[2px]" />
         </div> */}
 
       </div>

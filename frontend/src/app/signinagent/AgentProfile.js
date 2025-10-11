@@ -212,7 +212,7 @@ const AgentProfile = () => {
   useEffect(() => {
     const fetchAgentsWithPropertiesData = async () => {
       try {
-        console.log("Fetching enhanced agents with properties data...");
+        //console.log("Fetching enhanced agents with properties data...");
         setPropertiesLoading(true);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`
@@ -231,11 +231,11 @@ const AgentProfile = () => {
 
           if (selectedAgent) {
             setAgentProperties(selectedAgent.properties || []);
-            console.log("Selected Agent:", selectedAgent.name);
-            console.log("Properties:", selectedAgent.properties);
+            //console.log("Selected Agent:", selectedAgent.name);
+            //console.log("Properties:", selectedAgent.properties);
             setPropertiesLoading(false);
           } else {
-            console.warn("No agent found with this email");
+            //console.warn("No agent found with this email");
             setAgentProperties([]);
             setPropertiesLoading(false);
           }
@@ -243,11 +243,11 @@ const AgentProfile = () => {
           // Store full agents data if needed
           setAgentsWithPropertiesData(data);
         } else {
-          console.log("Enhanced API not available, will use fallback");
+          //console.log("Enhanced API not available, will use fallback");
           setPropertiesLoading(false);
         }
       } catch (error) {
-        console.log("Enhanced API error, will use fallback:", error);
+        //console.log("Enhanced API error, will use fallback:", error);
         setPropertiesLoading(false);
       }
     };
@@ -271,7 +271,7 @@ const AgentProfile = () => {
         setError(null);
         
         try {
-          console.log('Fetching agent data for email:', agentEmail);
+          //console.log('Fetching agent data for email:', agentEmail);
           
           // First check if agent data is available in localStorage (from property details page)
           if (typeof window !== 'undefined') {
@@ -283,28 +283,28 @@ const AgentProfile = () => {
                 const storedEmail = String(agentData.email || '').toLowerCase();
               const currentEmail = String(agentEmail || '').toLowerCase();
               
-              console.log('Comparing emails:', {
-                storedEmail,
-                currentEmail,
-                match: storedEmail === currentEmail
-              });
+              // console.log('Comparing emails:', {
+              //   storedEmail,
+              //   currentEmail,
+              //   match: storedEmail === currentEmail
+              // });
               
                 if (storedEmail === currentEmail) {
-                  console.log('Using stored agent data:', agentData);
+                 // console.log('Using stored agent data:', agentData);
                   setAgent(agentData);
                   if (agentData.image) setImgSrc(agentData.image);
                   setLoading(false);
                   return;
                 }
               } catch (e) {
-                console.log('Error parsing stored agent data:', e);
+                //console.log('Error parsing stored agent data:', e);
               }
             }
           }
           
           // First try to find agent in enhanced API data
           if (agentsWithPropertiesData && agentsWithPropertiesData.success) {
-            console.log('Searching in enhanced API data...');
+            //console.log('Searching in enhanced API data...');
             
             // Safely handle the arrays
             const agentsWithProps = Array.isArray(agentsWithPropertiesData.agentsWithProperties) 
@@ -322,7 +322,7 @@ const AgentProfile = () => {
             });
             
             if (foundEnhancedAgent) {
-              console.log('Found agent in enhanced API:', foundEnhancedAgent);
+              //console.log('Found agent in enhanced API:', foundEnhancedAgent);
               const mappedAgent = {
                 name: foundEnhancedAgent.name,
                 phone: foundEnhancedAgent.phone,
@@ -340,10 +340,10 @@ const AgentProfile = () => {
               
               // Set properties directly from enhanced API
               if (foundEnhancedAgent.properties && Array.isArray(foundEnhancedAgent.properties) && foundEnhancedAgent.properties.length > 0) {
-                console.log(`Setting ${foundEnhancedAgent.properties.length} properties from enhanced API`);
+               // console.log(`Setting ${foundEnhancedAgent.properties.length} properties from enhanced API`);
                 setProperties(foundEnhancedAgent.properties);
               } else {
-                console.log('No properties found for this agent in enhanced API');
+                //console.log('No properties found for this agent in enhanced API');
                 setProperties([]);
               }
               
@@ -357,7 +357,7 @@ const AgentProfile = () => {
           
           if (agentRes.ok) {
             const agentData = await agentRes.json();
-            console.log('Agents API response:', agentData);
+           // console.log('Agents API response:', agentData);
             
             // Cache the combined API data for use in properties extraction
             setCombinedApiData(agentData);
@@ -393,7 +393,7 @@ const AgentProfile = () => {
                 
                 setAgent(mappedAgent);
                 if (mappedAgent.image) setImgSrc(mappedAgent.image);
-                console.log('Agent found and set:', mappedAgent);
+               // console.log('Agent found and set:', mappedAgent);
               } else {
                 setError('Agent not found.');
               }
@@ -404,7 +404,7 @@ const AgentProfile = () => {
             throw new Error(`Failed to fetch agent data: ${agentRes.status}`);
           }
         } catch (e) {
-          console.error('Error fetching agent data:', e);
+         // console.error('Error fetching agent data:', e);
           setError(`Failed to load agent data: ${e.message}`);
         } finally {
           setLoading(false);
@@ -425,7 +425,7 @@ const AgentProfile = () => {
       // Extract properties from the cached combined API data and filter for this agent
       const extractAndFilterProperties = () => {
         if (!agent || !combinedApiData) {
-          console.log('Missing data:', { agent: !!agent, combinedApiData: !!combinedApiData });
+          //console.log('Missing data:', { agent: !!agent, combinedApiData: !!combinedApiData });
           return;
         }
         setPropertiesLoading(true);
@@ -470,42 +470,42 @@ const AgentProfile = () => {
               }
             });
             
-            console.log('All extracted properties:', allProperties.length);
-            console.log('Sample property structure:', allProperties[0]);
+            //console.log('All extracted properties:', allProperties.length);
+            //console.log('Sample property structure:', allProperties[0]);
             
             // Filter properties by agent's kw_uid
             const agentPropertiesFromCombined = allProperties.filter(property => {
               const listKwUid = property.list_kw_uid || property.listing_agent_kw_uid || property.agent_kw_uid || '';
               const match = String(listKwUid) === String(agent.kw_uid);
               if (match) {
-                console.log('Found matching property for agent:', property);
+                //console.log('Found matching property for agent:', property);
               }
               return match;
             });
             
-            console.log('Filtered properties for agent:', agentPropertiesFromCombined.length);
-            console.log('Agent kw_uid being searched:', agent.kw_uid);
-            console.log('Sample property kw_uid values:', allProperties.slice(0, 3).map(p => ({
-              id: p._kw_meta?.id,
-              list_kw_uid: p.list_kw_uid,
-              listing_agent_kw_uid: p.listing_agent_kw_uid,
-              agent_kw_uid: p.agent_kw_uid
-            })));
+           // console.log('Filtered properties for agent:', agentPropertiesFromCombined.length);
+            //console.log('Agent kw_uid being searched:', agent.kw_uid);
+            // console.log('Sample property kw_uid values:', allProperties.slice(0, 3).map(p => ({
+            //   id: p._kw_meta?.id,
+            //   list_kw_uid: p.list_kw_uid,
+            //   listing_agent_kw_uid: p.listing_agent_kw_uid,
+            //   agent_kw_uid: p.agent_kw_uid
+            // })));
             
             setProperties(agentPropertiesFromCombined);
             
             // Fallback: if no agent-specific properties found, show some sample properties for testing
             if (agentPropertiesFromCombined.length === 0 && allProperties.length > 0) {
-              console.log('No agent-specific properties found. Showing first 6 properties for testing...');
+              //console.log('No agent-specific properties found. Showing first 6 properties for testing...');
               setProperties(allProperties.slice(0, 6));
             }
           } else {
-            console.log('No valid data in cached API response');
+            //console.log('No valid data in cached API response');
             setProperties([]);
           }
           
         } catch (e) {
-          console.error('Error extracting properties:', e);
+         // console.error('Error extracting properties:', e);
           setError(`Failed to load properties: ${e.message}`);
           setProperties([]);
         } finally {
@@ -531,10 +531,10 @@ const AgentProfile = () => {
             
             const data = await res.json();
             setEvents(data);
-            console.log(data.coverImage);
+            //console.log(data.coverImage);
             
           } catch (error) {
-            console.error('Error fetching blogs:', error);
+            //console.error('Error fetching blogs:', error);
             setError('Failed to load events. Please try again later.');
           } finally {
             setLoading(false);
@@ -556,14 +556,14 @@ const AgentProfile = () => {
           const linksResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/links`);
           if (linksResponse.ok) {
             const linksData = await linksResponse.json();
-            console.log('Links data received:', linksData);
+            //console.log('Links data received:', linksData);
             // Backend returns links directly, not wrapped in an object
             setLinks(Array.isArray(linksData) ? linksData : []);
           } else {
-            console.log('Links API response not ok:', linksResponse.status);
+            //console.log('Links API response not ok:', linksResponse.status);
           }
         } catch (error) {
-          console.error('Error fetching links:', error);
+          //console.error('Error fetching links:', error);
         }
       };
 
@@ -572,7 +572,7 @@ const AgentProfile = () => {
   
     if (error) {
       return (
-        <div className='relative p-6 md:p-8'>
+        <div className='relative p-6 lg:p-8'>
           <HeaderAgent />
           <div className='text-center bg-[rgb(206,32,39,255)] py-20'>{error}</div>
           <NewFooter />
@@ -582,7 +582,7 @@ const AgentProfile = () => {
     
     if (loading && !agent) {
       return (
-        <div className='relative p-6 md:p-8'>
+        <div className='relative p-6 lg:p-8'>
           <HeaderAgent/>
           <div className='flex justify-center items-center h-60'>
             <div className='animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600'></div>
@@ -594,7 +594,7 @@ const AgentProfile = () => {
     
     if (!agent && !loading) {
       return (
-        <div className='relative p-6 md:p-8'>
+        <div className='relative p-6 lg:p-8'>
           <HeaderAgent />
           <div className='text-center bg-[rgb(206,32,39,255)] py-20'>
             {!agentEmail ? t('No agent email provided') : (error || t('Agent not found'))}
@@ -605,7 +605,7 @@ const AgentProfile = () => {
     }
 
   return (
-    <div className="relative p-4 sm:p-6 md:p-8">
+    <div className="relative p-4 sm:p-6 lg:p-8">
       <HeaderAgent />
 
       {/* Global loader overlay */}
@@ -618,12 +618,12 @@ const AgentProfile = () => {
         </div>
       )}
 
-      <div className="absolute top-0 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-[100px] md:h-[100px] bg-[rgb(206,32,39,255)] z-0"></div>
+      <div className="absolute top-0 left-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-[100px] lg:h-[100px] bg-[rgb(206,32,39,255)] z-0"></div>
       <div className="relative bg-gray-100">
-        <div className="flex flex-col md:flex-row min-h-screen">
+        <div className="flex flex-col lg:flex-row min-h-screen">
           {/* Sidebar */}
           {/* Mobile bottom nav (hidden on desktop) */}
-<aside className="flex md:hidden w-full p-2 flex-row mt-30 sticky bottom-0 h-14 bg-white z-10 shadow-md">
+<aside className="flex lg:hidden w-full p-2 flex-row mt-30 sticky bottom-0 h-14 bg-white z-10 shadow-md">
   <nav className="w-full">
     <ul className="flex flex-row justify-around items-center text-gray-700">
       <li
@@ -659,10 +659,10 @@ const AgentProfile = () => {
 </aside>
 
 {/* Desktop sidebar (hidden on mobile) */}
-<aside className="hidden md:flex w-56 md:w-64 p-2 md:p-4 flex-col mt-6 md:mt-20 pl-0 md:pl-8 sticky top-0 md:top-30 h-auto md:h-screen overflow-x-auto md:overflow-y-auto bg-white md:bg-transparent z-10">
-  <h1 className="text-xl font-bold text-gray-500 py-4 md:py-6">{t('Dashboard')}</h1>
+<aside className="hidden lg:flex md:flex sm:flex lg:w-10 xl:w-64 p-2 lg:p-4 flex-col mt-6 lg:mt-20 pl-0 lg:pl-8 sticky top-0 lg:top-30 h-auto lg:h-screen overflow-x-auto lg:overflow-y-auto bg-white lg:bg-transparent z-10">
+  <h1 className="text-xl font-bold text-gray-500 py-4 lg:py-6">{t('Dashboard')}</h1>
   <nav>
-    <ul className="flex md:flex-col gap-4 text-gray-700">
+    <ul className="flex lg:flex-col gap-4 text-gray-700">
       <li className="flex items-center gap-2 cursor-pointer hover:text-[rgb(206,32,39,255)]" onClick={() => scrollToSection(profileRef)}>
         <FontAwesomeIcon icon={faUser} /> {t('Profile')}
       </li>
@@ -681,16 +681,16 @@ const AgentProfile = () => {
 
 
           {/* Main Content */}
-          <main className="flex-1 p-2 sm:p-4 md:p-6">
+          <main className="flex-1 p-2 sm:p-4 lg:p-6">
           
             
-            <div className="bg-white mt-8 md:mt-20 px-2 sm:px-6 md:px-10 lg:px-20" ref={profileRef}>
-<p className="font-semibold pt-4 text-[rgb(206,32,39,255)] text-2xl md:px-10">{t('Agent Space')}</p>
-  <p className="font-semibold text-gray-600 text-lg md:px-10">KW {agent.city}</p>
+            <div className="bg-white mt-8 lg:mt-20 px-2 sm:px-6 lg:px-10 lg:px-20" ref={profileRef}>
+<p className="font-semibold pt-4 text-[rgb(206,32,39,255)] text-2xl lg:px-10">{t('Agent Space')}</p>
+  <p className="font-semibold text-gray-600 text-lg lg:px-10">KW {agent.city}</p>
             
             {/* Profile Card with loading skeleton */}
             {loading ? (
-              <div className="hidden md:flex flex-col md:flex-row md:mt-10 mt-10 shadow-xl rounded-3xl overflow-hidden w-full animate-pulse">
+              <div className="hidden lg:flex flex-col lg:flex-row lg:mt-10 mt-10 shadow-xl rounded-3xl overflow-hidden w-full animate-pulse">
                 <div className="w-full bg-gray-300 min-h-[80vh] flex flex-col justify-center px-6 sm:px-10 lg:px-16">
                   <div className="h-8 bg-gray-400 rounded mb-4"></div>
                   <div className="h-6 bg-gray-400 rounded mb-2 w-3/4"></div>
@@ -698,16 +698,16 @@ const AgentProfile = () => {
                   <div className="h-20 bg-gray-400 rounded w-64"></div>
                 </div>
                 <div className="w-full bg-gray-300 flex items-center justify-center">
-                  <div className="w-32 h-40 sm:w-48 sm:h-56 md:w-64 md:h-64 lg:w-80 lg:h-80 bg-gray-400 rounded-full"></div>
+                  <div className="w-32 h-40 sm:w-48 sm:h-56 lg:w-64 lg:h-64 lg:w-80 lg:h-80 bg-gray-400 rounded-full"></div>
                 </div>
               </div>
             ) : agent ? (
               <>
-  <div className="hidden md:flex flex-col md:flex-row md:mt-6 mt-10 shadow-xl rounded-3xl overflow-hidden w-full">
+  <div className="hidden lg:flex flex-col lg:flex-row lg:mt-6 mt-10 shadow-xl rounded-3xl overflow-hidden w-full">
     {/* Left Section */}
   <div className="w-full text-white px-4 sm:px-8 lg:px-12 bg-[rgb(206,32,39,255)] min-h-[60vh] flex flex-col justify-center">
   {/* Left Section */}
-  <div className="text-center md:text-left">
+  <div className="text-center lg:text-left">
     <h1
   className={`text-xl sm:text-2xl lg:text-3xl break-words mt-6 sm:mt-2 ${
     isRTL ? "text-right" : "text-left"
@@ -718,12 +718,12 @@ const AgentProfile = () => {
 
     <div className="text-sm sm:text-base lg:text-lg">
       {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start lg:items-center">
         <p className="tracking-[2.5px]">{t('Property Expert')}</p>
       </div>
 
       {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start lg:items-center">
         <span className="truncate">{agent.name || agent.fullName || ''}</span>
       </div>
 
@@ -742,15 +742,15 @@ const AgentProfile = () => {
 </div>
 
 {/* Right Section */}
-<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 md:mt-0">
+<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 lg:mt-0">
   {/* Optional Background Split for Desktop */}
-  <div className="hidden md:flex absolute inset-0">
+  <div className="hidden lg:flex absolute inset-0">
     <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
     <div className="w-1/2 bg-gray-400"></div>
   </div>
 
   {/* Agent Image */}
-  <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-32 h-40 sm:w-48 sm:h-56 md:w-64 md:h-64 lg:w-80 lg:h-80 aspect-square">
+  <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-32 h-40 sm:w-48 sm:h-56 lg:w-64 lg:h-64 lg:w-80 lg:h-80 aspect-square">
     <Image
       src={agent.image || '/avtar.jpg'}
       alt={agent.name || agent.fullName || 'Agent'}
@@ -765,7 +765,7 @@ const AgentProfile = () => {
 
 
 {/* Mobile-Only Agent Card Box */}
-<div className="flex flex-col bg-[rgb(206,32,39,255)] text-white shadow-lg rounded-2xl gap-4 mt-4 md:hidden">
+<div className="flex flex-col bg-[rgb(206,32,39,255)] text-white shadow-lg rounded-2xl gap-4 mt-4 lg:hidden">
   {/* Agent Image */}
   <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mt-4 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-100">
   
@@ -789,12 +789,12 @@ const AgentProfile = () => {
   {/* Info Items */}
   <div className="text-sm sm:text-base lg:text-lg">
       {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 justify-center items-center  sm:items-center lg:items-center">
         <p className="tracking-[2.5px]">Property Expert</p>
       </div>
 
       {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 justify-center items-center sm:items-center lg:items-center">
         <span className="truncate">{agent.name || agent.fullName || '-'}</span>
       </div>
 
@@ -816,7 +816,7 @@ const AgentProfile = () => {
 
  
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-2xl lg:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">{t('Sell your home with ')}</span>
     <span>
   {(() => {
@@ -837,27 +837,27 @@ const AgentProfile = () => {
   </p>
 </div>
 
-<div className="flex flex-col md:flex-row items-center justify-center mt-4 gap-2 md:gap-6 px-4 text-center md:text-left">
+<div className="flex flex-col lg:flex-row items-center justify-center mt-4 gap-2 lg:gap-6 px-4 text-center lg:text-left">
   {/* Phone */}
-  <span className="flex items-center gap-1 text-gray-500 text-base md:text-lg">
+  <span className="flex items-center gap-1 text-gray-500 text-base lg:text-lg">
     {t('Call')}:
     <span className="text-[rgb(206,32,39,255)]">{agent?.phone || "-"}</span>
   </span>
 
   {/* Divider for desktop */}
-  <span className="hidden md:inline border-l h-5 border-gray-400"></span>
+  <span className="hidden lg:inline border-l h-5 border-gray-400"></span>
 
   {/* Email */}
-  <span className="flex flex-wrap items-center gap-1 text-gray-500 text-base md:text-lg">
+  <span className="flex flex-wrap items-center gap-1 text-gray-500 text-base lg:text-lg">
   {t('Email')}:
   <span className="text-[rgb(206,32,39,255)] break-all">{agent?.email || ""}</span>
 </span>
 
   {/* Divider for desktop */}
-  <span className="hidden md:inline border-l h-5 border-gray-400"></span>
+  <span className="hidden lg:inline border-l h-5 border-gray-400"></span>
 
   {/* KW UID */}
-  <span className="flex items-center gap-1 text-gray-500 text-base md:text-lg">
+  <span className="flex items-center gap-1 text-gray-500 text-base lg:text-lg">
     {t('Kw UID')}:
     <span className="text-[rgb(206,32,39,255)]">
       {agent?.kw_uid || t('Not specified')}
@@ -869,7 +869,7 @@ const AgentProfile = () => {
             ) : null}
 
 <div className='bg-white'>
-   <p className="flex flex-wrap justify-center items-center text-2xl md:text-3xl mt-10 md:mt-20 font-semibold mb-6 md:mb-12 text-center">
+   <p className="flex flex-wrap justify-center items-center text-2xl lg:text-3xl mt-10 lg:mt-20 font-semibold mb-6 lg:mb-12 text-center">
   <span className='text-[rgb(206,32,39,255)] mr-2'>{t("Properties from")}</span>
   <span className="break-words">{agent.name || agent.fullName || '-'}</span>
 </p>
@@ -903,7 +903,7 @@ const AgentProfile = () => {
   </div>
 ) : (
   <div>
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
       {(agentProperties.length > 0 ? agentProperties : properties).slice(0, visibleCount).map((property, idx) => (
         <div
           key={property._kw_meta?.id || property.id }
@@ -915,7 +915,7 @@ const AgentProfile = () => {
           }}
         >
           {/* Image section */}
-          <div className="relative w-full h-40 sm:h-48 md:h-60">
+          <div className="relative w-full h-40 sm:h-48 lg:h-60">
             <Image
               src={
                 property.image ||
@@ -1015,7 +1015,7 @@ const AgentProfile = () => {
       <div className="flex justify-center mt-8">
         <button
           onClick={() => setVisibleCount(prev => prev + 6)}
-          className="px-8 py-3 bg-gray-500 text-white font-semibold text-base rounded-lg transition-colors"
+          className="px-8 py-3 bg-gray-500 text-white font-semibold text-base transition-colors"
         >
           {t("Load More Properties")}
         </button>
@@ -1023,16 +1023,16 @@ const AgentProfile = () => {
     )}
   </div>
 )}
-               <div className="flex flex-col items-center mt-10 md:mt-30 ">
+               <div className="flex flex-col items-center mt-10 lg:mt-30 ">
       {/* Training Calendar */}
       <h2
-        className="text-2xl md:text-3xl font-semibold mb-10 tracking-[1.5px]"
+        className="text-2xl lg:text-3xl font-semibold mb-10 tracking-[1.5px]"
         ref={calendarRef}
       >
         {t("Training")} <span className="text-[rgb(206,32,39,255)]">{t("Calendar")}</span>
       </h2>
 
-  <div className="flex gap-4 sm:gap-8 md:gap-10 mb-8 md:mb-16 flex-wrap justify-center">
+  <div className="flex gap-4 sm:gap-8 lg:gap-10 mb-8 lg:mb-16 flex-wrap justify-center">
         {links
           .filter((link) => link.name === "Jamin" || link.name === "Jeddah")
           .map((link) => {
@@ -1043,7 +1043,7 @@ const AgentProfile = () => {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[rgb(206,32,39)] text-white px-4 sm:px-8 md:px-10 py-4 sm:py-6 text-base sm:text-xl font-semibold transition cursor-pointer inline-flex items-center hover:bg-[rgb(180,28,35)]"
+                className="bg-[rgb(206,32,39)] text-white px-4 sm:px-8 lg:px-10 py-4 sm:py-6 text-base sm:text-xl font-semibold transition cursor-pointer inline-flex items-center hover:bg-[rgb(180,28,35)]"
               >
                 <span className="text-lg">{t("KW Saudi Arabia")}</span>
                 <span
@@ -1060,13 +1060,13 @@ const AgentProfile = () => {
 
       {/* Agent Drive */}
       <h2
-        className="text-2xl md:text-3xl font-semibold mb-8 mt-20 tracking-[1.5px]"
+        className="text-2xl lg:text-3xl font-semibold mb-8 mt-20 tracking-[1.5px]"
         ref={agentDriveRef}
       >
         <span className="text-[rgb(206,32,39,255)]">{t("Agent")}</span> {t("Drive")}
       </h2>
 
-  <div className="flex gap-2 sm:gap-4 mb-4 md:mb-8 flex-wrap justify-center">
+  <div className="flex gap-2 sm:gap-4 mb-4 lg:mb-8 flex-wrap justify-center">
         {links
           .filter((link) => link.name === "Resources" || link.name === "Agent Drive" || link.name === "Drive")
           .map((link) => (
@@ -1075,7 +1075,7 @@ const AgentProfile = () => {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[rgb(206,32,39,255)] text-white px-6 sm:px-16 md:px-24 lg:px-40 tracking-[1.5px] py-4 sm:py-6 text-lg sm:text-2xl font-semibold transition cursor-pointer inline-block text-center hover:bg-[rgb(180,28,35)]"
+              className="bg-[rgb(206,32,39,255)] text-white px-6 sm:px-16 lg:px-24 lg:px-40 tracking-[1.5px] py-4 sm:py-6 text-lg sm:text-2xl font-semibold transition cursor-pointer inline-block text-center hover:bg-[rgb(180,28,35)]"
             >
              {t("View")} {t(link.name)}
             </a>
@@ -1086,7 +1086,7 @@ const AgentProfile = () => {
       </div>
     </div> {/* Filter Bar */}
           
-  <p className="flex justify-center items-center text-2xl md:text-3xl font-semibold py-6 md:py-10 mt-10 md:mt-20 tracking-[1.5px]" ref={eventsRef}>
+  <p className="flex justify-center items-center text-2xl lg:text-3xl font-semibold py-6 lg:py-10 mt-10 lg:mt-20 tracking-[1.5px]" ref={eventsRef}>
   <span className="text-[rgb(206,32,39)]">{t("View Our")}&nbsp;</span>{t("Events")}
 </p>
 
@@ -1108,7 +1108,7 @@ const AgentProfile = () => {
     
           {/* Blog Cards */}
           {!loading && !error && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-10 p-2 sm:p-4 md:px-8 lg:px-16 ">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-10 p-2 sm:p-4  lg:px-16 ">
         {events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-lg text-gray-600">{t("No events found.")}</div>
@@ -1144,7 +1144,7 @@ const AgentProfile = () => {
                     {new Date(post.createdAt).toLocaleDateString()}
                   </p>
                 )}
-                <h3 className="md:text-2xl text-xl mb-2 font-semibold line-clamp-2">
+                <h3 className="lg:text-2xl text-xl mb-2 font-semibold line-clamp-2">
                   {post.title}
                 </h3>
                 <p className="text-gray-600 text-base line-clamp-3 mb-3">

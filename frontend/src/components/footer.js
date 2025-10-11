@@ -16,37 +16,37 @@ const Footer = () => {
   return (
     <div className="w-full">
       {/* Footer Grid */}
-      <hr className="block md:hidden w-full bg-gray-100" />
+      <hr className="block lg:hidden w-full bg-gray-100" />
 
-      <div className="md:mt-1 w-full max-w-full mx-auto">
+      <div className="lg:mt-1 w-full max-w-full mx-auto">
         {/* Top Contact Info */}
-        <div className="flex flex-col md:flex-row md:justify-between md:border md:border-gray-100 md:rounded-xl items-center md:items-start text-center md:text-left md:border-b md:p-8 pb-2 md:pb-4 text-xs md:text-sm md:bg-gray-100 md:text-gray-700">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:border lg:border-gray-100 lg:rounded-xl items-center lg:items-start text-center lg:text-left lg:border-b lg:p-8 pb-2 lg:pb-4 text-xs lg:text-sm lg:bg-gray-100 lg:text-gray-700">
           {/* Contact Us Title */}
-          <div className="flex items-center justify-center space-x-2 font-semibold mb-2 md:mb-0 mt-4 md:mt-0 md:py-0">
+          <div className="flex items-center justify-center space-x-2 font-semibold mb-2 lg:mb-0 mt-4 lg:mt-0 lg:py-0">
             <span className=" text-lg text-[rgb(206,32,39,255)]">{t('CONTACT US')}</span>
           </div>
           
-          <hr className="block md:hidden w-20 md:w-5/12 border-0 mx-auto bg-[rgb(206,32,39,255)]  h-[2px] mt-1 md:mt-14 mb-5" />
+          <hr className="block lg:hidden w-20 lg:w-5/12 border-0 mx-auto bg-[rgb(206,32,39,255)]  h-[2px] mt-1 lg:mt-14 mb-5" />
           
-          <div className="flex flex-col items-center justify-center mb-2 md:hidden w-full">
+          <div className="flex flex-col items-center justify-center mb-2 lg:hidden w-full">
             <span className="text-sm mb-2">{t('EMAIL')}  <span className="inline-block w-2" />  - <span className="inline-block w-4" />  <span className="text-[0.8rem] font-bold">INFO@KWSAUDIARABIA.COM</span></span>
             <span className="text-sm">{t('TELEPHONE')}  <span className="inline-block w-2" /> - <span className="inline-block w-4" />  <span className="text-[0.8rem] font-bold">9200-15671</span></span>
           </div>
           
           {/* Email - Desktop */}
-          <div className="hidden md:flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start text-[1rem] mb-1 md:mb-0">
-            <span className="font-normal md:mr-1">{t('EMAIL')}<span className="inline-block w-4" />-<span className="inline-block w-4" /></span>
+          <div className="hidden lg:flex flex-col lg:flex-row items-center lg:items-start justify-center lg:justify-start text-[1rem] mb-1 lg:mb-0">
+            <span className="font-normal lg:mr-1">{t('EMAIL')}<span className="inline-block w-4" />-<span className="inline-block w-4" /></span>
             <span className='font-bold'>INFO@KWSAUDIARABIA.COM</span>
           </div>
 
           {/* Telephone - Desktop */}
-          <div className="hidden md:flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start text-[1rem]">
-            <span className="font-normal md:mr-1">{t('TELEPHONE')}<span className="inline-block w-4" />-<span className="inline-block w-4" /></span>
+          <div className="hidden lg:flex flex-col lg:flex-row items-center lg:items-start justify-center lg:justify-start text-[1rem]">
+            <span className="font-normal lg:mr-1">{t('TELEPHONE')}<span className="inline-block w-4" />-<span className="inline-block w-4" /></span>
             <span className='font-bold'>9200-15671</span>
           </div>
 
           {/* Social Icons - Desktop */}
-          <div className="hidden md:flex space-x-2 md:space-x-3 text-gray-700 text-sm md:text-lg">
+          <div className="hidden lg:flex space-x-2 lg:space-x-3 text-gray-700 text-sm lg:text-lg">
             <a href="https://www.linkedin.com/company/kwsaudiarabia/" aria-label="LinkedIn" 
               target="_blank" rel="noopener noreferrer"
               className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white hover:bg-gray-800 transition-colors">
@@ -79,10 +79,10 @@ const Footer = () => {
           </div>
         </div>
 
-        <hr className="block md:hidden w-40 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[2px]" />
+        <hr className="block lg:hidden w-40 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[2px]" />
 
         {/* Main Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-0 md:gap-4 w-full md:mx-0 mx-4 px-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 lg:grid-cols-8 gap-0 lg:gap-4 w-full lg:mx-0 mx-4 px-2">
           {[
             {
               label: t("Properties"),
@@ -175,26 +175,26 @@ const Footer = () => {
               ],
             },
           ].map(({ label, imageUrl, path, items }, i) => (
-            <div key={i} className="mb-0 md:mb-0">
+            <div key={i} className="mb-0 lg:mb-0">
               {/* Image with link - Desktop only */}
-              <div className="hidden md:flex rounded-xl flex-col transition-all cursor-pointer">
+              <div className="hidden lg:flex rounded-xl flex-col transition-all cursor-pointer">
                 <a href={path}>
                   <Image
                     src={imageUrl}
                     alt={label}
                     width={100}
                     height={100}
-                    className="object-contain h-25 w-25 md:h-50 md:w-50"
+                    className="object-contain h-25 w-25 lg:h-50 lg:w-50"
                   />
                 </a>
               </div>
               
               {/* Label - Mobile only */}
-              <p className="block md:hidden text-[rgb(206,32,39,255)]  md:text-[0.8rem] mt-4 mb-2">{label}</p>
+              <p className="block lg:hidden text-[rgb(206,32,39,255)]  lg:text-[0.8rem] mt-4 mb-2">{label}</p>
 
               {/* Items list */}
-              <div className="border-l border-[rgb(206,32,39,255)] md:border-gray-300 pl-3 ml-4">
-                <ul className="md:text-base text-xs space-y-1 md:space-y-6 text-left">
+              <div className="border-l border-[rgb(206,32,39,255)] lg:border-gray-300 pl-3 ml-4">
+                <ul className="lg:text-base text-xs space-y-1 lg:space-y-6 text-left">
                   {items.map((item, index) => (
                     <li key={index} className="hover:text-[rgb(206,32,39,255)] transition-colors">
                       <a href={item.path} className="block w-full py-1">
@@ -215,10 +215,10 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer Info - Desktop */}
-      <div className="hidden md:block bg-gray-100 px-4 py-3 text-gray-50 border-t mt-10">
-        <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+      <div className="hidden lg:block bg-gray-100 px-4 py-3 text-gray-50 border-t mt-10">
+        <div className="max-w-full mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
           {/* Logo */}
-          <div className="flex items-center h-12 md:h-14">
+          <div className="flex items-center h-12 lg:h-14">
             <Image
               src="/footerlogo.jpg"
               alt="KW Saudi Arabia Logo"
@@ -230,10 +230,10 @@ const Footer = () => {
           
           {/* Address + Links */}
           <div className="text-right space-y-1 text-xs p-2">
-            <a href="#" className='text-gray-500 md:text-sm text-[0.65rem] tracking-[0.2em]'>{t('Jasmine Real Estate Management and Development Company')}</a>
-            <p className="text-gray-500 md:text-sm text-[0.65rem] tracking-[0.1em] mt-2">{t('REGA LICENSE NUMBER #1200018764')}</p>
-            <p className="text-gray-500 md:text-sm text-[0.65rem] tracking-[0.1em] mt-2">{t('KW Saudi Arabia HQ - 2740 King Fahad Branch Rd, Al Sahafah, 6403, Riyadh 13515')}</p>
-            <div className="flex flex-wrap justify-end gap-2 text-gray-600 md:text-sm text-[0.65rem] tracking-[0.1em] mt-2">
+            <a href="#" className='text-gray-500 lg:text-sm text-[0.65rem] tracking-[0.2em]'>{t('Jasmine Real Estate Management and Development Company')}</a>
+            <p className="text-gray-500 lg:text-sm text-[0.65rem] tracking-[0.1em] mt-2">{t('REGA LICENSE NUMBER #1200018764')}</p>
+            <p className="text-gray-500 lg:text-sm text-[0.65rem] tracking-[0.1em] mt-2">{t('KW Saudi Arabia HQ - 2740 King Fahad Branch Rd, Al Sahafah, 6403, Riyadh 13515')}</p>
+            <div className="flex flex-wrap justify-end gap-2 text-gray-600 lg:text-sm text-[0.65rem] tracking-[0.1em] mt-2">
               <a href="#" className="hover:underline  mr-4">{t('© 2026 All Rights Reserved')}</a>
               <div className="w-px h-4 bg-gray-500/50  mt-1"></div>
               <a href="#" className="hover:underline ml-2 mr-4">{t('KW Saudi Arabia')}</a>
@@ -247,7 +247,7 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer Info - Mobile */}
-      <div className="w-full bg-gray-100 text-center text-[0.65rem] text-gray-700 md:hidden px-6 pt-4 mt-10 pb-6 space-y-2">
+      <div className="w-full bg-gray-100 text-center text-[0.65rem] text-gray-700 lg:hidden px-6 pt-4 mt-10 pb-6 space-y-2">
         {/* Links with Logo */}
         <div className="flex justify-center items-center gap-3 font-medium">
           <span>{t('PRIVACY POLICY')}</span>
@@ -256,7 +256,7 @@ const Footer = () => {
             alt="KW Logo"
             width={20}
             height={20}
-            className="h-6 md:h-8 w-auto object-contain"
+            className="h-6 lg:h-8 w-auto object-contain"
           />
           <span>{t('TERMS OF USE')}</span>
         </div>

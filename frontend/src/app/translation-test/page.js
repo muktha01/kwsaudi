@@ -18,7 +18,7 @@ const TranslationTestPage = () => {
             Translation System Test Page
           </h1>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-8">
             {/* Test Content Section 1 */}
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold text-blue-600">
@@ -107,7 +107,7 @@ const TranslationTestPage = () => {
         {/* Test Form Section */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Contact Form Test</h2>
-          <form className="grid md:grid-cols-2 gap-6">
+          <form className="grid lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <input 
@@ -146,7 +146,7 @@ const TranslationTestPage = () => {
               </select>
             </div>
             
-            <div className="md:col-span-2">
+            <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
               <textarea 
                 rows="4"
@@ -155,7 +155,7 @@ const TranslationTestPage = () => {
               ></textarea>
             </div>
             
-            <div className="md:col-span-2">
+            <div className="lg:col-span-2">
               <button 
                 type="submit"
                 className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
@@ -170,7 +170,7 @@ const TranslationTestPage = () => {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Special Content Test</h2>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-2" data-no-translate>500+</div>
               <p className="text-gray-600">Properties Sold</p>

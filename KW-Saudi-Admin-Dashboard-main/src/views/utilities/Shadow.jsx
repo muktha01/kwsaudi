@@ -65,79 +65,79 @@ export default function UtilitiesShadow() {
         <Grid size={12}>
           <SubCard title="Basic Shadow">
             <Grid container spacing={gridSpacing}>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="0" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="1" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="2" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="3" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="4" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="5" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="6" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="7" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="8" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="9" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="10" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="11" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="12" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="13" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="14" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="15" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="16" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="17" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="18" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="19" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="20" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="21" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="22" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="23" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <ShadowBox shadow="24" />
               </Grid>
             </Grid>
@@ -146,22 +146,22 @@ export default function UtilitiesShadow() {
         <Grid size={12}>
           <SubCard title="Color Shadow">
             <Grid container spacing={gridSpacing}>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="primary.main" shadow={theme.customShadows.primary} label="primary" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="secondary.main" shadow={theme.customShadows.secondary} label="secondary" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="orange.main" shadow={theme.customShadows.orange} label="orange" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="success.main" shadow={theme.customShadows.success} label="success" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="warning.main" shadow={theme.customShadows.warning} label="warning" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, lg: 4, lg: 3 }}>
                 <CustomShadowBox color="error.main" shadow={theme.customShadows.error} label="error" />
               </Grid>
             </Grid>

@@ -64,7 +64,7 @@ export default function AppBar({ ...others }) {
             <Typography component={RouterLink} to="/" sx={{ flexGrow: 1, textAlign: 'left' }}>
               <Logo />
             </Typography>
-            <Stack direction="row" sx={{ display: { xs: 'none', sm: 'block' } }} spacing={{ xs: 1.5, md: 2.5 }}>
+            <Stack direction="row" sx={{ display: { xs: 'none', sm: 'block' } }} spacing={{ xs: 1.5, lg: 2.5 }}>
               <Button color="inherit" component={Link} href="#">
                 Home
               </Button>

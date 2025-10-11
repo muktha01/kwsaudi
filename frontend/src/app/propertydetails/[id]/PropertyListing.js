@@ -854,31 +854,31 @@ const [activeTab, setActiveTab] = useState('overview');
   
   return (
     <div>
-    <div className="relative p-6 md:p-8">
+    <div className="relative p-6 lg:p-8">
       <Header />
-      <div className="absolute top-0 left-0 w-[60px] h-[60px] sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(179,4,4)] z-0"></div>
+      <div className="absolute top-0 left-0 w-[60px] h-[60px] sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(179,4,4)] z-0"></div>
       
       <div ref={overviewSectionRef} className='relative bg-gray-100'>
         {/* Hero Section */}
-        <div className="relative min-h-[40vh] sm:min-h-[60vh] w-full px-4 md:px-36">
+        <div className="relative min-h-[40vh] sm:min-h-[60vh] w-full px-4 lg:px-36">
           {/* Back to Search and Price */}
-          <div className="w-full flex flex-col items-start gap-0 mb-2 sm:mb-4 md:mb-6">
-            <div className="flex items-center gap-0 mt-30  md:mt-30 md:gap-3  py-1 ">
+          <div className="w-full flex flex-col items-start gap-0 mb-2 sm:mb-4 lg:mb-6">
+            <div className="flex items-center gap-0 mt-30  lg:mt-30 lg:gap-3  py-1 ">
               <button
                 onClick={() => {
                   router.back();
                 }}
                 className="flex items-center gap-1 text-[rgb(179,4,4)] hover:bg-gray-100  py-1 "
               >
-                <FaChevronLeft className="w-2 h-2 md:w-3 md:h-3" />
-                <span className={`text-sm md:text-base font-medium ${isRTL ? 'pr-1' : 'pl-1'}`}>
+                <FaChevronLeft className={`w-2 h-2 lg:w-3 lg:h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                <span className={`text-sm lg:text-base font-medium ${isRTL ? 'pr-1' : 'pl-1'}`}>
                   {t("Back to Search")}
                 </span>
               </button>
             </div>
-            <p className='mt-2 md:mt-4 text-sm sm:text-base font-medium md:text-base text-[rgb(179,4,4)]'>   {t(property?.list_status || "Unknown Status")}</p>
-            <p className="text-2xl sm:text-xl md:text-3xl font-semibold text-gray-800 mt-2">{property?.list_address.address || property?.property_address || property?.address || property?.full_address || t('Address not available')}</p>
-            <h1 className="text-lg sm:text-xl md:text-xl mt-1 font-semibold text-gray-800">
+            <p className='mt-2 lg:mt-4 text-sm sm:text-base font-medium lg:text-base text-[rgb(179,4,4)]'>   {t(property?.list_status || "Unknown Status")}</p>
+            <p className="text-2xl sm:text-xl lg:text-3xl font-semibold text-gray-800 mt-2">{property?.list_address.address || property?.property_address || property?.address || property?.full_address || t('Address not available')}</p>
+            <h1 className="text-lg sm:text-xl lg:text-xl mt-1 font-semibold text-gray-800">
             <div className="flex items-center gap-1">
   <span className="relative w-4 h-4">
    <Image 
@@ -903,9 +903,9 @@ const [activeTab, setActiveTab] = useState('overview');
           </div>
 
           {/* Main Content */}
-          <div className="w-full flex flex-col lg:flex-row justify-between gap-2 md:gap-4">
+          <div className="w-full flex flex-col lg:flex-row justify-between gap-2 lg:gap-4">
             {/* Main Image */}
-            <div className="relative w-full aspect-[16/9] md:aspect-[16/9]">
+            <div className="relative w-full aspect-[16/9] lg:aspect-[16/9]">
   <Image
     src={brokenImages.has(propertyImages[currentImageIndex]) ? FALLBACK_IMAGE : propertyImages[currentImageIndex]}
     alt={t("Property")}
@@ -930,18 +930,18 @@ const [activeTab, setActiveTab] = useState('overview');
                 <>
                   <button
                     onClick={prevImage}
-                    className={`cursor-pointer absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 bg-[rgb(179,4,4)] p-1 md:p-2 shadow-lg z-30`}
+                    className={`cursor-pointer absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 bg-[rgb(179,4,4)] p-1 lg:p-2 shadow-lg z-30`}
                     style={{ zIndex: 30 }}
                   >
-                    <FaChevronLeft className={`w-6 h-6 md:w-10 md:h-10 text-white ${isRTL ? 'rotate-180' : ''}`} />
+                    <FaChevronLeft className={`w-6 h-6 lg:w-10 lg:h-10 text-white ${isRTL ? 'rotate-180' : ''}`} />
                   </button>
 
                   <button
                     onClick={nextImage}
-                    className={`cursor-pointer absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 bg-[rgb(179,4,4)]  p-1 md:p-2 shadow-lg z-30`}
+                    className={`cursor-pointer absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 bg-[rgb(179,4,4)]  p-1 lg:p-2 shadow-lg z-30`}
                     style={{ zIndex: 30 }}
                   >
-                    <FaChevronRight className={`w-6 h-6 md:w-10 md:h-10 text-white ${isRTL ? 'rotate-180' : ''}`} />
+                    <FaChevronRight className={`w-6 h-6 lg:w-10 lg:h-10 text-white ${isRTL ? 'rotate-180' : ''}`} />
                   </button>
                 </>
               )}
@@ -952,7 +952,7 @@ const [activeTab, setActiveTab] = useState('overview');
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 md:w-3 md:h-3  border rounded-full border-white transition-all ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                    className={`w-2 h-2 lg:w-3 lg:h-3  border rounded-full border-white transition-all ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
                   />
                 ))}
               </div>
@@ -1023,7 +1023,7 @@ const [activeTab, setActiveTab] = useState('overview');
 
             {/* Thumbnail Grid */}
             
-            <div className="hidden sm:flex flex-col gap-2 overflow-y-auto ml-6 overflow-x-hidden scrollbar-hide aspect-[16/9] md:aspect-[16/9]">
+            <div className="hidden sm:flex flex-col gap-2 overflow-y-auto ml-6 overflow-x-hidden scrollbar-hide aspect-[16/9] lg:aspect-[16/9]">
               <div className="grid grid-cols-2 gap-2">
                 {thumbnailImages.map((image, index) => (
                   <div
@@ -1053,13 +1053,13 @@ const [activeTab, setActiveTab] = useState('overview');
         </div>
 
         {/* Tabs and Buttons */}
-        <div className="z-40 mt-6 py-4 md:px-36  md:mt-10 flex justify-start overflow-x-auto scrollbar-hide bg-gray-100">
-          <div className="flex min-w-full md:min-w-0 gap-1 md:gap-2">
+        <div className="z-40 mt-6 py-4 lg:px-36  lg:mt-10 flex justify-start overflow-x-auto scrollbar-hide bg-gray-100">
+          <div className="flex min-w-full lg:min-w-0 gap-1 lg:gap-2">
             {tabList.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => handleTabClick(tab.key)}
-                className={`cursor-pointer flex-shrink-0 w-30 md:w-auto px-2 md:px-8 py-1 md:py-2 font-bold text-xs md:text-sm lg:text-base border-b-4 uppercase tracking-wide ${
+                className={`cursor-pointer flex-shrink-0 w-30 lg:w-auto px-2 lg:px-8 py-1 lg:py-2 font-bold text-xs lg:text-sm lg:text-base border-b-4 uppercase tracking-wide ${
                   activeTab === tab.key
                     ? 'border-[rgb(179,4,4)] bg-white text-[rgb(179,4,4)]'
                     : 'border-transparent bg-gray-400 text-white'
@@ -1072,15 +1072,15 @@ const [activeTab, setActiveTab] = useState('overview');
         </div>
       </div>
 
-      <div className="w-full flex flex-col lg:flex-row gap-4 justify-between md:gap-8 px-6 md:px-36">
-        <div className="w-full md:w-2/3 ">
+      <div className="w-full flex flex-col lg:flex-row gap-4 justify-between lg:gap-8 px-6 lg:px-36">
+        <div className="w-full lg:w-2/3 ">
           
           {/* OVERVIEW TAB CONTENT */}
           {activeTab === 'overview' && (
             <>
               {/* Description */}
-              <div className="mt-4 md:mt-8">
-                <h2 className="font-bold text-lg text-gray-800 sm:text-lg md:text-2xl flex items-center gap-2">
+              <div className="mt-4 lg:mt-8">
+                <h2 className="font-bold text-lg text-gray-800 sm:text-lg lg:text-2xl flex items-center gap-2">
                   {t("Property Description")}
                 </h2>
               </div>
@@ -1088,18 +1088,18 @@ const [activeTab, setActiveTab] = useState('overview');
               {(property?.description || property?.long_description || '').length > 200 && (
                 <button 
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="mt-2 md:mt-4 text-indigo-600 text-xs sm:text-sm md:text-base font-semibold hover:text-indigo-800 transition-colors"
+                  className="mt-2 lg:mt-4 text-indigo-600 text-xs sm:text-sm lg:text-base font-semibold hover:text-indigo-800 transition-colors"
                 >
                   {showFullDescription ? t('Show Less') : t('Show More')}
                 </button>
               )}
 
-              <div className="mt-4 md:mt-10" ref={propertyDetailsRef}>
+              <div className="mt-4 lg:mt-10" ref={propertyDetailsRef}>
                 <div ref={propertyDetailsContentRef}></div>
                 <div className="min-h-screen bg-white  flex justify-center">
                   <div className="w-full">
                     {/* Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-800 text-lg font-medium">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-gray-800 text-lg font-medium">
                       
                       {/* Left column */}
                       <div className="flex items-center">
@@ -1274,11 +1274,11 @@ const [activeTab, setActiveTab] = useState('overview');
 
         {/* RIGHT SIDE: Sticky Agent Box */}
         {activeTab === 'overview' && (
-          <main className="flex flex-col justify-between mt-30 md:mt-34">
-            <div className="sticky top-34 bg-gray-100 p-6 shadow-md w-full max-w-sm text-center">
+          <main className="flex flex-col justify-between mt-20 lg:mt-34">
+            <div className="sticky top-34 bg-gray-100 p-6 shadow-md w-full lg:max-w-sm max-w-full text-center">
               {/* Profile Image */}
               <div className="flex flex-col items-center">
-                <div className="w-46 h-46 rounded-full overflow-hidden border-4 border-white mt-[-90px] mb-4">
+                <div className="w-46 h-46  rounded-full overflow-hidden border-4 border-white mt-[-90px] mb-4">
                   <Image
                     src={
                       property.list_agent_office?.list_agent_url ||
@@ -1301,7 +1301,7 @@ const [activeTab, setActiveTab] = useState('overview');
                   || property.list_agent_full_name || t('Agent Name')}</span> {t("on:")}
               </p>
 
-              <p className="my-8 text-gray-900 font-medium">
+              <p className="my-8 lg:text-base text-base text-gray-900 font-medium">
               {property.list_agent_office?.list_office_email || property.agent_email || t('agent@kw.com')}
               </p>
               
@@ -1321,7 +1321,7 @@ const [activeTab, setActiveTab] = useState('overview');
                   className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
                 >
                   <Phone className="w-6 h-6 text-gray-700" />
-                  <span className="text-[0.6rem] md:text-xs mt-1">{t("Call")}</span>
+                  <span className="text-[0.6rem] lg:text-xs mt-1">{t("Call")}</span>
                 </a>
 
              {/* WhatsApp */}
@@ -1337,7 +1337,7 @@ const [activeTab, setActiveTab] = useState('overview');
       className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
     >
       <FaWhatsapp className="w-6 h-6 text-gray-700 " />
-      <span className="text-[0.6rem] md:text-xs mt-1">{t("WhatsApp")}</span>
+      <span className="text-[0.6rem] lg:text-xs mt-1">{t("WhatsApp")}</span>
     </a>
   );
 })()}
@@ -1352,7 +1352,7 @@ const [activeTab, setActiveTab] = useState('overview');
   className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
   >
     <Mail className="w-6 h-6 text-gray-700" />
-    <span className="text-[0.6rem] md:text-xs mt-1">{t("Mail")}</span>
+    <span className="text-[0.6rem] lg:text-xs mt-1">{t("Mail")}</span>
   </a>
 
                 {/* File */}
@@ -1385,7 +1385,7 @@ const [activeTab, setActiveTab] = useState('overview');
   className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
 >
   <User className="w-6 h-6 text-gray-700" />
-  <span className="text-[0.6rem] md:text-xs mt-1">{t("Profile")}</span>
+  <span className="text-[0.6rem] lg:text-xs mt-1">{t("Profile")}</span>
 </button>
 
 
@@ -1399,8 +1399,8 @@ const [activeTab, setActiveTab] = useState('overview');
           {/* MAP LOCATION TAB CONTENT */}
 {activeTab === "map" && (
   <div className="w-full">
-    <div className="px-6 md:px-36 mt-4 md:mt-10">
-      <div className="w-full h-64 md:h-80 lg:h-[400px] overflow-hidden shadow-md rounded-lg relative">
+    <div className="px-6 lg:px-36 mt-4 lg:mt-10">
+      <div className="w-full h-64 lg:h-80 lg:h-[400px] overflow-hidden shadow-md rounded-lg relative">
         {/* Loading state */}
         {mapLoading && !mapError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
@@ -1551,12 +1551,12 @@ const [activeTab, setActiveTab] = useState('overview');
          {/* 360 TOUR TAB CONTENT */}
 {activeTab === "tour" && (
   <div className="w-full">
-    <div className="flex flex-col items-center justify-center px-6 md:px-36 mt-4 md:mt-10">
+    <div className="flex flex-col items-center justify-center px-6 lg:px-36 mt-4 lg:mt-10">
       
 
       <div className="flex flex-col items-center mx-4 w-full">
         {/* Main Image Container */}
-        <div className="w-full h-64 md:h-80 lg:h-[400px]  overflow-hidden shadow-md relative mb-4 md:mb-6 cursor-pointer">
+        <div className="w-full h-64 lg:h-80 lg:h-[400px]  overflow-hidden shadow-md relative mb-4 lg:mb-6 cursor-pointer">
           <Image
             src={brokenImages.has(propertyImages[currentImageIndex]) ? FALLBACK_IMAGE : propertyImages[currentImageIndex]}
             alt={t("360 Virtual Tour")}
@@ -1579,9 +1579,9 @@ const [activeTab, setActiveTab] = useState('overview');
     alt={t("360° Overlay")}
     width={80}
     height={80}
-    className="md:w-[120px] md:h-[120px]"
+    className="lg:w-[120px] lg:h-[120px]"
   />
-  <p className="mt-2 text-white text-sm md:text-lg font-semibold">{t("Click here")}</p>
+  <p className="mt-2 text-white text-sm lg:text-lg font-semibold">{t("Click here")}</p>
 </div>
          
         </div>
@@ -1648,7 +1648,7 @@ const [activeTab, setActiveTab] = useState('overview');
                 }
               }
             }}
-            className="px-4 md:px-8 py-2 md:py-3  bg-gray-400 text-white text-sm md:text-lg font-semibold shadow hover:bg-gray-500 transition"
+            className="px-4 lg:px-8 py-2 lg:py-3  bg-gray-400 text-white text-sm lg:text-lg font-semibold shadow hover:bg-gray-500 transition"
           >
             {t("View in Full Screen")}
           </button>

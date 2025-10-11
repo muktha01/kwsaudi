@@ -295,20 +295,23 @@ const Technology = () => {
     
 
       {/* Section Title */}
-      <div className="md:my-10 mt-4">
-        <h1 className={`text-2xl md:text-3xl py-2 md:py-2 flex justify-center text-center ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className="lg:my-10 mt-4">
+        <h1
+          className={`text-2xl lg:text-3xl py-2 lg:py-2 flex justify-center text-center ${isRTL ? 'text-right' : 'text-center'}`}
+          {...(isRTL ? { dir: 'rtl' } : {})}
+        >
           {t("COMMAND FOR SOLO AGENT")}
         </h1>
-        <hr className="w-50 md:w-50 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 " />
+        <hr className="w-50 lg:w-50 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 " />
       </div>
 
       {/* Timeline Section */}
       <div ref={timelineRef1} className="relative bg-white pt-2 pb-2">
         {/* Vertical Line */}
-        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
+        <div className="hidden lg:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
 
         {/* Marker */}
-        <div className="hidden md:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
+        <div className="hidden lg:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
           <div
             className="absolute left-1/2 transform -translate-x-1/2"
             style={{
@@ -327,10 +330,10 @@ const Technology = () => {
           {steps.map((step, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-2 items-center px-4 md:px-8 lg:px-24 gap-1 md:my-4"
+              className="grid grid-cols-1 lg:grid-cols-2 items-center px-4 lg:px-8  gap-1 lg:my-4"
             >
               {/* Left Image (Desktop) */}
-              <div className="hidden md:flex justify-center">
+              <div className="hidden lg:flex justify-center">
                 <Image
                   src={step.image}
                   alt={t(step.title)}
@@ -341,7 +344,7 @@ const Technology = () => {
               </div>
 
 {/* Mobile Layout */}
-<div className="md:hidden flex flex-col items-center px-4">
+<div className="lg:hidden flex flex-col items-center px-4">
   <Image
     src={step.image}
     alt={t(step.title)}
@@ -352,11 +355,14 @@ const Technology = () => {
  
 </div>
               {/* Right Text */}
-              <div className={`text-left ml-8 ${isRTL ? 'text-right mr-8 ml-0' : 'text-left'}`}>
+              <div
+                className={`lg:text-left text-center ml-8 ${isRTL ? 'text-right mr-8 ml-0' : 'text-center'}`}
+                {...(isRTL ? { dir: 'rtl' } : {})}
+              >
                 <h2 className="text-[rgb(206,32,39,255)] text-2xl font-semibold uppercase mb-2">
                   {t(step.title)}
                 </h2>
-                <p className="whitespace-pre-line text-md md:text-lg leading-relaxed">
+                <p className="whitespace-pre-line text-md lg:text-lg leading-relaxed">
                   {t(step.content)}
                 </p>
               </div>
@@ -367,20 +373,23 @@ const Technology = () => {
       </div>
 
 {/* Section Title */}
-      <div className="md:my-30 mt-4">
-       <h1 className={`text-2xl md:text-3xl py-2 md:py-2 flex justify-center text-center ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className="lg:my-30 mt-4">
+        <h1
+          className={`text-2xl lg:text-3xl py-2 lg:py-2 flex justify-center text-center ${isRTL ? 'text-right' : 'text-center'}`}
+          {...(isRTL ? { dir: 'rtl' } : {})}
+        >
           {t("Command For Solo Teams")}
         </h1>
-        <hr className="w-50 md:w-50 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 " />
+        <hr className="w-50 lg:w-50 mx-auto bg-[rgb(206,32,39,255)] h-[1.5px] border-0 " />
       </div>
 
 {/* Timeline Section */}
       <div ref={timelineRef2} className="relative bg-white pt-2 pb-2">
         {/* Vertical Line */}
-        <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
+        <div className="hidden lg:block absolute top-0 bottom-0 left-1/2 w-px bg-black z-0" />
 
         {/* Marker */}
-        <div className="hidden md:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
+        <div className="hidden lg:block absolute top-0 left-1/2 transform -translate-x-1/2 z-10 h-full">
           <div
             className="absolute left-1/2 transform -translate-x-1/2"
             style={{
@@ -399,10 +408,10 @@ const Technology = () => {
           {steps2.map((step, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-2 items-center px-4 md:px-8 lg:px-24 gap-8 my-4"
+              className="grid grid-cols-1 lg:grid-cols-2 items-center px-4 lg:px-8  gap-8 my-4"
             >
               {/* Left Image (Desktop) */}
-              <div className="hidden md:flex justify-center">
+              <div className="hidden lg:flex justify-center">
                 <Image
                   src={step.image}
                   alt={t(step.title)}
@@ -413,7 +422,7 @@ const Technology = () => {
               </div>
 
 {/* Mobile Layout */}
-<div className="md:hidden flex flex-col items-center px-4 ">
+<div className="lg:hidden flex flex-col items-center px-4 ">
   <Image
     src={step.image}
     alt={t(step.title)}
@@ -424,11 +433,14 @@ const Technology = () => {
  
 </div>
               {/* Right Text */}
-              <div className={`text-left ml-8 ${isRTL ? 'text-right mr-8 ml-0' : 'text-left'}`}>
+              <div
+                className={`text-center lg:text-left  ml-8 ${isRTL ? 'text-right mr-8 ml-0' : 'text-center'}`}
+                {...(isRTL ? { dir: 'rtl' } : {})}
+              >
                 <h2 className="text-[rgb(206,32,39,255)] text-2xl font-semibold uppercase mb-2">
                   {t(step.title)}
                 </h2>
-                <p className="whitespace-pre-line text-md md:text-lg  leading-relaxed">
+                <p className="whitespace-pre-line text-md lg:text-lg  leading-relaxed">
                   {t(step.content)}
                 </p>
               </div>
@@ -440,7 +452,7 @@ const Technology = () => {
         </div>
       </div>
       {/* Final Image */}
-      <div className="flex justify-center py-2 md:py-16">
+      <div className="flex justify-center py-2 lg:py-16">
         <Image
           src="/howwillyouthink.png"
           alt={t("How Will You Thrive")}

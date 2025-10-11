@@ -73,7 +73,7 @@ const NewsManagement = () => {
       const response = await newsService.getAllNews();
       setNews(response);
     } catch (error) {
-      console.error('Error fetching news:', error);
+      //console.error('Error fetching news:', error);
       showMessage('error', 'Failed to fetch news');
     } finally {
       setLoading(false);
@@ -83,9 +83,9 @@ const NewsManagement = () => {
   const showMessage = (type, message) => {
     // You can implement a proper notification system here
     if (type === 'error') {
-      console.error(message);
+      //console.error(message);
     } else {
-      console.log(`${type}: ${message}`);
+      //console.log(`${type}: ${message}`);
     }
   };
 
@@ -320,7 +320,7 @@ const NewsManagement = () => {
                     alt="Preview"
                     style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                     onError={(e) => {
-                      console.error('Error loading image preview:', e);
+                     // console.error('Error loading image preview:', e);
                       setImagePreview(null);
                     }}
                   />

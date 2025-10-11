@@ -22,8 +22,9 @@ const nextConfig = {
       'kwlast-j4yv.vercel.app',
       'res.cloudinary.com',
       'https://www.kwsaudiarabia.com/',
-      'http://31.97.62.135:5001/api',
-      'http://31.97.62.135:5001',
+  'http://31.97.62.135:5001/api',
+  'http://31.97.62.135:5001',
+  'www.ambakeer.com',
     ],
   },
 };

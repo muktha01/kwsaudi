@@ -4,19 +4,19 @@ import Footer from "./newfooter";
 import Header from "./header";
 const PrivacyPolicy = () => {
   return (
- <div className="relative p-4 sm:p-6 md:p-8">
+ <div className="relative p-4 sm:p-6 lg:p-8">
       <Header />
 
-      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
       <div className="relative bg-gray-100">
-        <div className="pt-32 sm:pt-32 md:pt-44">
+        <div className="pt-32 sm:pt-32 lg:pt-44">
     
  
-    <div className="min-h-screen  py-10 px-4 md:px-20">
+    <div className="min-h-screen  py-10 px-4 lg:px-20">
       <div className=" mx-auto space-y-4">
-         <h2 className="md:text-4xl text-2xl font-semibold mb-4 tracking-wider  ">Privacy Policy</h2>
-   <h2 className="md:text-2xl text-xl  font-semibold mb-4 uppercase text-[rgb(206,32,39,255)]">Language - English</h2>
+         <h2 className="lg:text-4xl text-2xl font-semibold mb-4 tracking-wider  ">Privacy Policy</h2>
+   <h2 className="lg:text-2xl text-xl  font-semibold mb-4 uppercase text-[rgb(206,32,39,255)]">Language - English</h2>
 
       <p className="mb-4">
   <strong>KW SAUDI ARABIA, LTD. (&ldquo;KW SAUDI ARABIA&rdquo;)</strong> provides
@@ -145,7 +145,7 @@ const PrivacyPolicy = () => {
         .
       </p>
     </div>
-     <div className=" mx-auto px-4 py-10 md:py-20 rtl text-right space-y-4" dir="rtl">
+     <div className=" mx-auto px-4 py-10 lg:py-20 rtl text-right space-y-4" dir="rtl">
        <h2 className="text-2xl text-[rgb(206,32,39,255)] font-semibold mb-4 uppercase text-justify" dir="rtl ">Language - Arabic</h2>
 
       <p className="mb-4 font-semibold">

@@ -493,7 +493,7 @@ useEffect(() => {
 
   if (error) {
     return (
-      <div className='relative p-6 md:p-8'>
+      <div className='relative p-6 lg:p-8'>
         <Header />
         <div className='text-center bg-[rgb(206,32,39,255)] py-20'>{error}</div>
         <NewFooter />
@@ -503,7 +503,7 @@ useEffect(() => {
   
   if (loading && !agent) {
     return (
-      <div className='relative p-6 md:p-8'>
+      <div className='relative p-6 lg:p-8'>
         <Header />
         <div className='flex justify-center items-center h-60'>
           <div className='animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600'></div>
@@ -515,7 +515,7 @@ useEffect(() => {
   
   if (!agent) {
     return (
-      <div className='relative p-6 md:p-8'>
+      <div className='relative p-6 lg:p-8'>
         <Header />
         <div className='text-center bg-[rgb(206,32,39,255)] py-20'>
           {error || 'Agent not found'}
@@ -529,49 +529,49 @@ useEffect(() => {
     <div>
     
     
-    <div className='relative p-6 md:p-8 '>
+    <div className='relative p-6 lg:p-8 '>
       <Header />
-      <div className="absolute top-0 left-0 w-[100px] h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+      <div className="absolute top-0 left-0 w-[100px] h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
-<div className="relative bg-gray-100 px-4 md:px-20 py-4 md:py-10">
+<div className="relative bg-gray-100 px-4 lg:px-20 py-4 lg:py-10">
   {/* Top Header */}
-  <div className="w-full flex flex-col md:flex-row items-start md:px-10 md:items-center justify-between gap-4 md:gap-0">
+  <div className="w-full flex flex-col lg:flex-row items-start lg:px-10 lg:items-center justify-between gap-4 lg:gap-0">
     {/* Back Button */}
-    {/* <div className="flex items-center gap-2 md:mt-30 mt-20 px-4 border rounded-full border-[rgb(206,32,39,255)] py-1 bg-[rgb(206,32,39,255)] h-10">
+    {/* <div className="flex items-center gap-2 lg:mt-30 mt-20 px-4 border rounded-full border-[rgb(206,32,39,255)] py-1 bg-[rgb(206,32,39,255)] h-10">
       <button 
         onClick={() => router.push('/agent')}
-        className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full bg-white border border-white text-[rgb(206,32,39,255)] hover:bg-gray-100 cursor-pointer"
+        className="w-4 h-4 lg:w-5 lg:h-5 flex items-center justify-center rounded-full bg-white border border-white text-[rgb(206,32,39,255)] hover:bg-gray-100 cursor-pointer"
       >
-        <FaArrowLeft className="w-2 h-2 md:w-3 md:w-3" />
+        <FaArrowLeft className="w-2 h-2 lg:w-3 lg:w-3" />
       </button>
       <button 
         onClick={() => router.push('/agent')}
-        className="text-[0.6rem] md:text-xs text-white font-medium cursor-pointer hover:text-gray-200 transition-colors"
+        className="text-[0.6rem] lg:text-xs text-white font-medium cursor-pointer hover:text-gray-200 transition-colors"
       >
         Back to Agents
       </button>
     </div> */}
   </div>
-  <p className="font-semibold  pt-20 text-[rgb(206,32,39,255)] text-2xl md:px-10"> {agent.name || agent.fullName || ''}</p>
-  <p className="font-semibold text-gray-600 text-lg md:px-10"> Keller Williams {agent.city || ''}</p>
+  <p className="font-semibold  pt-20 text-[rgb(206,32,39,255)] text-2xl lg:px-10"> {agent.name || agent.fullName || ''}</p>
+  <p className="font-semibold text-gray-600 text-lg lg:px-10"> Keller Williams {agent.city || ''}</p>
   {/* Agent Card Section */}
-  <div className="hidden md:flex flex-col md:flex-row md:mt-6 mt-20 shadow-xl rounded-3xl overflow-hidden  w-full">
+  <div className="hidden lg:flex flex-col lg:flex-row lg:mt-6 mt-20 shadow-xl rounded-3xl overflow-hidden  w-full">
     {/* Left Section */}
     <div className="w-full text-white px-6 sm:px-10 lg:px-16 bg-[rgb(206,32,39,255)] min-h-[80vh] flex flex-col justify-center">
   {/* Left Section */}
-  <div className="text-center md:text-left">
+  <div className="text-center lg:text-left">
     <h1 className="text-xl sm:text-2xl lg:text-3xl break-words mt-6 sm:mt-2">
       Property Sales in Saudi Arabia
     </h1>
 
     <div className="text-sm sm:text-base lg:text-lg">
       {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start lg:items-center">
         <p className="tracking-[2.5px]">Property Expert</p>
       </div>
 
       {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start lg:items-center">
         <span className="truncate">{agent.name || agent.fullName || ''}</span>
       </div>
 
@@ -590,9 +590,9 @@ useEffect(() => {
 </div>
 
 {/* Right Section */}
-<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 md:mt-0">
+<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 lg:mt-0">
   {/* Optional Background Split for Desktop */}
-  <div className="hidden md:flex absolute inset-0">
+  <div className="hidden lg:flex absolute inset-0">
     <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
     <div className="w-1/2 bg-gray-400"></div>
   </div>
@@ -613,7 +613,7 @@ useEffect(() => {
 
 
 {/* Mobile-Only Agent Card Box */}
-<div className="flex flex-col bg-[rgb(206,32,39,255)] text-white shadow-lg rounded-2xl gap-4 mt-4 md:hidden">
+<div className="flex flex-col bg-[rgb(206,32,39,255)] text-white shadow-lg rounded-2xl gap-4 mt-4 lg:hidden">
   {/* Agent Image */}
   <div className="w-40 h-40 mx-auto mt-4 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-100">
   
@@ -637,12 +637,12 @@ useEffect(() => {
   {/* Info Items */}
   <div className="text-sm sm:text-base lg:text-lg">
       {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start lg:items-center">
         <p className="tracking-[2.5px]">Property Expert</p>
       </div>
 
       {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start md:items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start lg:items-center">
         <span className="truncate">{agent.name || agent.fullName || '-'}</span>
       </div>
 
@@ -664,7 +664,7 @@ useEffect(() => {
 
   </div>
   <div className="flex flex-col items-center justify-center mt-10 px-4 text-center">
-  <p className="text-2xl md:text-4xl font-semibold">
+  <p className="text-2xl lg:text-4xl font-semibold">
     <span className="text-[rgb(206,32,39,255)]">Sell your home with </span>
     <span>
   {(() => {
@@ -685,7 +685,7 @@ useEffect(() => {
   </p>
 </div>
 
-<div className="flex flex-col md:flex-row items-center justify-center mt-4 gap-2 md:gap-6 px-4 text-center md:text-left">
+<div className="flex flex-col lg:flex-row items-center justify-center mt-4 gap-2 lg:gap-6 px-4 text-center lg:text-left">
   {/* Phone */}
   <span className="flex items-center gap-1 text-gray-500 text-lg">
     Call:
@@ -693,7 +693,7 @@ useEffect(() => {
   </span>
 
   {/* Divider for desktop */}
-  <span className="hidden md:inline border-l h-5 border-gray-400"></span>
+  <span className="hidden lg:inline border-l h-5 border-gray-400"></span>
 
   {/* Email */}
   <span className="flex items-center gap-1 text-gray-500 text-lg">
@@ -702,7 +702,7 @@ useEffect(() => {
   </span>
 
   {/* Divider for desktop */}
-  <span className="hidden md:inline border-l h-5 border-gray-400"></span>
+  <span className="hidden lg:inline border-l h-5 border-gray-400"></span>
 
   {/* KW UID */}
   <span className="flex items-center gap-1 text-gray-500 text-lg">
@@ -714,40 +714,40 @@ useEffect(() => {
   
 
 </div>
-<div className="flex justify-center items-stretch mx-2 md:mx-10 bg-white py-10 md:py-30 ">
+<div className="flex justify-center items-stretch mx-2 lg:mx-10 bg-white py-10 lg:py-30 ">
 
-  <div className="grid grid-cols-1 md:grid-cols-2 w-full ">
+  <div className="grid grid-cols-1 lg:grid-cols-2 w-full ">
 
     {/* Left Red Box */}
-    <div className="bg-[rgb(206,32,39,255)] text-white p-4 md:p-14 relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="bg-[rgb(206,32,39,255)] text-white p-4 lg:p-14 relative flex flex-col lg:min-h-[420px] min-h-[400px]">
 
       {/* Content */}
       <div className="pb-24">
-          <p className="text-base md:text-[1.6rem] font-normal mb-6 pl-3 border-l-8 border-white">
+          <p className="text-base lg:text-[1.6rem] font-normal mb-6 pl-3 border-l-8 border-white">
             Download guide
           </p>
 
-        <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">How to sell your home</h2>
+        <h2 className="text-2xl lg:text-[2.5rem] font-bold mb-4 lg:mb-6">How to sell your home</h2>
 
-        <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+        <p className="text-base lg:text-[1.4rem] mb-4 lg:mb-6">
           The guide to selling a property will advise not only on the process but also how you can be super prepared and help to achieve the highest sale price.
         </p>
       </div>
 
       {/* Input Group - Responsive */}
-      <div className="absolute md:bottom-18 md:left-14 md:right-6 bottom-6 left-2 right-auto w-full">
-           <div className="hidden md:flex w-full  md:max-w-lg items-center">
+      <div className="absolute lg:bottom-18 lg:left-14 lg:right-6 bottom-6 left-2 right-auto w-full">
+           <div className="hidden lg:flex w-full  lg:max-w-lg items-center">
             <input
               type="text"
               placeholder="Email Address"
               className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
             />
-            <button className="cursor-pointer hover:text-black bg-black hover:bg-gray-200 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black">
+            <button className="cursor-pointer hover:text-black bg-black hover:bg-gray-200 text-white px-4 lg:px-8 py-2 text-lg font-semibold border-black">
               Download
             </button>
           </div>
 
-          <div className="flex md:hidden w-65  flex-col gap-2">
+          <div className="flex lg:hidden w-65  flex-col gap-2">
             <input
               type="text"
               placeholder="Email Address"
@@ -762,7 +762,7 @@ useEffect(() => {
     </div>
 
     {/* Right Image Box */}
-    <div className="relative flex flex-col md:min-h-[420px] min-h-[400px]">
+    <div className="relative flex flex-col lg:min-h-[420px] min-h-[400px]">
 
       <Image
         src="/3.jpg"
@@ -772,37 +772,37 @@ useEffect(() => {
       />
       <div className="absolute inset-0 bg-gray-500/50"></div>
 
-      <div className="absolute inset-0 bg-opacity-40 p-4 md:p-14 text-white flex flex-col h-full">
+      <div className="absolute inset-0 bg-opacity-40 p-4 lg:p-14 text-white flex flex-col h-full">
 
         {/* Content */}
         <div className="pb-24">
-          <p className="text-base md:text-[1.6rem] font-normal mb-6 pl-3 border-l-8 border-white">
+          <p className="text-base lg:text-[1.6rem] font-normal mb-6 pl-3 border-l-8 border-white">
             Download guide
           </p>
 
-          <h2 className="text-2xl md:text-[2.5rem] font-bold mb-4 md:mb-6">
+          <h2 className="text-2xl lg:text-[2.5rem] font-bold mb-4 lg:mb-6">
             How to buy a home
           </h2>
 
-          <p className="text-base md:text-[1.4rem] mb-4 md:mb-6">
+          <p className="text-base lg:text-[1.4rem] mb-4 lg:mb-6">
             The following guide to buying a property will explain how to position yourself to negotiate the best price, but importantly ensure you are the winning bidder when up against the competition.
           </p>
         </div>
 
         {/* Input Group - Responsive */}
-     <div className="absolute md:bottom-18 md:left-14 md:right-6 bottom-6 left-2 right-auto w-full">
-           <div className="hidden md:flex w-full  md:max-w-lg items-center">
+     <div className="absolute lg:bottom-18 lg:left-14 lg:right-6 bottom-6 left-2 right-auto w-full">
+           <div className="hidden lg:flex w-full  lg:max-w-lg items-center">
             <input
               type="text"
               placeholder="Email Address"
               className="w-full px-4 py-2 bg-white text-black text-lg outline-none"
             />
-            <button className="cursor-pointer hover:text-black bg-black hover:bg-gray-200 text-white px-4 md:px-8 py-2 text-lg font-semibold border-black">
+            <button className="cursor-pointer hover:text-black bg-black hover:bg-gray-200 text-white px-4 lg:px-8 py-2 text-lg font-semibold border-black">
               Download
             </button>
           </div>
 
-          <div className="flex md:hidden w-65  flex-col gap-2">
+          <div className="flex lg:hidden w-65  flex-col gap-2">
             <input
               type="text"
               placeholder="Email Address"
@@ -820,18 +820,18 @@ useEffect(() => {
   </div>
 
 </div>
-<div className="w-full px-6 md:px-12 lg:px-20 py-10">
+<div className="w-full px-6 lg:px-12 lg:px-20 py-10">
   {/* About Section */}
-  <div className="flex flex-col md:flex-row ">
+  <div className="flex flex-col lg:flex-row ">
     {/* Left Tab */}
-    <div className="w-full md:w-1/4">
+    <div className="w-full lg:w-1/4">
       <div className="bg-gray-200 border-gray-200 p-3 text-center font-medium">
        <p className='bg-white p-2 font-semibold text-lg'> About {agent.name || agent.fullName || '-'}</p>
       </div>
     </div>
 
     {/* Right Content */}
-    <div className="w-full md:w-3/4">
+    <div className="w-full lg:w-3/4">
       <div className="rounded-md shadow-md p-6">
         {/* Welcome Title */}
         <h2 className={`${dancing.className} text-3xl mb-4`}>
@@ -839,7 +839,7 @@ useEffect(() => {
 </h2>
 
         {/* Paragraph */}
-        <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6">
+        <p className="text-gray-700 text-base lg:text-lg leading-relaxed mb-6">
           {getAgentBio(agent)}
         </p>
 
@@ -851,18 +851,18 @@ useEffect(() => {
       </div>
       </div>
       </div>
-      {/* <div className="w-full px-6 md:px-12 lg:px-20 py-12">
+      {/* <div className="w-full px-6 lg:px-12 lg:px-20 py-12">
     
-      <h2 className="text-center text-xl md:text-3xl font-semibold mb-10">
+      <h2 className="text-center text-xl lg:text-3xl font-semibold mb-10">
         My customer reviews
       </h2>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
-        <div className=" rounded-xl shadow-md p-4 md:p-20 border border-gray-200 flex flex-col items-center text-center bg-white">
+        <div className=" rounded-xl shadow-md p-4 lg:p-20 border border-gray-200 flex flex-col items-center text-center bg-white">
           <FaQuoteLeft className="text-gray-300 text-4xl border-1 rounded-full p-1 bg-white shadow-md mb-4" />
-          <p className="text-gray-700 text-base md:text-lg  leading-relaxed">
+          <p className="text-gray-700 text-base lg:text-lg  leading-relaxed">
             Absolutely fabulous service received from {agent.name || agent.fullName || '-'} from the very first
             telephone contact! She was very supportive, helpful, professional
             and friendly. I do recommend her to anyone who is looking to sell or
@@ -871,9 +871,9 @@ useEffect(() => {
         </div>
 
        
-        <div className=" rounded-xl shadow-md p-4 md:p-20 text-lg border border-gray-200 flex flex-col items-center text-center bg-white">
+        <div className=" rounded-xl shadow-md p-4 lg:p-20 text-lg border border-gray-200 flex flex-col items-center text-center bg-white">
         <FaQuoteLeft className="text-gray-300 text-4xl border-1 rounded-full p-1 bg-white shadow-md mb-4" />
-          <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+          <p className="text-gray-700 text-base lg:text-lg leading-relaxed">
             My mum recently bought an apartment in Maidenhead through {agent.name || agent.fullName || '-'} and
             Keller Williams. {agent.name || agent.fullName || '-'} is a great independent estate agent who was
             very helpful throughout the whole process. I would not hesitate
@@ -883,7 +883,7 @@ useEffect(() => {
       </div>
     </div> */}
 
-    <p className="flex justify-center items-center text-2xl font-semibold mb-10 md:mb-12">
+    <p className="flex justify-center items-center text-2xl font-semibold mb-10 lg:mb-12">
   Properties from {agent.name || agent.fullName || '-'}
 </p>
 
@@ -915,8 +915,8 @@ useEffect(() => {
    
   </div>
 ) : (
-  <div className="px-4 md:px-20">
-    <div className="grid grid-cols-1  md:grid-cols-3 gap-6">
+  <div className="px-4 lg:px-20">
+    <div className="grid grid-cols-1  lg:grid-cols-3 gap-6">
       {(agentProperties.length > 0 ? agentProperties : properties).slice(0, visibleCount).map((property, idx) => (
         <div
           key={property._kw_meta?.id || property.id }
@@ -928,7 +928,7 @@ useEffect(() => {
           }}
         >
           {/* Image section */}
-          <div className="relative w-full h-50 md:h-60">
+          <div className="relative w-full h-50 lg:h-60">
             <Image
               src={
                 property.image ||

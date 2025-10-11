@@ -76,19 +76,19 @@ export default function NewsDetailPage() {
   return (
     <div>
       <div>
-    <div className="relative p-4 sm:p-6 md:p-8">
+    <div className="relative p-4 sm:p-6 lg:p-8">
       <Header />
 
-      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] md:w-[150px] md:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
+      <div className="absolute top-0 left-0 w-20 h-20 sm:w-[100px] sm:h-[100px] lg:w-[150px] lg:h-[150px] bg-[rgb(206,32,39,255)] z-0"></div>
 
       <div className="relative bg-gray-100 pb-10">
-      <div className="pt-32 sm:pt-32 md:pt-44 mx-4 md:mx-36">
+      <div className="pt-32 sm:pt-32 lg:pt-44 mx-4 lg:mx-36">
         <Link href="/ourCulture/news" className="text-blue-600 hover:underline mb-4 inline-block">&larr; {t("Back to News")}</Link>
-        <h1 className="md:text-3xl text-2xl font-bold mb-4">{blog.title}</h1>
+        <h1 className="lg:text-3xl text-2xl font-bold mb-4">{blog.title}</h1>
         
         {/* Article Metadata */}
         
-        <div className="w-full aspect-[4/3] md:aspect-[14/6] relative mb-6">
+        <div className="w-full aspect-[4/3] lg:aspect-[14/6] relative mb-6">
   <Image
   src={
     blog.coverImage
@@ -107,7 +107,7 @@ export default function NewsDetailPage() {
 
 </div>
 
-        <div className="text-lg text-gray-800 md:px-20 md:mt-20">
+        <div className="text-lg text-gray-800 lg:px-20 lg:mt-20">
           <div className="mb-4 text-sm text-gray-600">
             {blog.location && <span>{blog.location} • </span>}
             {blog.eventDate && (

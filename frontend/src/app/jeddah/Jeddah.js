@@ -1,4 +1,3 @@
-
 'use client'
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/header';
@@ -236,7 +235,7 @@ const Jeddah = () => {
           }
         } catch (error) {
           if (error.name === 'AbortError') {
-            console.warn('Jeddah page fetch timeout');
+            //console.warn('Jeddah page fetch timeout');
           }
           // On error, try to use cached data if available
           if (typeof window !== 'undefined') {
@@ -247,7 +246,7 @@ const Jeddah = () => {
                 setPage(parsedData.page);
                 setHeroSrc(parsedData.heroSrc);
               } catch (parseError) {
-                console.warn('Error parsing cached jeddah data:', parseError);
+                //console.warn('Error parsing cached jeddah data:', parseError);
               }
             }
           }
@@ -286,7 +285,7 @@ const Jeddah = () => {
             sessionStorage.setItem('jeddah_page_session', cachedData);
           }
         } catch (e) {
-          console.warn('Error reading cached jeddah data in client effect:', e);
+         // console.warn('Error reading cached jeddah data in client effect:', e);
         }
       }
     }, [heroSrc,page]); // Run once on mount
@@ -301,19 +300,19 @@ const Jeddah = () => {
          }
        /> 
         {/* Combined Section */}
-        <section className="mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <section className="mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Left Side */}
-      <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-        <h1 className="md:text-3xl text-2xl font-semibold leading-snug">
+      <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}> 
+        <h1 className="lg:text-3xl text-2xl font-semibold leading-snug">
           {t("Shape Your")} <br></br><span className="text-[rgb(206,32,39,255)]">{t("Future")}</span> {t("in Real Estate")}
         </h1>
-        <p className="md:text-lg text-md leading-relaxed">
+        <p className="lg:text-lg text-md leading-relaxed">
   {t(`Are you ready to unlock your potential in the real estate industry? Join us at Keller Williams Saudi Arabia Career Night to learn more about how you can become a successful real estate agent with the world's largest real estate franchise.`)}
 </p>
 
 
         {/* Contact Info */}
-        <div className="flex flex-col md:flex-row md:gap-8 gap-4 justify-center my-8 text-base text-gray-700">
+        <div className="flex flex-col lg:flex-row lg:gap-8 gap-4 justify-center my-8 text-base text-gray-700">
   <div className="flex items-center gap-2">
     <span className="text-lg">📞</span>
     <a href="tel:+966500100000">+966 500100000</a>
@@ -428,25 +427,25 @@ const Jeddah = () => {
         </form>
       </div>
     </section>
-        <div className="min-h-screen bg-white mt-4 md:mt-20">
+        <div className="min-h-screen bg-white mt-4 lg:mt-20">
         {/* Changed outer container to stack on mobile */}
-        <div className={`flex flex-col md:flex-row border-t border-b border-black`}>
+        <div className={`flex flex-col lg:flex-row border-t border-b border-black`}>
           
           {/* Left Section - Full width on mobile, sticky 50% on desktop */}
-          <div className={`w-full md:w-1/2 flex justify-center items-center 
-                         md:sticky md:top-0 top-20 h-auto md:h-screen 
-                          ${isRTL?'md:border-l':'md:border-r'} border-black
-                         py-4 md:py-0`}>
+          <div className={`w-full lg:w-1/2 flex justify-center items-center 
+                         lg:sticky lg:top-0 top-20 h-auto lg:h-screen 
+                          ${isRTL?'lg:border-l':'lg:border-r'} border-black
+                         py-4 lg:py-0`}>
        
-            <div className="text-center mb-10 md:mb-0 px-4">
-              <h2 className="text-2xl md:text-3xl font-semibold mb-2">{t("OUR TEAM")}</h2>
-              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] mb-2 mx-auto border-0 mt-4 md:mt-10"></div>
-              <p className="text-lg tracking-wider mt-4 md:mt-10">{t("Jeddah")}</p>
+            <div className="text-center mb-10 lg:mb-0 px-4">
+              <h2 className="text-2xl lg:text-3xl font-semibold mb-2">{t("OUR TEAM")}</h2>
+              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] mb-2 mx-auto border-0 mt-4 lg:mt-10"></div>
+              <p className="text-lg tracking-wider mt-4 lg:mt-10">{t("Jeddah")}</p>
             </div>
           </div>
       
           {/* Right Section - Full width on mobile, 50% on desktop */}
-          <div className="w-full md:w-1/2">
+          <div className="w-full lg:w-1/2">
   {loading && (
     <div className="flex justify-center items-center h-60">
       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[rgb(206,32,39,255)] border-solid"></div>
@@ -457,7 +456,7 @@ const Jeddah = () => {
   {!loading && !error && teamMembers.map((agent, idx) => (
     <React.Fragment key={agent._id || idx}>
       <article>
- <div className={`cursor-pointer p-4 md:mx-3 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-start gap-4 relative`}
+ <div className={`cursor-pointer p-4 lg:mx-3 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-start gap-4 relative`}
             onClick={(e) => {
               e.stopPropagation();
               localStorage.setItem('selectedAgent', JSON.stringify(agent));
@@ -466,7 +465,7 @@ const Jeddah = () => {
           
           >
         {/* Agent Image */}
-         <div className="w-32 h-32 md:w-48 md:h-48 flex-shrink-0 relative md:mx-3 rounded-lg overflow-hidden">
+         <div className="w-32 h-32 lg:w-48 lg:h-48 flex-shrink-0 relative lg:mx-3 rounded-lg overflow-hidden">
          
             <Image 
               src={
@@ -484,20 +483,20 @@ const Jeddah = () => {
           
         </div>
             {/* Vertical Divider */}
-            <div className="hidden md:block w-px bg-gray-300 mx-2" />
+            <div className="hidden lg:block w-px bg-gray-300 mx-2" />
             {/* Agent Info */}
-            <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}> 
             <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4 ">
-                <h3 className="text-lg sm:text-lg md:text-2xl font-semibold tracking-[0.1em] uppercase md:mb-2">{t(agent.name)}</h3>
+                <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold tracking-[0.1em] uppercase lg:mb-2">{t(agent.name)}</h3>
                 {/* <p className="text-sm text-gray-500 ml-auto">{agent.city}</p> */}
               </div>
-              <p className="md:text-sm text-[0.7rem] text-[rgb(206,32,39,255)]  mb-2 md:mb-2 break-all">{t(agent.jobTitle)}</p>
+              <p className="lg:text-sm text-[0.7rem] text-[rgb(206,32,39,255)]  mb-2 lg:mb-2 break-all">{t(agent.jobTitle)}</p>
               <div className="mt-6 space-y-2">
-  <p className="flex items-center gap-2 md:text-base text-sm mb-2 md:mb-2 break-all">
+  <p className="flex items-center gap-2 lg:text-base text-sm mb-2 lg:mb-2 break-all">
     <FaPhoneAlt className="text-gray-600" />
     {agent.phone}
   </p>
-  <p className="flex items-center gap-2 md:text-base text-sm mb-4 md:mb-12 break-all">
+  <p className="flex items-center gap-2 lg:text-base text-sm mb-4 lg:mb-12 break-all">
     <FaEnvelope className="text-gray-600" />
     {agent.email}
   </p>
@@ -510,12 +509,11 @@ const Jeddah = () => {
          alt={t("Keller Williams")}
          width={180}
          height={50}
-         className="mb-4 w-28 md:w-44 lg:w-48 h-auto"
+         className="mb-4 w-28 lg:w-44 lg:w-48 h-auto"
        />
      </div>
      
-
-
+     
               
           
           </article>
@@ -533,13 +531,13 @@ const Jeddah = () => {
         </div>
         </div>
        
-             <div className="flex justify-center py:4 md:py-0">
+             <div className="flex justify-center py:4 lg:py-0">
                     <Image
                       src="/howwillyouthink.png"
                       alt={t("How Will You Thrive")}
                       width={800}
                       height={400}
-                      className="w-70 h-20 md:w-[950px] md:h-[400px] object-contain"
+                      className="w-70 h-20 lg:w-[950px] lg:h-[400px] object-contain"
                     />
                   </div>
                   

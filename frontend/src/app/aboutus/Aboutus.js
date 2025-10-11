@@ -62,7 +62,7 @@ export default function Aboutus() {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing session cache:', e);
+              //console.warn('Error parsing session cache:', e);
             }
           }
 
@@ -80,7 +80,7 @@ export default function Aboutus() {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing localStorage cache:', e);
+              //console.warn('Error parsing localStorage cache:', e);
             }
           }
         }
@@ -146,14 +146,14 @@ export default function Aboutus() {
 
           // Show update notification for background updates
           if (isBackgroundUpdate) {
-            console.log('✅ About Us page updated with latest data');
+            //console.log('✅ About Us page updated with latest data');
           }
 
         } catch (error) {
           if (error.name === 'AbortError') {
-            console.warn('About us page fetch timeout');
+           // console.warn('About us page fetch timeout');
           }
-          console.error('Error fetching about us page:', error);
+          //console.error('Error fetching about us page:', error);
           
           if (!isBackgroundUpdate) {
             // Try to use expired cache if API fails
@@ -165,7 +165,7 @@ export default function Aboutus() {
                   setPage(parsedData.page);
                   setHeroSrc(parsedData.heroSrc);
                 } catch (parseError) {
-                  console.warn('Error parsing cached about us data:', parseError);
+                  //console.warn('Error parsing cached about us data:', parseError);
                 }
               }
             }
@@ -191,7 +191,7 @@ export default function Aboutus() {
         }
 
       } catch (err) {
-        console.error('Error in fetchPageHero:', err);
+        //console.error('Error in fetchPageHero:', err);
         setLoading(false);
       }
     };
@@ -228,7 +228,7 @@ export default function Aboutus() {
           sessionStorage.setItem('aboutus_page_session', cachedData);
         }
       } catch (e) {
-        console.warn('Error reading cached about us data in client effect:', e);
+        //console.warn('Error reading cached about us data in client effect:', e);
       }
     }
   }, [heroSrc,page]); // Run once on mount
@@ -301,19 +301,19 @@ export default function Aboutus() {
         
       />
 
-      <div className="px-10 md:px-20 py-2 text-black bg-white">
+  <div className="px-10 lg:px-20 py-2 text-black bg-white">
         {/* Heading + Image on same line */}
-        <div className="md:flex md:items-start md:justify-between md:gap-10">
+  <div className="lg:flex lg:items-start lg:justify-between lg:gap-10">
           {/* Text Section */}
-          <div className="md:w-2/3">
+          <div className="lg:w-2/3">
             <div className="mb-6">
                 <p className='text-[rgb(206,32,39,255)] text-xl py-4'>{t('About Us')}</p>
-              <h2 className={`text-2xl md:text-3xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+              <h2 className={`text-2xl lg:text-3xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}> 
                 {t('Empowering Real Estate Across Saudi Arabia')}
               </h2>
             </div>
 
-            <div className={`space-y-4 text-md md:text-lg leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`space-y-4 text-md lg:text-lg leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}> 
               <p>{t('KW Saudi Arabia — Building Dreams, Creating Opportunities')}</p>
               <p>
                 {t("KW Saudi Arabia is part of Keller Williams, the world's largest real estate technology and franchise company. Founded on values of integrity, excellence, and innovation, KW Saudi Arabia is transforming how people buy, sell, and invest in real estate across the Kingdom.")}
@@ -331,7 +331,7 @@ export default function Aboutus() {
           </div>
 
           {/* Video Section */}
-           <div className="md:w-1/3 md:mt-30 mt-10">
+           <div className="lg:w-1/3 lg:mt-30 mt-10">
       <video
         ref={videoRef}
         src='https://dev1.w4u.us/About_us_ssection%20video.mp4'
@@ -346,10 +346,10 @@ export default function Aboutus() {
         </div>
 
         {/* Bottom Grid Section */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 mt-4 md:mt-16 ${isRTL ? 'text-right' : 'text-left'} mb-10 md:mb-20`}>
+  <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4 lg:mt-16 ${isRTL ? 'text-right' : 'text-left'} mb-10 lg:mb-20`}>
   {/* First Column */}
   <div>
-    <h3 className="text-lg md:text-3xl md:leading-16 tracking-[0.1rem]">
+  <h3 className="text-lg lg:text-3xl lg:leading-16 tracking-[0.1rem]">
       {t('Our Operating ')} <br />
       {t('Principles')}
     </h3>
@@ -357,32 +357,32 @@ export default function Aboutus() {
 
   {/* Second Column */}
   <div>
-    <h3 className="font-semibold md:text-xl text-lg py-2 md:py-6 text-[rgb(206,32,39,255)]">{t('Our Mission')}</h3>
-    <p className='md:text-lg text-md'>
+  <h3 className="font-semibold lg:text-xl text-lg py-2 lg:py-6 text-[rgb(206,32,39,255)]">{t('Our Mission')}</h3>
+  <p className='lg:text-lg text-md'>
       {t('To Build Careers Worth Having, Businesses Worth Owning, Lives Worth Living, Experiences Worth Giving, And Legacies Worth Leaving.')}
     </p>
   </div>
 
   {/* Third Column */}
   <div>
-    <h3 className="font-semibold md:text-xl text-lg py-2 md:py-6 text-[rgb(206,32,39,255)]">{t('Our Vision')}</h3>
-    <p className='md:text-lg text-md'>
+  <h3 className="font-semibold lg:text-xl text-lg py-2 lg:py-6 text-[rgb(206,32,39,255)]">{t('Our Vision')}</h3>
+  <p className='lg:text-lg text-md'>
       {t('To Be The Real Estate Company Of Choice For Agents And Their Customers.')}
     </p>
   </div>
 
   {/* Extra Content - Second Column */}
-  <div className="md:col-start-2">
-    <h3 className="font-semibold md:text-xl text-lg py-2 md:py-6 text-[rgb(206,32,39,255)]">{t('Our Perspective')}</h3>
-    <p className='md:text-lg text-md'>
+  <div className="lg:col-start-2">
+    <h3 className="font-semibold lg:text-xl text-lg py-2 lg:py-6 text-[rgb(206,32,39,255)]">{t('Our Perspective')}</h3>
+    <p className='lg:text-lg text-md'>
     {t("A Technology Company That Provides The Real Estate Platform That Our Agents' Buyers And Sellers Prefer. Keller Williams Thinks Like A Top Producer, Acts Like A Trainer-consultant, And Focuses All Its Activities On Service, Productivity, And Profitability.")}
     </p>
   </div>
 
   {/* Extra Content - Third Column */}
   <div>
-    <h3 className="font-semibold md:text-xl text-lg py-2 md:py-6 text-[rgb(206,32,39,255)]">{t('WI4C2TES')}</h3>
-    <p className='md:text-lg text-md'>
+    <h3 className="font-semibold lg:text-xl text-lg py-2 lg:py-6 text-[rgb(206,32,39,255)]">{t('WI4C2TES')}</h3>
+    <p className='lg:text-lg text-md'>
     {t('Our Belief System Win-win: Or No Deal Integrity: Do The Right Thing Customers: Always Come First Commitment: In All Things Communication: Seek First To Understandcreativity: Ideas Before Results Teamwork: Together Everyone Achieves More Trust: Starts With Honesty Equity: Opportunities For Allsuccess: Results Through People.')}
     </p>
   </div>
@@ -390,49 +390,49 @@ export default function Aboutus() {
 
       </div>
  <div>
-      <div className="pt-4 mx-10 md:mx-10">
-        <div className="flex flex-col md:flex-row md:px-20 items-start">
-          <div className="md:w-140 h-[40vh] w-full md:h-full items-start">
+      <div className="pt-4 mx-10 lg:mx-10">
+        <div className="flex flex-col lg:flex-row lg:px-20 lg:items-start justify-center items-center">
+          <div className="lg:w-140 h-[40vh] md:h-[60vh] w-full lg:h-full lg:items-start flex justify-center items-center">
             <Image
               src='/ceoimage.png'
               alt="CEO"
               width={800}
               height={500}
-              className="h-[40vh] md:h-full w-full md:w-140 border border-gray-400"
+              className="h-[40vh] lg:h-full md:h-[60vh] w-full md:w-140 border border-gray-400"
             />
           </div>
 
-          <div className={`w-full md:w-full flex flex-col justify-center items-center text-center mt-10 px-2 md:px-10 ${isRTL ? 'text-right' : 'text-center'}`}>
-            <h1 className="text-xl md:text-2xl font-semibold tracking-wide text-[rgb(206,32,39,255)]">
+          <div className={`w-full lg:w-full flex flex-col justify-center items-center text-center mt-10 px-2 lg:px-10 ${isRTL ? 'text-right' : 'text-center'}`}> 
+            <h1 className="text-xl lg:text-2xl font-semibold tracking-wide text-[rgb(206,32,39,255)]">
               {t('MEET OUR CEO')}
             </h1>
-            <p className="mt-4 md:text-lg text-md md:leading-relaxed leading-normal mx-w-sm">
+            <p className="mt-4 lg:text-lg text-md lg:leading-relaxed leading-normal mx-w-sm">
               {t('More than ever, we want to thank and recognize our agents and partners for diligently bringing their very best when their clients need it most. As a company built by agents, and for agents, we wake up every day asking ourselves how we can best support them.')}
             </p>
-            <p className="mt-4 md:text-lg text-md md:leading-relaxed leading-normal mx-w-sm">
+            <p className="mt-4 lg:text-lg text-md lg:leading-relaxed leading-normal mx-w-sm">
               {t('KW has cultivated an agent-centric, technology-driven, and education-based culture that rewards agents as stakeholders.')}
             </p>
-            <p className="mt-4 md:text-lg text-md md:leading-relaxed leading-normal mx-w-sm">
+            <p className="mt-4 lg:text-lg text-md lg:leading-relaxed leading-normal mx-w-sm">
               {t('Regional team members, market center team members, and agent partners. No one succeeds alone, and this is truly a shared moment in recognition of our continuous achievements together.')}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="min-h-screen bg-white mt-6 md:mt-20">
-        <div className="flex flex-col md:flex-row border-t border-b md:border-r border-black">
-        <div className={`w-full md:w-1/2 flex justify-center items-center 
-                         md:sticky md:top-0 top-20 h-auto md:h-screen 
-                          ${isRTL?'md:border-l':'md:border-r'} border-black
-                         py-4 md:py-0`}>
-            <div className="text-center px-4 mb-10 md:mb-0">
-              <h2 className={`text-3xl md:text-4xl md:font-normal font-semibold mb-2 `}>{t('OUR TEAM')}</h2>
-              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] border-0 mb-2 mx-auto mt-4 md:mt-10"></div>
-              <p className={`text-lg tracking-wider mt-4 md:mt-10`}>{t('Regional Team')}</p>
+      <div className="min-h-screen bg-white mt-6 lg:mt-20">
+        <div className="flex flex-col lg:flex-row border-t border-b lg:border-r border-black">
+        <div className={`w-full lg:w-1/2 flex justify-center items-center 
+                         lg:sticky lg:top-0 top-20 h-auto lg:h-screen 
+                          ${isRTL?'lg:border-l':'lg:border-r'} border-black
+                         py-4 lg:py-0`}>
+            <div className="text-center px-4 mb-10 lg:mb-0">
+              <h2 className={`text-3xl lg:text-4xl lg:font-normal font-semibold mb-2 `}>{t('OUR TEAM')}</h2>
+              <div className="w-30 h-0.5 bg-[rgb(206,32,39,255)] border-0 mb-2 mx-auto mt-4 lg:mt-10"></div>
+              <p className={`text-lg tracking-wider mt-4 lg:mt-10`}>{t('Regional Team')}</p>
             </div>
           </div>
 
-           <div className="w-full md:w-1/2">
+           <div className="w-full lg:w-1/2">
             {loading && (
               <div className="flex justify-center items-center h-60">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[rgb(206,32,39,255)] border-solid"></div>
@@ -443,7 +443,7 @@ export default function Aboutus() {
             {!loading && !error && teamMembers.map((agent, idx) => (
               <React.Fragment key={agent._id || idx}>
           <article>
-           <div className={`cursor-pointer p-4 md:mx-3 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-start gap-4 relative`}
+           <div className={`cursor-pointer p-4 lg:mx-3 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-start gap-4 relative`}
                       onClick={(e) => {
                         e.stopPropagation();
                         localStorage.setItem('selectedAgent', JSON.stringify(agent));
@@ -452,7 +452,7 @@ export default function Aboutus() {
                     
                     >
                   {/* Agent Image */}
-                   <div className="w-32 h-32 md:w-48 md:h-48 flex-shrink-0 relative md:mx-3 rounded-lg overflow-hidden">
+                   <div className="w-32 h-32 lg:w-48 lg:h-48 flex-shrink-0 relative lg:mx-3 rounded-lg overflow-hidden">
                    
                       <Image 
                                    src={
@@ -471,20 +471,20 @@ export default function Aboutus() {
                     
                   </div>
                       {/* Vertical Divider */}
-                      <div className="hidden md:block w-px bg-gray-300 mx-2" />
+                      <div className="hidden lg:block w-px bg-gray-300 mx-2" />
                       {/* Agent Info */}
                       <div className="flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4 ">
-                          <h3 className="text-lg sm:text-lg md:text-2xl font-semibold tracking-[0.1em] uppercase md:mb-2">{agent.name}</h3>
+                          <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold tracking-[0.1em] uppercase lg:mb-2">{agent.name}</h3>
                           {/* <p className="text-sm text-gray-500 ml-auto">{agent.city}</p> */}
                         </div>
-                        <p className="md:text-sm text-[0.7rem] text-[rgb(206,32,39,255)]  mb-2 md:mb-2 break-all">{agent.jobTitle}</p>
+                        <p className="lg:text-sm text-[0.7rem] text-[rgb(206,32,39,255)]  mb-2 lg:mb-2 break-all">{agent.jobTitle}</p>
                         <div className="mt-6 space-y-2">
-            <p className="flex items-center gap-2 md:text-base text-sm mb-2 md:mb-2 break-all">
+            <p className="flex items-center gap-2 lg:text-base text-sm mb-2 lg:mb-2 break-all">
               <FaPhoneAlt className="text-gray-600" />
               {agent.phone}
             </p>
-            <p className="flex items-center gap-2 md:text-base text-sm mb-4 md:mb-12 break-all">
+            <p className="flex items-center gap-2 lg:text-base text-sm mb-4 lg:mb-12 break-all">
               <FaEnvelope className="text-gray-600" />
               {agent.email}
             </p>
@@ -497,7 +497,7 @@ export default function Aboutus() {
               alt={t("Keller Williams")}
               width={180}
               height={50}
-              className="mb-4 w-28 md:w-44 lg:w-48 h-auto"
+              className="mb-4 w-28 lg:w-44 lg:w-48 h-auto"
             />
           </div>
           
@@ -520,17 +520,17 @@ export default function Aboutus() {
       </div>
     </div>
     <div>
-      <main className="px-4 py-2 md:py-6 md:mt-2">
-        <div className="max-w-full mx-auto text-center md:mt-14">
-          <p className="text-2xl md:text-4xl font-normal">
+      <main className="px-4 py-2 lg:py-6 lg:mt-2">
+        <div className="max-w-full mx-auto text-center lg:mt-14">
+          <p className="text-2xl lg:text-4xl font-normal">
             {t('KW SAUDI ARABIA')}
           </p>
-          <hr className="w-48 md:w-96 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-6 md:mt-16" />
-          <p className="mt-4 md:mt-8 md:text-base text-sm">{t('Together We Do More')}</p>
-          <p className="px-4 md:px-0 md:text-base text-sm">{t('Keller Williams Is There To Help At Every Big Step In The Realestate Journey.')}</p>
-          <div className="flex justify-center md:justify-center mt-6 md:mt-10">
+          <hr className="w-48 lg:w-96 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-6 lg:mt-16" />
+          <p className="mt-4 lg:mt-8 lg:text-base text-sm">{t('Together We Do More')}</p>
+          <p className="px-4 lg:px-0 lg:text-base text-sm">{t('Keller Williams Is There To Help At Every Big Step In The Realestate Journey.')}</p>
+          <div className="flex justify-center lg:justify-center mt-6 lg:mt-10">
             <button className="
-              cursor-pointer md:px-20 px-10 bg-[rgb(206,32,39,255)] text-white py-2 md:py-3 rounded-full text-sm
+              cursor-pointer lg:px-20 px-10 bg-[rgb(206,32,39,255)] text-white py-2 lg:py-3 rounded-full text-sm
               relative overflow-hidden
               group transition-all duration-300
               hover:pr-20 hover:pl-16
@@ -550,13 +550,13 @@ export default function Aboutus() {
           </div>
         </div>
       </main>
-      <div className="order-1 md:order-2 flex flex-col items-center justify-center py-2 md:py-0">
+      <div className="order-1 lg:order-2 flex flex-col items-center justify-center py-2 lg:py-0">
         <Image
           src="/howwillyouthink.png"
           alt={t('How Will You Thrive')}
           width={800}
           height={400}
-          className="w-70 h-20 md:w-[950px] md:h-[400px] object-contain"
+          className="w-70 h-20 lg:w-[950px] lg:h-[400px] object-contain"
         />
       </div>
     </div>

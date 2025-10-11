@@ -44,7 +44,7 @@ export default function NotificationList() {
   const containerSX = { pl: 7 };
 
   return (
-    <List sx={{ width: '100%', maxWidth: { xs: 300, md: 330 }, py: 0 }}>
+    <List sx={{ width: '100%', maxWidth: { xs: 300, lg: 330 }, py: 0 }}>
       <ListItemWrapper>
         <ListItem
           alignItems="center"

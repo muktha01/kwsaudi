@@ -101,7 +101,7 @@ export default function SearchSection() {
 
   return (
     <>
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+      <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
         <PopupState variant="popper" popupId="demo-popup-popper">
           {(popupState) => (
             <>
@@ -135,7 +135,7 @@ export default function SearchSection() {
           )}
         </PopupState>
       </Box>
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+      <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
         <OutlinedInput
           id="input-search-header"
           value={value}
@@ -155,7 +155,7 @@ export default function SearchSection() {
           }
           aria-describedby="search-helper-text"
           slotProps={{ input: { 'aria-label': 'weight', sx: { bgcolor: 'transparent', pl: 0.5 } } }}
-          sx={{ width: { md: 250, lg: 434 }, ml: 2, px: 2 }}
+          sx={{ width: { lg: 250, lg: 434 }, ml: 2, px: 2 }}
         />
       </Box>
     </>

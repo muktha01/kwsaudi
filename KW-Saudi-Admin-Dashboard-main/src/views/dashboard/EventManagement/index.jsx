@@ -79,7 +79,7 @@ const EventManagement = () => {
 
   const showMessage = (type, message) => {
     // You can implement a proper notification system here
-    console.log(`${type}: ${message}`);
+    //console.log(`${type}: ${message}`);
   };
 
   const handleInputChange = (e) => {

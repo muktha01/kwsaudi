@@ -8,6 +8,7 @@ import Footer from '@/components/newfooter';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { cache } from '@/utils/hybridCache';
 
 // Utility function to strip HTML tags and get plain text
 const stripHtmlTags = (html) => {
@@ -25,6 +26,14 @@ export default function News(){
   const [heroSrc, setHeroSrc] = useState('/'); 
   const [page, setPage] = useState('');
   useEffect(() => {
+    const cacheKey = 'news-list-v1';
+    const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      setBlogs(cached);
+      setLoading(false);
+      return;
+    }
     const fetchBlogs = async () => {
       try {
         setLoading(true);
@@ -38,6 +47,7 @@ export default function News(){
         
         const data = await res.json();
         setBlogs(data);
+        cache.set(cacheKey, data, CACHE_TTL);
         console.log(data.coverImage);
         
       } catch (error) {
@@ -110,7 +120,7 @@ export default function News(){
 
       {/* Blog Cards */}
       {!loading && !error && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 p-4 md:px-40">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 py-4 mx-4 sm:mx-10 md:mx-10 lg:mx-10 xl:mx-36 2xl:mx-36">
     {blogs.length === 0 ? (
       <div className="col-span-full text-center py-20">
         <div className="text-lg text-gray-600">{t('No news articles found.')}</div>
@@ -129,7 +139,7 @@ export default function News(){
           const cleanPath = post.coverImage.replace(/\\/g, "/");
           return cleanPath.startsWith("http")
             ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+          : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`
         })()
       : "/event.png"
   }
@@ -147,7 +157,7 @@ export default function News(){
                 {new Date(post.createdAt).toLocaleDateString()}
               </p>
             )}
-            <h3 className="md:text-2xl text-xl mb-2 font-semibold line-clamp-2">
+            <h3 className="lg:text-2xl text-xl mb-2 font-semibold line-clamp-2">
               {post.title}
             </h3>
             <p className="text-gray-600 text-base line-clamp-3 mb-3">

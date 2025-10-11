@@ -76,7 +76,7 @@ const Joinus = (props) => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing session cache:', e);
+              //console.warn('Error parsing session cache:', e);
             }
           }
 
@@ -94,7 +94,7 @@ const Joinus = (props) => {
               setHeroSrc(parsedData.heroSrc);
               return true; // Cached data was shown
             } catch (e) {
-              console.warn('Error parsing localStorage cache:', e);
+             // console.warn('Error parsing localStorage cache:', e);
             }
           }
         }
@@ -156,14 +156,14 @@ const Joinus = (props) => {
 
           // Show update notification for background updates
           if (isBackgroundUpdate) {
-            console.log('✅ Join Us page updated with latest data');
+           // console.log('✅ Join Us page updated with latest data');
           }
 
         } catch (error) {
           if (error.name === 'AbortError') {
             console.warn('Join Us page fetch timeout');
           }
-          console.error('Error fetching join us page:', error);
+          //console.error('Error fetching join us page:', error);
           
           if (!isBackgroundUpdate) {
             // Try to use expired cache if API fails
@@ -175,7 +175,7 @@ const Joinus = (props) => {
                   setPage(parsedData.page);
                   setHeroSrc(parsedData.heroSrc);
                 } catch (parseError) {
-                  console.warn('Error parsing cached join us data:', parseError);
+                  //console.warn('Error parsing cached join us data:', parseError);
                 }
               }
             }
@@ -197,7 +197,7 @@ const Joinus = (props) => {
         }
 
       } catch (err) {
-        console.error('Error in fetchPageHero:', err);
+        //console.error('Error in fetchPageHero:', err);
       }
     };
 
@@ -230,19 +230,19 @@ const Joinus = (props) => {
         image={'/joinus.png'}
       ></Box>
  
-      <div className=" px-10 md:pl-20">
-        <div className="grid md:grid-cols-2 gap-0 items-start ">
+      <div className=" px-10 lg:pl-20">
+        <div className="grid lg:grid-cols-2 gap-0 items-start ">
           {/* Left Column */}
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-semibold md:py-5 text-black">
+              <h2 className="text-2xl lg:text-3xl font-semibold lg:py-5 text-black">
                 {t('Shape Your')} <br />
                 <span className="text-[rgb(206,32,39,255)]">{t('Future')}</span>
                 {" "}{t('in Real Estate')}
               </h2>
              <p
-  className={`mt-4 md:text-lg text-md text-gray-700 
-    ${isRTL ? 'md:pl-50 text-right' : 'md:pr-50 text-left'}`}
+  className={`mt-4 lg:text-lg text-md text-gray-700 
+    ${isRTL ? 'lg:pl-50 text-right' : 'lg:pr-50 text-left'}`}
 >
 
                 {t('Are you ready to unlock your potential in the real estate industry? Join us at Keller Williams Saudi Arabia Career Night to learn more about how you can become a successful real estate agent with the world\'s largest real estate franchise.')}
@@ -254,15 +254,15 @@ const Joinus = (props) => {
               <ul className="text-gray-700 space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-[rgb(206,32,39,255)] font-bold mt-1">✓</span>
-                  <span className='md:text-lg text-md'>{t('One-of-a-kind culture')}</span>
+                  <span className='lg:text-lg text-md'>{t('One-of-a-kind culture')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[rgb(206,32,39,255)] font-bold mt-1">✓</span>
-                  <span className='md:text-lg text-md'>{t('Limitless earning potential')}</span>
+                  <span className='lg:text-lg text-md'>{t('Limitless earning potential')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[rgb(206,32,39,255)] font-bold mt-1">✓</span>
-                  <span className='md:text-lg text-md'>{t('Industry-leading technology')}</span>
+                  <span className='lg:text-lg text-md'>{t('Industry-leading technology')}</span>
                 </li>
               </ul>
             </div>
@@ -346,7 +346,7 @@ const Joinus = (props) => {
       </div>
      
           
-          <div className="flex justify-center py-2 md:py-0">
+          <div className="flex justify-center py-2 lg:py-0">
                    <Image
                      src="/howwillyouthink.png"
                      alt="How Will You Thrive"
@@ -356,7 +356,7 @@ const Joinus = (props) => {
                    />
                  </div>
            
-                 {/* <hr className="w-8/12 md:w-5/12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-2 md:mt-14 mb-10" /> */}
+                 {/* <hr className="w-8/12 lg:w-5/12 mx-auto bg-[rgb(206,32,39,255)] border-0 h-[1.5px] mt-2 lg:mt-14 mb-10" /> */}
       
       <NewFooter></NewFooter>
     </div>

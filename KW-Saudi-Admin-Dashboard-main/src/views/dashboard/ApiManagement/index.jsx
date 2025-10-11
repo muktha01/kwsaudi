@@ -18,7 +18,7 @@ const HeaderFooterPage = () => {
   // Fetch initial data
   useEffect(() => {
     setLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/api-management/`)
+    fetch(`${import.meta.env.VITE_API_URL}/api-management`)
       .then((res) => res.json())
       .then((data) => {
         setHeaderContent(data.header || '');
@@ -41,7 +41,7 @@ const HeaderFooterPage = () => {
     };
     try {
       // Use PUT to update (or POST for first time)
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api-management/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api-management`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

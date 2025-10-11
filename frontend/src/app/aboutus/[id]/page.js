@@ -15,7 +15,7 @@ export async function generateMetadata() {
     };
   } catch (err) {
     // No fallback; metadata will be undefined if API fails
-    console.error('Failed to fetch SEO:', err);
+   // console.error('Failed to fetch SEO:', err);
     return {};
   }
 }
