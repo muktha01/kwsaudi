@@ -36,6 +36,9 @@ dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 
 const app = express();
 
+// Add this line to fix proxy issues
+app.set('trust proxy', true);
+
 // Production middleware
 app.use(compression()); // Compress responses
 app.use(helmet()); // Security headers
@@ -48,8 +51,10 @@ const limiter = rateLimit({
     error: 'Too many requests from this IP, please try again later.',
     retryAfter: '1 minute'
   },
+  trustProxy: true, // Add this line
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Remove the keyGenerator line - it causes IPv6 errors
 });
 
 // Stricter rate limiting for authentication endpoints
@@ -58,8 +63,9 @@ const authLimiter = rateLimit({
   max: 20, // limit each IP to 5 login attempts per windowMs
   message: {
     error: 'Too many authentication attempts, please try again later.',
-    retryAfter: '15 minutes'
+    retryAfter: '10 minutes'
   },
+  trustProxy: true, // ADD THIS LINE
   skipSuccessfulRequests: true
 });
 

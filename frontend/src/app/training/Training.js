@@ -313,7 +313,7 @@ export default function Training() {
     <div className="flex flex-col lg:flex-row items-center lg:items-center">
 
       {/* Left side - Books */}
-      <div className={`w-full flex justify-center  ${isRTL ? 'lg:pr-0' : 'lg:pr-60'}  lg:justify-start mb-8 lg:mb-0`}>
+      <div className={`w-full flex justify-center  ${isRTL ? 'lg:pr-0 lg:pl-60' : 'lg:pl-0 lg:pr-60'}  lg:justify-start mb-8 lg:mb-0`}>
         <div className="flex">
           <Image
             src="/bookblue.png"

@@ -34,13 +34,26 @@ export const login = async (req, res) => {
         admin = await Admin.findOne({ phoneNumber });
       }
       const token = generateToken(admin._id);
-      res.cookie('token', token, {
+      // Set secure HTTP-only cookie with proper domain handling
+      const cookieConfig = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/'
-      });
+      };
+      
+      // Set domain based on request origin to handle both direct and proxy requests
+      if (process.env.NODE_ENV === 'production') {
+        const origin = req.get('origin') || req.get('referer');
+        if (origin && origin.includes('kwsaudiarabia.com')) {
+          cookieConfig.domain = '.kwsaudiarabia.com'; // For reverse proxy
+        } else {
+          cookieConfig.domain = '.kw-saudiarabia.com'; // For direct admin access
+        }
+      }
+      
+      res.cookie('token', token, cookieConfig);
       return res.status(200).json({
         success: true,
         message: 'Superadmin login successful',
@@ -86,14 +99,26 @@ export const login = async (req, res) => {
     const token = generateToken(admin._id);
     console.log('Token generated successfully');
 
-    // Set secure HTTP-only cookie
-    res.cookie('token', token, {
+    // Set secure HTTP-only cookie with proper domain handling
+    const cookieConfig = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/'
-    });
+    };
+    
+    // Set domain based on request origin to handle both direct and proxy requests
+    if (process.env.NODE_ENV === 'production') {
+      const origin = req.get('origin') || req.get('referer');
+      if (origin && origin.includes('kwsaudiarabia.com')) {
+        cookieConfig.domain = '.kwsaudiarabia.com'; // For reverse proxy
+      } else {
+        cookieConfig.domain = '.kw-saudiarabia.com'; // For direct admin access
+      }
+    }
+    
+    res.cookie('token', token, cookieConfig);
 
     console.log('Login successful for:', phoneNumber, 'Role:', admin.role);
     console.log('=== LOGIN REQUEST END ===');
@@ -206,6 +231,7 @@ export const logout = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? '.kw-saudiarabia.com' : undefined,
       path: '/'
     });
 

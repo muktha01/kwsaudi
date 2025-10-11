@@ -698,68 +698,74 @@ const AgentProfile = () => {
                   <div className="h-20 bg-gray-400 rounded w-64"></div>
                 </div>
                 <div className="w-full bg-gray-300 flex items-center justify-center">
-                  <div className="w-32 h-40 sm:w-48 sm:h-56 lg:w-64 lg:h-64 lg:w-80 lg:h-80 bg-gray-400 rounded-full"></div>
+                  <div className="w-32 h-40 sm:w-48 sm:h-56 lg:w-64  bg-gray-400 rounded-full"></div>
                 </div>
               </div>
             ) : agent ? (
               <>
-  <div className="hidden lg:flex flex-col lg:flex-row lg:mt-6 mt-10 shadow-xl rounded-3xl overflow-hidden w-full">
-    {/* Left Section */}
-  <div className="w-full text-white px-4 sm:px-8 lg:px-12 bg-[rgb(206,32,39,255)] min-h-[60vh] flex flex-col justify-center">
+<div className="hidden lg:flex flex-col md:flex-row md:mt-10 lg:mt-6 mt-10 shadow-xl rounded-3xl overflow-hidden w-full">
   {/* Left Section */}
-  <div className="text-center lg:text-left">
-    <h1
-  className={`text-xl sm:text-2xl lg:text-3xl break-words mt-6 sm:mt-2 ${
-    isRTL ? "text-right" : "text-left"
-  }`}
->
-      {t('Property Sales in Saudi Arabia')}
-    </h1>
+  <div className="w-full md:w-1/2 text-white px-6 sm:px-10 md:px-10 lg:px-16 bg-[rgb(206,32,39,255)] min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] flex flex-col justify-center">
+    <div className="text-center md:text-left">
+      <h1
+        className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl break-words mt-4 sm:mt-2 ${
+          isRTL ? "text-right" : "text-left"
+        }`}
+      >
+        {t("Property Sales in Saudi Arabia")}
+      </h1>
 
-    <div className="text-sm sm:text-base lg:text-lg">
-      {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start lg:items-center">
-        <p className="tracking-[2.5px]">{t('Property Expert')}</p>
+      <div className="text-sm sm:text-base md:text-lg lg:text-xl">
+        {/* Property Expert */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-10 md:mt-12 lg:mt-20 items-center sm:items-start lg:items-center">
+          <p className="tracking-[2.5px]">{t("Property Expert")}</p>
+        </div>
+
+        {/* Agent Name */}
+        <div
+          className={`flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 items-start break-words ${
+            isRTL ? "text-right" : "text-left"
+          }`}
+        >
+          <span className="whitespace-normal break-words">
+            {agent.name || agent.fullName || ""}
+          </span>
+        </div>
+
+        {/* Powered by */}
+        <div className="flex mt-6 sm:mt-8 md:mt-10 lg:mt-20 justify-center md:justify-start">
+          <Image
+            src="/powerdby.png"
+            alt="Powered by Keller Williams"
+            width={220}
+            height={70}
+            className="h-auto w-auto"
+          />
+        </div>
       </div>
-
-      {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 items-center sm:items-start lg:items-center">
-        <span className="truncate">{agent.name || agent.fullName || ''}</span>
-      </div>
-
-      {/* Powered by */}
-      <div className="flex mt-6 sm:mt-8 lg:mt-30">
-  <Image
-    src="/powerdby.png"   // your single combined image
-    alt="Powered by Keller Williams"
-    width={250}
-    height={80}
-    className="h-auto w-auto"
-  />
-</div>
-  </div>
-</div>
-</div>
-
-{/* Right Section */}
-<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 lg:mt-0">
-  {/* Optional Background Split for Desktop */}
-  <div className="hidden lg:flex absolute inset-0">
-    <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
-    <div className="w-1/2 bg-gray-400"></div>
+    </div>
   </div>
 
-  {/* Agent Image */}
-  <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-32 h-40 sm:w-48 sm:h-56 lg:w-64 lg:h-64 lg:w-80 lg:h-80 aspect-square">
-    <Image
-      src={agent.image || '/avtar.jpg'}
-      alt={agent.name || agent.fullName || 'Agent'}
-      fill
-      className="object-cover"
-    />
-  </div>
+  {/* Right Section */}
+  <div className="w-full md:w-1/2 relative flex items-center justify-center bg-[rgb(206,32,39,255)] md:bg-transparent lg:bg-transparent mt-8 md:mt-0 lg:mt-0">
+    {/* Background Split (Desktop Only) */}
+    <div className="absolute inset-0 flex">
+      <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
+      <div className="w-1/2 bg-gray-400"></div>
+    </div>
+
+    {/* Agent Image */}
+    <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 aspect-square">
+      <Image
+        src={agent.image || "/avtar.jpg"}
+        alt={agent.name || agent.fullName || t("Agent")}
+        fill
+        className="object-cover"
+      />
+    </div>
   </div>
 </div>
+
 
 
 

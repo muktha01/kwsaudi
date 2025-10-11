@@ -432,65 +432,69 @@ const AgentProfile = (props) => {
   <p className="font-semibold  pt-30 text-[rgb(206,32,39,255)] text-2xl lg:px-10"> {agent.name || agent.fullName || '-'}</p>
   <p className="font-semibold text-gray-600 text-lg lg:px-10"> {t("Keller Williams")} {agent.city || '-'}</p>
   {/* Agent Card Section */}
-  <div className="hidden lg:flex flex-col lg:flex-row lg:mt-6 mt-20 shadow-xl rounded-3xl overflow-hidden  w-full">
-    {/* Left Section */}
-    <div className="w-full text-white px-6 sm:px-10 lg:px-16 bg-[rgb(206,32,39,255)] min-h-[80vh] flex flex-col justify-center">
+ <div className="hidden lg:flex flex-col md:flex-row md:mt-10 lg:mt-6 mt-20 shadow-xl rounded-3xl overflow-hidden w-full">
   {/* Left Section */}
-  <div className="text-center lg:text-left">
-   <h1
-  className={`text-xl tracking-[2.5px] sm:text-2xl lg:text-3xl break-words mt-6 sm:mt-2 ${
-    isRTL ? "text-right" : "text-left"
-  }`}
->
-      {t("Jasmin Team")}
-    </h1>
+  <div className="w-full md:w-1/2 text-white px-6 sm:px-10 md:px-10 lg:px-16 bg-[rgb(206,32,39,255)] min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] flex flex-col justify-center">
+    <div className="text-center md:text-left">
+      <h1
+        className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-[2.5px] break-words mt-4 sm:mt-2 ${
+          isRTL ? "text-right" : "text-left"
+        }`}
+      >
+        {t("Jasmin Team")}
+      </h1>
 
-    <div className="text-sm sm:text-base lg:text-lg">
-      {/* Property Expert */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-20 lg:mt-30 items-center sm:items-start lg:items-center">
-        <p className="tracking-[2.5px]">{agent.jobTitle}</p>
+      <div className="text-sm sm:text-base md:text-lg lg:text-xl">
+        {/* Property Expert / Job Title */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-10 md:mt-12 lg:mt-20 items-center sm:items-start lg:items-center">
+          <p className="tracking-[2.5px]">{agent.jobTitle}</p>
+        </div>
+
+        {/* Agent Name */}
+        <div
+          className={`flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 items-start break-words ${
+            isRTL ? "text-right" : "text-left"
+          }`}
+        >
+          <span className="whitespace-normal break-words">
+            {agent.name || agent.fullName || ""}
+          </span>
+        </div>
+
+        {/* Powered by */}
+        <div className="flex mt-6 sm:mt-8 md:mt-10 lg:mt-20 justify-center md:justify-start">
+          <Image
+            src="/powerdby.png"
+            alt={t("Powered by Keller Williams")}
+            width={220}
+            height={70}
+            className="h-auto w-auto"
+          />
+        </div>
       </div>
-
-      {/* Agent Name */}
-      <div className={`flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 items-start  break-words ${
-      isRTL ? " text-right" : " text-left "
-    }`}>
-  <span className="whitespace-normal break-words">{agent.name || agent.fullName || ''}</span>
-</div>
-
-      {/* Powered by */}
-      <div className="flex mt-6 sm:mt-8 lg:mt-30">
-  <Image
-    src="/powerdby.png"   // your single combined image
-    alt="Powered by Keller Williams"
-    width={250}
-    height={80}
-    className="h-auto w-auto"
-  />
-</div>
-  </div>
-</div>
-</div>
-
-{/* Right Section */}
-<div className="w-full relative flex items-center justify-center bg-[rgb(206,32,39,255)] mt-8 lg:mt-0">
-  {/* Optional Background Split for Desktop */}
-  <div className="hidden lg:flex absolute inset-0">
-    <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
-    <div className="w-1/2 bg-gray-400"></div>
+    </div>
   </div>
 
-  {/* Agent Image */}
-  <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-48 h-56 sm:w-64 sm:h-64 lg:w-100 lg:h-100 aspect-square">
-    <Image
-      src={agent.image || '/avtar.jpg'}
-      alt={agent.name || agent.fullName || t('Agent')}
-      fill
-      className="object-cover"
-    />
-  </div>
+  {/* Right Section */}
+  <div className="w-full md:w-1/2 relative flex items-center justify-center bg-[rgb(206,32,39,255)] md:bg-transparent lg:bg-transparent mt-8 md:mt-0 lg:mt-0">
+    {/* Background Split (Desktop Only) */}
+    <div className="absolute inset-0 flex">
+      <div className="w-1/2 bg-[rgb(206,32,39,255)]"></div>
+      <div className="w-1/2 bg-gray-400"></div>
+    </div>
+
+    {/* Agent Image */}
+    <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 aspect-square">
+      <Image
+        src={agent.image || "/avtar.jpg"}
+        alt={agent.name || agent.fullName || t("Agent")}
+        fill
+        className="object-cover"
+      />
+    </div>
   </div>
 </div>
+
 
 
 
