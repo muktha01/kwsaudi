@@ -2,6 +2,9 @@
 import { generateHreflangMetadata, getLanguageFromParams } from '@/utils/hreflang';
 import Agent from './Agent'// client component
 
+// Force dynamic rendering to handle searchParams
+export const dynamic = 'force-dynamic';
+
 // Server-side dynamic metadata with hreflang support
 export async function generateMetadata({ searchParams }) {
   const lang = await getLanguageFromParams(searchParams);
