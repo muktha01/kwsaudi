@@ -160,9 +160,9 @@ const Dashboard = () => {
       <Paper
         elevation={0}
         sx={{
-          p: { xs: 2, sm: 2.5, lg: 3, lg: 4 },
+          p: { xs: 2, sm: 2.5, lg: 4 },
           height: '100%',
-          minHeight: { xs: '140px', sm: '160px', lg: '180px', lg: '200px' },
+          minHeight: { xs: '140px', sm: '160px', lg: '200px' },
           position: 'relative',
           overflow: 'hidden',
           borderRadius: { xs: 1.5, sm: 2 },
@@ -189,8 +189,8 @@ const Dashboard = () => {
           }}>
             <Box
               sx={{
-                width: { xs: 36, sm: 44, lg: 52, lg: 56 },
-                height: { xs: 36, sm: 44, lg: 52, lg: 56 },
+                width: { xs: 36, sm: 44, lg: 56 },
+                height: { xs: 36, sm: 44, lg: 56 },
                 borderRadius: { xs: '10px', sm: '12px' },
                 display: 'flex',
                 alignItems: 'center',
@@ -200,7 +200,7 @@ const Dashboard = () => {
                 flexShrink: 0
               }}
             >
-              <Icon sx={{ fontSize: { xs: 20, sm: 24, lg: 28, lg: 32 } }} />
+              <Icon sx={{ fontSize: { xs: 20, sm: 24, lg: 32 } }} />
             </Box>
             <Box sx={{ 
               flex: 1,
@@ -212,7 +212,7 @@ const Dashboard = () => {
                 color="textSecondary" 
                 sx={{ 
                   mb: { xs: 0.25, sm: 0.5 },
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', lg: '1rem', lg: '1.125rem' },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem', lg: '1.125rem' },
                   fontWeight: 500,
                   lineHeight: 1.2,
                   overflow: 'hidden',
@@ -226,7 +226,7 @@ const Dashboard = () => {
                 variant="h4" 
                 sx={{ 
                   fontWeight: 'bold',
-                  fontSize: { xs: '1.25rem', sm: '1.5rem', lg: '2rem', lg: '2.25rem' },
+                  fontSize: { xs: '1.25rem', sm: '1.5rem', lg: '2.25rem' },
                   lineHeight: 1.1,
                   color: color
                 }}
@@ -241,8 +241,8 @@ const Dashboard = () => {
             position: 'absolute',
             top: { xs: -15, sm: -20 },
             right: { xs: -15, sm: -20 },
-            width: { xs: 60, sm: 80, lg: 100, lg: 120 },
-            height: { xs: 60, sm: 80, lg: 100, lg: 120 },
+            width: { xs: 60, sm: 80, lg: 120 },
+            height: { xs: 60, sm: 80, lg: 120 },
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.03)} 100%)`,
             zIndex: 0
@@ -254,7 +254,7 @@ const Dashboard = () => {
 
   return (
     <Box sx={{ 
-      p: { xs: 1, sm: 2, lg: 3, lg: 4 },
+      p: { xs: 1, sm: 2, lg: 4 },
       maxWidth: '100%',
       minHeight: '100vh',
       backgroundColor: theme.palette.background.default
@@ -268,7 +268,7 @@ const Dashboard = () => {
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 2, sm: 3, lg: 4, lg: 5 },
+            p: { xs: 2, sm: 3, lg: 5 },
             mb: { xs: 2, sm: 3, lg: 4 },
             position: 'relative',
             overflow: 'hidden',
@@ -301,7 +301,7 @@ const Dashboard = () => {
                 sx={{ 
                   mb: { xs: 0.5, sm: 1 }, 
                   fontWeight: 'bold',
-                  fontSize: { xs: '1.25rem', sm: '1.75rem', lg: '2.25rem', lg: '2.5rem' },
+                  fontSize: { xs: '1.25rem', sm: '1.75rem', lg: '2.5rem' },
                   color: '#fff',
                   lineHeight: { xs: 1.3, sm: 1.2 }
                 }}
@@ -313,7 +313,7 @@ const Dashboard = () => {
                 sx={{ 
                   opacity: 0.9, 
                   mb: { xs: 2, sm: 3 },
-                  fontSize: { xs: '0.875rem', sm: '1rem', lg: '1.25rem', lg: '1.375rem' },
+                  fontSize: { xs: '0.875rem', sm: '1rem', lg: '1.375rem' },
                   color: '#fff',
                   maxWidth: { xs: '100%', lg: '70%' },
                   lineHeight: 1.4
@@ -336,8 +336,8 @@ const Dashboard = () => {
               position: 'absolute',
               top: { xs: -50, sm: -75, lg: -100 },
               right: { xs: -50, sm: -75, lg: -100 },
-              width: { xs: 150, sm: 200, lg: 250, lg: 300 },
-              height: { xs: 150, sm: 200, lg: 250, lg: 300 },
+              width: { xs: 150, sm: 200, lg: 300 },
+              height: { xs: 150, sm: 200, lg: 300 },
               borderRadius: '50%',
               background: 'rgba(255,255,255,0.05)',
               zIndex: 1
@@ -354,7 +354,7 @@ const Dashboard = () => {
       >
         <Grid 
           container 
-          spacing={{ xs: 2, sm: 2, lg: 3, lg: gridSpacing }} 
+          spacing={{ xs: 2, sm: 2, lg: gridSpacing }} 
           sx={{ 
             mb: { xs: 2, sm: 3 },
             px: { xs: 0, sm: 0 }
@@ -400,9 +400,7 @@ const Dashboard = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
       >
           
-          
-      
-    </motion.div>
+      </motion.div>
     </Box>
   );
 };
