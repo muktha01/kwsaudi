@@ -556,7 +556,7 @@ const AgentContent = () => {
       }
       
       const data = await res.json();
-      console.log('API Response Structure:', data);
+      // console.log('API Response Structure:', data);
       
       return data;
     } catch (error) {
@@ -1358,5 +1358,6 @@ const Agent = () => {
     </Suspense>
   );
 };
+
 
 export default Agent;
