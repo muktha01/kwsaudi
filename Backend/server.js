@@ -79,8 +79,10 @@ app.use(cors({
     'http://localhost:3002',           // Additional local port
     'http://31.97.62.135:3000',       // Frontend server
     'http://31.97.62.135:3001',       // Admin Dashboard server
+    'https://kw-saudiarabia.com',      // Production domain
+    'https://www.kw-saudiarabia.com',  // Production domain with www
     'https://www.kwsaudiarabia.com',   // Production domain
-    'https://kw-saudiarabia.com'       // Production domain
+    'https://kwsaudiarabia.com'        // Production domain without www
   ],
   credentials: true
 }));
