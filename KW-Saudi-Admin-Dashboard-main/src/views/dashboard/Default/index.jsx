@@ -108,28 +108,36 @@ const Dashboard = () => {
 
     const fetchAgents = async () => {
       try {
-        const queryParams = new URLSearchParams({ offset: 0, limit: 1000 }).toString();
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/agents/kw/combined-data?${queryParams}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/agents/kw/agent-counts`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await res.json();
-        // Find the orgs by type and count their agents (org.data is now an array)
-        let jasmin = 0;
-        let jeddah = 0;
-        if (Array.isArray(data?.results)) {
-          data.results.forEach((org) => {
-            if (org.type === 'people_org_50449' && Array.isArray(org.data)) {
-              jasmin = org.data.length;
-            }
-            if (org.type === 'people_org_2414288' && Array.isArray(org.data)) {
-              jeddah = org.data.length;
-            }
-          });
+        
+        if (data.success && data.summary) {
+          setJasminAgents(data.summary.jasmin || 0);
+          setJeddahAgents(data.summary.jeddah || 0);
+        } else {
+          // Fallback to individual organization counts if summary not available
+          let jasmin = 0;
+          let jeddah = 0;
+          
+          if (Array.isArray(data?.organizations)) {
+            data.organizations.forEach((org) => {
+              if (org.name === 'Jasmin') {
+                jasmin = org.count || 0;
+              }
+              if (org.name === 'Jeddah') {
+                jeddah = org.count || 0;
+              }
+            });
+          }
+          
+          setJasminAgents(jasmin);
+          setJeddahAgents(jeddah);
         }
-        setJasminAgents(jasmin);
-        setJeddahAgents(jeddah);
       } catch (error) {
+        console.error('Error fetching agent counts:', error);
         setJasminAgents(0);
         setJeddahAgents(0);
       }

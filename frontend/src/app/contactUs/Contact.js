@@ -1,5 +1,7 @@
 'use client'
 import React, { useState,useEffect } from 'react';
+import Select from 'react-select';
+import CountryFlag from 'react-country-flag';
 import Box from '@/components/box';
 import Header from '@/components/header';
 import Footer from '@/components/newfooter';
@@ -15,8 +17,42 @@ const Contact = () => {
     email: '',
     enquiryType: 'General Enquiry',
     message: '',
-   
+    nationality: 'SA', // Default to Saudi Arabia
   });
+
+  // Nationality list for react-select with country code, label, and value
+  const nationalityList = [
+    { value: 'SA', label: 'Saudi Arabia', code: 'SA' },
+    { value: 'AE', label: 'United Arab Emirates', code: 'AE' },
+    { value: 'EG', label: 'Egypt', code: 'EG' },
+    { value: 'IN', label: 'India', code: 'IN' },
+    { value: 'PK', label: 'Pakistan', code: 'PK' },
+    { value: 'PH', label: 'Philippines', code: 'PH' },
+    { value: 'US', label: 'United States', code: 'US' },
+    { value: 'GB', label: 'United Kingdom', code: 'GB' },
+    { value: 'FR', label: 'France', code: 'FR' },
+    { value: 'DE', label: 'Germany', code: 'DE' },
+    { value: 'TR', label: 'Turkey', code: 'TR' },
+    { value: 'SD', label: 'Sudan', code: 'SD' },
+    { value: 'YE', label: 'Yemen', code: 'YE' },
+    { value: 'OM', label: 'Oman', code: 'OM' },
+    { value: 'QA', label: 'Qatar', code: 'QA' },
+    { value: 'KW', label: 'Kuwait', code: 'KW' },
+    { value: 'BH', label: 'Bahrain', code: 'BH' },
+    { value: 'JO', label: 'Jordan', code: 'JO' },
+    { value: 'LB', label: 'Lebanon', code: 'LB' },
+    { value: 'SY', label: 'Syria', code: 'SY' },
+    { value: 'MA', label: 'Morocco', code: 'MA' },
+    { value: 'DZ', label: 'Algeria', code: 'DZ' },
+    { value: 'TN', label: 'Tunisia', code: 'TN' },
+    { value: 'Other', label: 'Other', code: 'Other' },
+  ];
+
+  // Find the selected nationality option
+  const selectedNationality = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
+  // Hydration fix: Only render Select on client
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [heroSrc, setHeroSrc] = useState('/')
   const[page,setPage]=useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -226,21 +262,24 @@ const Contact = () => {
     setSubmitMessage('');
 
     try {
+      // Find the selected nationality object
+      const selectedNationalityObj = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
       const response = await api.post('/leads', {
         ...formData,
+        nationality: selectedNationalityObj.label, // send full label
         formType: 'contact-us'
       });
 
       if (response.status === 200 || response.status === 201) {
         setSubmitMessage(t('Thank you! Your message has been sent successfully.'));
-        // Reset form
+        // Reset form, always include default nationality
         setFormData({
           fullName: '',
           mobileNumber: '',
           email: '',
           enquiryType: 'General Enquiry',
           message: '',
-         
+          nationality: 'SA', // Default to Saudi Arabia
         });
       }
       
@@ -265,8 +304,8 @@ const Contact = () => {
       {/* Contact Form */}
       <div className="w-full lg:px-70 px-10 py-10">
         <form className="space-y-8" onSubmit={handleSubmit}>
-          {/* Full Name */}
-          <div className="relative">
+          {/* Nationality Dropdown with Flags */}
+           <div className="relative">
             <input
               type="text"
               id="fullName"
@@ -291,6 +330,95 @@ const Contact = () => {
               {t("Full Name")}
             </label>
           </div>
+       {/* Nationality Dropdown with Floating Label (matching border style) */}
+{/* Nationality Dropdown with Floating Label (matching other dropdowns) */}
+<div className="relative">
+  {mounted && (
+    <>
+      <Select
+        id="nationality"
+        options={nationalityList}
+        value={selectedNationality}
+        onChange={(option) =>
+          setFormData((prev) => ({ ...prev, nationality: option.value }))
+        }
+        formatOptionLabel={(option) => (
+          <div className="flex items-center gap-2">
+            {option.code !== 'Other' ? (
+              <CountryFlag countryCode={option.code} svg className="w-6 h-6" />
+            ) : (
+              <span className="text-xl">🌍</span>
+            )}
+            <span>{option.label}</span>
+          </div>
+        )}
+        isSearchable
+        classNamePrefix="react-select"
+        styles={{
+          control: (base, state) => ({
+            ...base,
+            border: 'none',
+            borderBottom: state.isFocused
+              ? '2px solid rgb(206,32,39,255)'
+              : '1px solid #9ca3af', // gray-400
+            borderRadius: 0,
+            background: 'transparent',
+            boxShadow: 'none',
+            minHeight: 40,
+            fontSize: '1.05rem',
+            paddingLeft: 0,
+            paddingRight: 0,
+            transition: 'border-color 0.2s ease, border-width 0.2s ease',
+          }),
+          valueContainer: (base) => ({
+            ...base,
+            padding: '0 0.25rem',
+          }),
+          input: (base) => ({
+            ...base,
+            margin: 0,
+            padding: 0,
+          }),
+          indicatorsContainer: (base) => ({
+            ...base,
+            paddingRight: 0,
+          }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isSelected
+              ? '#ce2027'
+              : state.isFocused
+              ? '#f3f3f3'
+              : 'white',
+            color: state.isSelected ? 'white' : 'black',
+            fontSize: 16,
+            padding: '8px 16px',
+          }),
+          menu: (base) => ({
+            ...base,
+            zIndex: 20,
+          }),
+        }}
+      />
+
+      {/* Floating Label */}
+      <label
+        htmlFor="nationality"
+        className={`absolute ${isRTL ? 'right-0' : 'left-0'} text-gray-500 text-[1.1rem] transition-all pointer-events-none ${
+          formData.nationality
+            ? '-top-3.5 text-sm text-black'
+            : 'top-2 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:-top-3.5 peer-focus:text-sm peer-focus:text-black'
+        }`}
+      >
+        {t("Nationality")}
+      </label>
+    </>
+  )}
+</div>
+
+
+          {/* Full Name */}
+         
 
           {/* Phone + Email */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

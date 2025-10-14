@@ -261,15 +261,16 @@ const JoinUs = () => {
                   <TableCell>Mobile Number</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>City</TableCell>
+                  <TableCell>Nationality</TableCell>
                   <TableCell>Message</TableCell>
-                    <TableCell>Status</TableCell>
+                  <TableCell>Status</TableCell>
                   <TableCell>Date</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {joinUsData.length === 0 ? (
                   <TableRow>
-                      <TableCell colSpan={7} align="center">No join us submissions found.</TableCell>
+                      <TableCell colSpan={8} align="center">No join us submissions found.</TableCell>
                   </TableRow>
                 ) : joinUsData.map((item, idx) => (
                   <TableRow key={item._id || idx}>
@@ -277,6 +278,7 @@ const JoinUs = () => {
                     <TableCell>{item.mobileNumber || '-'}</TableCell>
                     <TableCell>{item.email || '-'}</TableCell>
                     <TableCell>{item.city || '-'}</TableCell>
+                    <TableCell>{item.nationality || '-'}</TableCell>
                     <TableCell>{item.message || '-'}</TableCell>
                       <TableCell>
                         <Chip

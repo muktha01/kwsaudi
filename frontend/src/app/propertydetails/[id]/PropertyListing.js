@@ -81,9 +81,15 @@ export default function PropertyListing() {
   const [zoom, setZoom] = useState(1);
   const { t, isRTL } = useTranslation();
   const [brokenImages, setBrokenImages] = useState(new Set());
+  // Agent data state management
+  const [agentData, setAgentData] = useState(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentError, setAgentError] = useState(null);
+  const [imageKey, setImageKey] = useState(0); // Force image re-render
   // Add refs for abort controllers to cancel pending requests
   const propertyAbortController = useRef(null);
   const similarAbortController = useRef(null);
+  const agentAbortController = useRef(null);
   
   useEffect(() => {
     performanceRef.current.startTime = Date.now();
@@ -196,6 +202,75 @@ export default function PropertyListing() {
       }
     }
   }, []);
+
+  // Fetch agent data using kw_uid from property
+  const fetchAgentData = useCallback(async (property) => {
+    if (!property) return;
+    
+    const kwUid = property?.list_kw_uid || property?.kw_uid;
+    if (!kwUid) {
+      return;
+    }
+
+    // Cancel any previous agent request
+    if (agentAbortController.current) {
+      agentAbortController.current.abort();
+    }
+    
+    // Create new abort controller
+    agentAbortController.current = new AbortController();
+    
+    // Check cache first
+    const cacheKey = `agent_${kwUid}`;
+    const cachedAgent = cacheManager.get(cacheKey);
+    if (cachedAgent) {
+      setAgentData(cachedAgent);
+      console.log(`Loaded agent data from cache for kw_uid: ${kwUid}`);
+      return;
+    }
+    
+    setAgentLoading(true);
+    setAgentError(null);
+    
+    try {
+      const timeoutId = setTimeout(() => {
+        agentAbortController.current?.abort();
+      }, 5000); // 5 second timeout
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/agents/byid/${kwUid}`, {
+        signal: agentAbortController.current.signal,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.agent) {
+        setAgentData(data.agent);
+        setImageKey(prev => prev + 1); // Force image re-render
+        
+        // Cache the agent data
+        cacheManager.set(cacheKey, data.agent, 'agent');
+      } else {
+        setAgentError('Agent not found');
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return;
+      }
+      setAgentError(error.message || 'Failed to fetch agent data');
+    } finally {
+      setAgentLoading(false);
+    }
+  }, [cacheManager]);
 
   // Optimized function to fetch similar properties
   const fetchSimilarProperties = useCallback(async (currentProperty) => {
@@ -357,6 +432,13 @@ const [activeTab, setActiveTab] = useState('overview');
     { key: 'map', label: t('MAP LOCATION') },
     { key: 'tour', label: t('360 TOUR') },
   ];
+  // Reset agent data when property changes
+  useEffect(() => {
+    setAgentData(null);
+    setAgentError(null);
+    setImageKey(prev => prev + 1);
+  }, [id]);
+
   // Reset map loading state when tab changes to map
   useEffect(() => {
     if (activeTab === 'map' && mapData) {
@@ -502,6 +584,9 @@ const [activeTab, setActiveTab] = useState('overview');
       if (similarAbortController.current) {
         similarAbortController.current.abort();
       }
+      if (agentAbortController.current) {
+        agentAbortController.current.abort();
+      }
       
       // Clear cleanup interval
       clearInterval(cleanupInterval);
@@ -527,6 +612,8 @@ const [activeTab, setActiveTab] = useState('overview');
         const cachedData = cacheManager.get(cacheKey);
         if (cachedData) {
           setProperty(cachedData);
+          // Fetch agent data for cached property
+          fetchAgentData(cachedData);
           // Still fetch similar properties in background
           fetchSimilarProperties(cachedData);
           setPageLoading(false);
@@ -547,6 +634,8 @@ const [activeTab, setActiveTab] = useState('overview');
                 setProperty(propertyData);
                 // Cache the localStorage data
                 cacheManager.set(cacheKey, propertyData, 'property');
+                // Fetch agent data for localStorage property
+                fetchAgentData(propertyData);
                 fetchSimilarProperties(propertyData);
                 setPageLoading(false);
                // console.log(`Loaded property ${id} from localStorage and cached`);
@@ -584,6 +673,18 @@ const [activeTab, setActiveTab] = useState('overview');
         if (data.success && data.data) {
           setProperty(data.data);
           
+          // Debug: Log agent data structure
+          console.log('Property data for agent details:', {
+            list_agent_office: data.data.list_agent_office,
+            brokerage: data.data.brokerage,
+            agent_fields: {
+              list_agent_full_name: data.data.list_agent_full_name,
+              agent_email: data.data.agent_email,
+              agent_phone: data.data.agent_phone
+            },
+            list_kw_uid: data.data.list_kw_uid
+          });
+          
           // Cache with new cache manager
           cacheManager.set(cacheKey, data.data, 'property');
           
@@ -594,6 +695,9 @@ const [activeTab, setActiveTab] = useState('overview');
           cacheManager.cleanup();
           
           //console.log(`Fetched and cached property ${id}`);
+          
+          // Fetch agent data using kw_uid
+          fetchAgentData(data.data);
           
           // Fetch similar properties in parallel (non-blocking)
           fetchSimilarProperties(data.data);
@@ -620,6 +724,8 @@ const [activeTab, setActiveTab] = useState('overview');
                 setProperty(propertyData);
                 // Cache the fallback data
                 cacheManager.set(cacheKey, propertyData, 'property');
+                // Fetch agent data for fallback property
+                fetchAgentData(propertyData);
                 fetchSimilarProperties(propertyData);
                // console.log(`Used localStorage fallback for property ${id}`);
               }
@@ -640,7 +746,7 @@ const [activeTab, setActiveTab] = useState('overview');
         propertyAbortController.current.abort();
       }
     };
-  }, [id, fetchSimilarProperties,cacheManager,cachePropertyInStorage]);
+  }, [id, fetchSimilarProperties,cacheManager,cachePropertyInStorage,fetchAgentData]);
   
   // Optimized function to fetch similar properties
  
@@ -1280,32 +1386,138 @@ const [activeTab, setActiveTab] = useState('overview');
               <div className="flex flex-col items-center">
                 <div className="w-46 h-46  rounded-full overflow-hidden border-4 border-white mt-[-90px] mb-4">
                   <Image
-                    src={
-                      property.list_agent_office?.list_agent_url ||
-                      property.agent_photo ||
-                      "/avtar.jpg"
+                    key={`agent-image-${imageKey}-${agentData?.kw_uid || property?.list_kw_uid || 'default'}`} // Force re-render when agent changes
+                    src={(() => {
+                      // Priority 1: Use fetched agent data image (from working API)
+                      const apiPhoto = agentData?.photo || agentData?.profile_image_url || agentData?.image_url;
+                      if (apiPhoto && apiPhoto.trim() !== '') return apiPhoto;
+                      
+                      // Priority 2: Use property embedded agent image
+                      const propertyPhoto = property?.list_agent_office?.list_agent_url;
+                      if (propertyPhoto && propertyPhoto.trim() !== '' && /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(propertyPhoto)) {
+                        return propertyPhoto;
+                      }
+                      
+                      const agentPhoto = property?.agent_photo;
+                      if (agentPhoto && agentPhoto.trim() !== '') return agentPhoto;
+                      
+                      // Priority 3: Default fallback (never empty string)
+                      return "/avtar.jpg";
+                    })()}
+                    alt={
+                      agentData?.full_name || 
+                      agentData?.name || 
+                      property?.list_agent_office?.list_agent_full_name || 
+                      property?.list_agent_full_name || 
+                      t("Agent")
                     }
-                    alt={t("Agent")}
                     width={128}
                     height={128}
                     className="object-cover w-full h-full"
+                    priority={true}
+                    unoptimized={agentData?.photo ? true : false}
+                    onError={(e) => {
+                      if (e.target.src !== "/avtar.jpg") {
+                        e.target.src = "/avtar.jpg";
+                      }
+                    }}
                   />
                 </div>
               </div>
 
-            {/* Content */}
+              {/* Content */}
             <div className="mt-4">
-              <p className="text-2xl font-medium text-gray-600">
-                {t("To discuss this property please contact")} <br />
-                <span className="font-semibold">{property.list_agent_office?.list_agent_full_name
-                  || property.list_agent_full_name || t('Agent Name')}</span> {t("on:")}
-              </p>
-
-              <p className="my-8 lg:text-base text-base text-gray-900 font-medium">
-              {property.list_agent_office?.list_office_email || property.agent_email || t('agent@kw.com')}
-              </p>
+              {/* Agent loading state */}
+              {agentLoading && (
+                <div className="mb-4 text-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[rgb(179,4,4)] mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">{t("Loading agent details...")}</p>
+                </div>
+              )}
               
-              {/* Contact Me Button */}
+              {/* Show agent details with enhanced data from API */}
+              {(() => {
+                // Priority 1: Use fetched agent data if available (from working API)
+                if (agentData) {
+                  return (
+                    <>
+                      <p className="text-2xl font-medium text-gray-600">
+                        {t("To discuss this property please contact")} <br />
+                        <span className="font-semibold text-gray-800">
+                          {agentData.full_name || `${agentData.first_name} ${agentData.last_name}`.trim() || t('Agent Name')}
+                        </span> {t("on:")}
+                      </p>
+
+                      <div className="my-6 space-y-2">
+                        <p className="text-base text-gray-900 font-medium">
+                          {agentData.email || t('agent@kw.com')}
+                        </p>
+                        {agentData.market_center_number && (
+                          <p className="text-xs text-gray-500">
+                            {t("Market Center:")} {agentData.market_center_number}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  );
+                }
+                
+                // Priority 2: Use property embedded agent data
+                if (property?.list_agent_office?.list_agent_full_name || property?.list_agent_full_name) {
+                  return (
+                    <>
+                      <p className="text-2xl font-medium text-gray-600">
+                        {t("To discuss this property please contact")} <br />
+                        <span className="font-semibold text-gray-800">
+                          {property?.list_agent_office?.list_agent_full_name || 
+                           property?.list_agent_full_name || 
+                           property?.agent_name ||
+                           t('Agent Name')}
+                        </span> {t("on:")}
+                      </p>
+
+                      <div className="my-6 space-y-2">
+                        <p className="text-base text-gray-900 font-medium">
+                          {property?.list_agent_office?.list_agent_email || 
+                           property?.list_agent_office?.list_office_email || 
+                           property?.agent_email || 
+                           t('agent@kw.com')}
+                        </p>
+                      </div>
+                      
+                      <p className="text-xs text-blue-600 mb-2">
+                        {t("Agent data from property")}
+                      </p>
+                    </>
+                  );
+                }
+                
+                // Priority 3: Default fallback
+                return (
+                  <>
+                    <p className="text-2xl font-medium text-gray-600">
+                      {t("To discuss this property please contact")} <br />
+                      <span className="font-semibold text-gray-800">
+                        {t("Keller Williams Saudi Arabia")}
+                      </span> {t("on:")}
+                    </p>
+
+                    <div className="my-6 space-y-2">
+                      <p className="text-base text-gray-900 font-medium">
+                        {property?.list_agent_office?.list_office_email || 
+                         property?.brokerage?.email ||
+                         t('info@kwsaudiarabia.com')}
+                      </p>
+                    </div>
+                    
+                    {agentError && (
+                      <p className="text-xs text-red-600 mb-2">
+                        {t("Agent lookup failed")}: {agentError}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}              {/* Contact Me Button */}
               <p
                
                 className="mt-4 block w-full bg-red-700 text-white py-2  hover:bg-red-800 transition"
@@ -1317,7 +1529,17 @@ const [activeTab, setActiveTab] = useState('overview');
               <div className="grid grid-cols-4 gap-3 mt-5">
                 {/* Call */}
                 <a
-                  href={`tel:${property.list_agent_office?.list_office_phone|| property.agent_phone || "12067392150"}`}
+                  href={`tel:${
+                    // Priority 1: Use fetched agent data phone (from working API)
+                    agentData?.phone || agentData?.mobile_phone || agentData?.office_phone ||
+                    // Priority 2: Use property embedded agent phone
+                    property?.list_agent_office?.list_agent_preferred_phone || 
+                    property?.list_agent_office?.list_office_phone || 
+                    property?.brokerage?.phone ||
+                    property?.agent_phone || 
+                    // Priority 3: Default fallback
+                    "+966501234567"
+                  }`}
                   className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
                 >
                   <Phone className="w-6 h-6 text-gray-700" />
@@ -1326,11 +1548,22 @@ const [activeTab, setActiveTab] = useState('overview');
 
              {/* WhatsApp */}
 {(() => {
-  const phone = property.list_agent_office?.list_office_phone || "";
+  const phone = 
+    // Priority 1: Use fetched agent data phone (from working API)
+    agentData?.phone || agentData?.mobile_phone || agentData?.office_phone ||
+    // Priority 2: Use property embedded agent phone
+    property?.list_agent_office?.list_agent_preferred_phone || 
+    property?.list_agent_office?.list_office_phone || 
+    property?.brokerage?.phone ||
+    property?.agent_phone || 
+    // Priority 3: Default fallback
+    "+966501234567";
   const formattedPhone = phone.replace(/\D/g, ""); // strip non-digits
   return (
     <a
-      href={`https://wa.me/${formattedPhone}`}
+      href={`https://wa.me/${formattedPhone}?text=${encodeURIComponent(
+        t(`Hello ${agentData?.full_name || agentData?.first_name || 'Agent'}, I'm interested in the property at ${property?.list_address?.address || 'this location'}. Could you please provide more details?`)
+      )}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
@@ -1342,11 +1575,23 @@ const [activeTab, setActiveTab] = useState('overview');
   );
 })()}
 
-
-
                 {/* Mail */}
             <a
-  href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(property.list_agent_office?.list_office_email || '')}`}
+  href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(
+    // Priority 1: Use fetched agent data email (from working API)
+    agentData?.email || agentData?.office_email ||
+    // Priority 2: Use property embedded agent email
+    property?.list_agent_office?.list_agent_email || 
+    property?.list_agent_office?.list_office_email || 
+    property?.brokerage?.email ||
+    property?.agent_email || 
+    // Priority 3: Default fallback
+    'info@kwsaudiarabia.com'
+  )}&subject=${encodeURIComponent(
+    t(`Property Inquiry - ${property?.list_address?.address || 'Property Details'}`)
+  )}&body=${encodeURIComponent(
+    t(`Hello ${agentData?.full_name || agentData?.first_name || 'Agent'},\n\nI am interested in the property located at:\n${property?.list_address?.address || 'the listed address'}\n\nProperty ID: ${property?.list_id || 'N/A'}\nPrice: ${property?.current_list_price ? `SAR ${formatPrice(property.current_list_price)}` : 'Contact for pricing'}\n\nCould you please provide more information about this property?\n\nThank you,`)
+  )}`}
   target="_blank"
   rel="noopener noreferrer"
   className="flex flex-col items-center justify-center border p-2 hover:bg-gray-200 transition"
@@ -1355,28 +1600,69 @@ const [activeTab, setActiveTab] = useState('overview');
     <span className="text-[0.6rem] lg:text-xs mt-1">{t("Mail")}</span>
   </a>
 
-                {/* File */}
+                {/* Profile */}
 <button
   onClick={() => {
-    const agentId = property?.list_agent_office?.list_kw_uid||
-                  
-                   property?.list_kw_uid;
+    const agentId = 
+      // Priority 1: Use fetched agent data ID (from working API)
+      agentData?.kw_uid || agentData?._id || agentData?.id ||
+      // Priority 2: Use property embedded agent ID
+      property?.list_agent_office?.list_kw_uid ||
+      property?.list_kw_uid ||
+      property?.agent_id;
     
     if (agentId) {
-      const agentData = {
-        name: property?.list_agent_office?.list_agent_full_name || property?.list_agent_full_name || '',
-        fullName: property?.list_agent_office?.list_agent_full_name || property?.list_agent_full_name || '',
-        email: property?.list_agent_office?.list_office_email || property?.agent_email || '',
-        phone: property?.list_agent_office?.list_agent_preferred_phone || property?.agent_phone || '',
-        image: (property?.list_agent_office?.list_agent_url && /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(property?.list_agent_office?.list_agent_url)) 
-          ? property?.list_agent_office?.list_agent_url 
-          : '/avtar.jpg',
-        city: property?.list_address?.city || property?.city || '',
-        office: property?.list_agent_office?.list_office_name || '',
+      const agentDataToStore = {
+        name: 
+          // Priority 1: Use fetched agent data (from working API)
+          agentData?.full_name || agentData?.name || `${agentData?.first_name || ''} ${agentData?.last_name || ''}`.trim() ||
+          // Priority 2: Use property embedded data
+          property?.list_agent_office?.list_agent_full_name || 
+          property?.list_agent_full_name || 
+          property?.agent_name || '',
+        fullName: 
+          // Priority 1: Use fetched agent data (from working API)
+          agentData?.full_name || agentData?.name || `${agentData?.first_name || ''} ${agentData?.last_name || ''}`.trim() ||
+          // Priority 2: Use property embedded data
+          property?.list_agent_office?.list_agent_full_name || 
+          property?.list_agent_full_name || 
+          property?.agent_name || '',
+        email: 
+          // Priority 1: Use fetched agent data (from working API)
+          agentData?.email || agentData?.office_email ||
+          // Priority 2: Use property embedded data
+          property?.list_agent_office?.list_agent_email || 
+          property?.list_agent_office?.list_office_email || 
+          property?.agent_email || '',
+        phone: 
+          // Priority 1: Use fetched agent data (from working API)
+          agentData?.phone || agentData?.mobile_phone || agentData?.office_phone ||
+          // Priority 2: Use property embedded data
+          property?.list_agent_office?.list_agent_preferred_phone || 
+          property?.list_agent_office?.list_office_phone || 
+          property?.agent_phone || '',
+        image: 
+          // Priority 1: Use fetched agent data (from working API)
+          agentData?.photo || agentData?.profile_image_url || agentData?.image_url ||
+          // Priority 2: Use property embedded data
+          (property?.list_agent_office?.list_agent_url && /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(property?.list_agent_office?.list_agent_url)) 
+            ? property?.list_agent_office?.list_agent_url 
+            : '/avtar.jpg',
+        city: 
+          // Priority 1: Use fetched agent data (from working API) 
+          agentData?.city ||
+          // Priority 2: Use property location
+          property?.list_address?.city || property?.city || '',
+        office: 
+          // Use agent's market center or office name
+          agentData?.market_center_number || property?.list_agent_office?.list_office_name || '',
         kw_id: property?.kw_id || property?.list_id || property?.id || '',
+        kw_uid: agentData?.kw_uid || agentId,
+        active: agentData?.active || true,
+        source_org_id: agentData?.source_org_id || '',
         _id: agentId
       };
-      localStorage.setItem('selectedAgent', JSON.stringify(agentData));
+      localStorage.setItem('selectedAgent', JSON.stringify(agentDataToStore));
       
       router.push(`/agent/${agentId}`);
     }

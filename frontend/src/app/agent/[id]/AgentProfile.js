@@ -176,119 +176,21 @@ const [buyEmail, setBuyEmail] = useState("");
       setInitialLoadComplete(false);
       setError(null);
       
-      // Clear previous agent data if it's for a different agent
+      // Only clear previous agent data if it's for a different agent
+      // and only if we don't have cached data for the new agent
       if (agent && (agent.kw_uid !== agentId && agent._id !== agentId)) {
-        setAgent(null);
+        const cacheKey = `agent_${agentId}`;
+        // Only clear if we don't have cached data for the new agent
+        if (!cacheRef.current.has(cacheKey)) {
+          // Don't immediately clear agent - this prevents the "no agent" flash
+          // The agent fetching effect will handle setting the new agent data
+        }
         // Don't immediately clear properties - let the data fetching effect handle this
         // This prevents the brief "no properties found" flash
       }
     }
   }, [agentId]); // This will run when navigating to a new agent
-  const agentBios = {
-    1: {
-      text: `
-        As a proud member of Keller Williams Saudi Arabia, I am committed to providing personalized, professional, and client-focused real estate services. 
-        My knowledge of the local market, paired with a global network, allows me to guide buyers, sellers, and investors toward informed decisions and successful outcomes. 
-        Saudi Arabia’s Vision 2030 drives me to contribute to our nation’s growth by helping families and businesses find properties that meet their needs, enhance their lifestyles, and support long-term prosperity.
-      `
-    },
-    2: {
-      text: `
-        At Keller Williams Saudi Arabia, I dedicate myself to delivering exceptional results through honesty, transparency, and market expertise. 
-        My approach is rooted in understanding each client’s unique goals and creating a seamless real estate experience. 
-        With Vision 2030 transforming our cities into world-class hubs, I take pride in connecting people to properties that align with both their personal aspirations and the Kingdom’s bright future.
-      `
-    },
-    3: {
-      text: `
-        As a real estate professional with Keller Williams Saudi Arabia, I combine in-depth market insights with a people-first philosophy to create meaningful property solutions. 
-        I believe real estate is more than transactions — it’s about building lasting relationships and helping clients achieve their dreams. 
-        In this era of transformation under Vision 2030, I am inspired to support the growth of vibrant communities by helping individuals and families secure homes and investments that stand the test of time.
-      `
-    },
-    4: {
-      text: `
-        Working with Keller Williams Saudi Arabia allows me to bring world-class real estate practices to our rapidly evolving market. 
-        My mission is to empower clients with the knowledge and resources they need to make confident property decisions. 
-        Saudi Arabia’s Vision 2030 fuels my passion for contributing to the nation’s development, whether by assisting a family in finding their perfect home or guiding an investor toward high-potential opportunities.
-      `
-    },
-    5: {
-      text: `
-        At Keller Williams Saudi Arabia, I approach every client relationship with integrity, dedication, and a genuine desire to help. 
-        By blending local expertise with global standards, I provide a real estate experience that is both personalized and results-driven. 
-        The energy of Vision 2030 motivates me to connect people with properties that contribute to their success and play a role in shaping the Kingdom’s future landscape.
-      `
-    },
-    6: {
-      text: `
-        As part of Keller Williams Saudi Arabia, I am passionate about guiding clients through one of life’s most important decisions — buying or selling a property. 
-        My focus is on understanding needs, anticipating challenges, and delivering solutions that exceed expectations. 
-        The rapid progress of Vision 2030 inspires me to help build communities that reflect the ambition, innovation, and diversity of our great nation.
-      `
-    },
-    7: {
-      text: `
-        Proudly representing Keller Williams Saudi Arabia, I am committed to offering expert guidance and unwavering support throughout every step of the real estate process. 
-        I work to ensure that each transaction is handled with professionalism, care, and attention to detail. 
-        Vision 2030’s transformative projects and urban expansion drive my commitment to helping clients invest wisely and secure homes that enhance their quality of life.
-      `
-    },
-    8: {
-      text: `
-        As a real estate agent with Keller Williams Saudi Arabia, I aim to simplify the complex world of property transactions. 
-        By combining market analysis, negotiation skills, and client-focused service, I help people make informed and confident choices. 
-        Inspired by Vision 2030, I take pride in contributing to the Kingdom’s growth by matching clients with properties that offer both immediate value and long-term potential.
-      `
-    },
-    9: {
-      text: `
-        At Keller Williams Saudi Arabia, I believe in creating real estate experiences that are as rewarding as the results themselves. 
-        My goal is to understand each client’s unique story and translate that into the perfect property match. 
-        With Vision 2030 reshaping our cities, I am motivated to help families, investors, and entrepreneurs secure properties that align with both their dreams and the nation’s future.
-      `
-    },
-    10: {
-      text: `
-        Representing Keller Williams Saudi Arabia, I am dedicated to providing exceptional service that blends market expertise with a personal touch. 
-        I focus on building trust, offering honest advice, and delivering outstanding results. 
-        Saudi Arabia’s Vision 2030 inspires me to actively contribute to our growing real estate sector by connecting people to homes and investments that reflect the Kingdom’s ambition.
-      `
-    },
-    11: {
-      text: `
-        Being part of Keller Williams Saudi Arabia allows me to serve clients with a blend of local insight and international best practices. 
-        I am driven by a commitment to help people navigate the market with confidence and clarity. 
-        Vision 2030’s transformative goals encourage me to help shape the future of our communities by guiding clients toward properties that enrich their lives and secure their futures.
-      `
-    },
-    12: {
-      text: `
-        As a real estate professional at Keller Williams Saudi Arabia, I view my role as more than selling properties — it’s about guiding people toward opportunities that truly make a difference in their lives. 
-        In alignment with Vision 2030, I strive to help clients find properties that not only meet their immediate needs but also position them to benefit from the Kingdom’s long-term growth.
-      `
-    },
-    13: {
-      text: `
-        At Keller Williams Saudi Arabia, I am committed to excellence in every transaction. 
-        I focus on listening to my clients, understanding their vision, and working tirelessly to make it a reality. 
-        With Vision 2030 driving urban innovation and development, I take pride in helping clients secure properties that are part of this exciting transformation.
-      `
-    },
-    14: {
-      text: `
-        Proud to be part of Keller Williams Saudi Arabia, I believe that successful real estate service is built on trust, expertise, and genuine care for each client’s goals. 
-        The opportunities emerging from Vision 2030 motivate me to guide clients toward properties that will grow in value, enhance their lifestyles, and contribute to the Kingdom’s evolving landscape.
-      `
-    },
-    15: {
-      text: `
-        As a representative of Keller Williams Saudi Arabia, I bring passion, professionalism, and market knowledge to every client I serve. 
-        My mission is to make the process of buying, selling, or investing as smooth and rewarding as possible. 
-        Vision 2030’s blueprint for the Kingdom’s future inspires me to help people find properties that reflect both their aspirations and the exciting new era of growth and innovation in Saudi Arabia.
-      `
-    }
-  };
+ 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
@@ -366,7 +268,7 @@ const [buyEmail, setBuyEmail] = useState("");
       setPropertiesLoading(true);
       
       try {
-        // console.log(`Starting to fetch properties for agent ${agentId}`);
+        console.log(`Starting to fetch properties for agent ${agentId} using new endpoint`);
         
         // Cancel any previous request
         if (enhancedApiAbortController.current) {
@@ -376,8 +278,9 @@ const [buyEmail, setBuyEmail] = useState("");
         // Create new abort controller
         enhancedApiAbortController.current = new AbortController();
 
+        // Use the new properties by agent endpoint
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`,
+          `${process.env.NEXT_PUBLIC_API_URL}/agents/properties/by-agent/${agentId}`,
           {
             signal: enhancedApiAbortController.current.signal,
             headers: {
@@ -389,14 +292,10 @@ const [buyEmail, setBuyEmail] = useState("");
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Properties API response:', data);
 
-          // Find the agent that matches the current agentId
-          const selectedAgent = data.agentsWithProperties?.find(
-            (agent) => agent.kw_uid?.toString() === agentId?.toString()
-          );
-
-          if (selectedAgent) {
-            const properties = selectedAgent.properties || [];
+          if (data.success && data.properties) {
+            const properties = data.properties;
             
             setAgentProperties(properties);
             setProperties(properties);
@@ -405,7 +304,7 @@ const [buyEmail, setBuyEmail] = useState("");
             // Cache the properties
             if (properties.length > 0) {
               cacheRef.current.set(propertiesCacheKey, properties);
-              // console.log(`Cached ${properties.length} properties for agent ${agentId}`);
+              console.log(`Cached ${properties.length} properties for agent ${agentId}`);
             }
 
             // Limit cache size
@@ -414,25 +313,70 @@ const [buyEmail, setBuyEmail] = useState("");
               cacheRef.current.delete(firstKey);
             }
           } else {
+            console.log('No properties found in response');
             setAgentProperties([]);
             setProperties([]);
             setFilteredProperties([]);
           }
-
-          // Store full agents data for agent details
-          setAgentsWithPropertiesData(data);
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
       } catch (error) {
         if (error.name === 'AbortError') {
-          // console.log('Enhanced API fetch aborted');
+          console.log('Properties API fetch aborted');
           return;
         }
-        // console.error("Error fetching properties:", error);
-        setAgentProperties([]);
-        setProperties([]);
-        setFilteredProperties([]);
+        console.error("Error fetching properties:", error);
+        
+        // Fallback to old API if new endpoint fails
+        try {
+          console.log('Falling back to old property API...');
+          const fallbackResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`,
+            {
+              signal: enhancedApiAbortController.current.signal,
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+
+            // Find the agent that matches the current agentId
+            const selectedAgent = fallbackData.agentsWithProperties?.find(
+              (agent) => agent.kw_uid?.toString() === agentId?.toString()
+            );
+
+            if (selectedAgent) {
+              const properties = selectedAgent.properties || [];
+              
+              setAgentProperties(properties);
+              setProperties(properties);
+              setFilteredProperties(properties);
+
+              // Cache the properties
+              if (properties.length > 0) {
+                cacheRef.current.set(propertiesCacheKey, properties);
+                console.log(`Cached ${properties.length} properties for agent ${agentId} from fallback`);
+              }
+            } else {
+              setAgentProperties([]);
+              setProperties([]);
+              setFilteredProperties([]);
+            }
+
+            // Store full agents data for agent details
+            setAgentsWithPropertiesData(fallbackData);
+          }
+        } catch (fallbackError) {
+          console.error("Fallback API also failed:", fallbackError);
+          setAgentProperties([]);
+          setProperties([]);
+          setFilteredProperties([]);
+        }
       } finally {
         setPropertiesLoading(false);
         setInitialLoadComplete(true);
@@ -485,7 +429,7 @@ const [buyEmail, setBuyEmail] = useState("");
   // Removed redundant properties fetching effect - now consolidated into main effect above
 
   useEffect(() => {
-    // Fetch agent data using ID from URL params
+    // Fetch agent data using ID from URL params - same approach as PropertyListing.js
     const fetchAgentData = async () => {
       if (!agentId) {
         setError(t('No agent ID provided.'));
@@ -505,7 +449,7 @@ const [buyEmail, setBuyEmail] = useState("");
       setError(null);
       
       try {
-        // console.log('Fetching agent data for ID:', agentId);
+        console.log('Fetching agent data for ID:', agentId);
         
         // Check cache first
         const cacheKey = `agent_${agentId}`;
@@ -514,93 +458,17 @@ const [buyEmail, setBuyEmail] = useState("");
           setAgent(cachedAgent);
           if (cachedAgent.image) setImgSrc(cachedAgent.image);
           setLoading(false);
-          // console.log('Using cached agent data:', cachedAgent);
+          console.log('Using cached agent data:', cachedAgent);
           return;
         }
         
-        // First check if agent data is available in localStorage (from property details page)
-        const storedAgent = localStorage.getItem('selectedAgent');
-        if (storedAgent) {
-          try {
-            const agentData = JSON.parse(storedAgent);
-            // Check if the stored agent matches the current agentId
-            const storedId = String(agentData._id || '');
-            const storedKwId = String(agentData.kw_id || '');
-            const storedKwUid = String(agentData.kw_uid || '');
-            const storedId2 = String(agentData.id || '');
-            const currentId = String(agentId);
-            
-            if (storedId === currentId || storedKwId === currentId || storedKwUid === currentId || storedId2 === currentId) {
-              // console.log('Using stored agent data:', agentData);
-              setAgent(agentData);
-              if (agentData.image) setImgSrc(agentData.image);
-
-              // Cache the localStorage data
-              cacheRef.current.set(cacheKey, agentData);
-              
-              setLoading(false);
-              return;
-            }
-          } catch (e) {
-            // console.log('Error parsing stored agent data:', e);
-          }
-        }
-        
-        // Try to find agent in enhanced API data first (faster)
-        if (agentsWithPropertiesData && agentsWithPropertiesData.success) {
-          // console.log('Searching in enhanced API data...');
-          
-          // Safely handle the arrays
-          const agentsWithProps = Array.isArray(agentsWithPropertiesData.agentsWithProperties) 
-            ? agentsWithPropertiesData.agentsWithProperties 
-            : [];
-          const agentsWithoutProps = Array.isArray(agentsWithPropertiesData.agentsWithoutProperties) 
-            ? agentsWithPropertiesData.agentsWithoutProperties 
-            : [];
-            
-          const allEnhancedAgents = [...agentsWithProps, ...agentsWithoutProps];
-          
-          const foundEnhancedAgent = allEnhancedAgents.find(agent =>
-            agent.kw_uid === agentId ||
-            agent._id === agentId ||
-            String(agent._id) === String(agentId)
-          );
-          
-          if (foundEnhancedAgent) {
-            // console.log('Found agent in enhanced API:', foundEnhancedAgent);
-            const mappedAgent = {
-              name: foundEnhancedAgent.name,
-              phone: foundEnhancedAgent.phone,
-              email: foundEnhancedAgent.email,
-              city: foundEnhancedAgent.city,
-              image: foundEnhancedAgent.photo || foundEnhancedAgent.image,
-              _id: foundEnhancedAgent._id,
-              marketCenter: foundEnhancedAgent.market_center_number || "",
-              kw_uid: foundEnhancedAgent.kw_uid,
-              kw_id: foundEnhancedAgent.kw_uid // Keep backward compatibility
-            };
-            
-            setAgent(mappedAgent);
-            if (mappedAgent.image) setImgSrc(mappedAgent.image);
-
-            // Cache the enhanced API data
-            cacheRef.current.set(cacheKey, mappedAgent);
-            
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Only fetch from slow API if enhanced API didn't work
-        // console.log('Falling back to combined API...');
-        
-        // Add timeout - shorter for better UX
+        // Add timeout for better UX
         const timeoutId = setTimeout(() => {
           agentAbortController.current?.abort();
-        }, 7000); // Reduced to 7 seconds
+        }, 5000); // 5 second timeout like PropertyListing.js
         
-        // If no stored data or no match, fetch from API
-        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=100`, {
+        // Fetch agent data directly from the same endpoint as PropertyListing.js
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/agents/byid/${agentId}`, {
           signal: agentAbortController.current.signal,
           headers: {
             'Accept': 'application/json',
@@ -610,71 +478,52 @@ const [buyEmail, setBuyEmail] = useState("");
 
         clearTimeout(timeoutId);
         
-        if (agentRes.ok) {
-          const agentData = await agentRes.json();
-          // console.log('Agents API response received');
-          
-          // Cache the combined API data for use in properties extraction
-          setCombinedApiData(agentData);
-          
-          if (agentData.success && agentData.results) {
-            // Extract agents from people results
-            let allAgents = [];
-            
-            agentData.results.forEach(result => {
-              if (result.success && result.type.includes('people_org') && result.data?.data) {
-                allAgents = allAgents.concat(result.data.data);
-              }
-            });
-            
-            // Find the specific agent by ID
-            const foundAgent = allAgents.find(a => 
-              a.kw_uid === agentId || 
-              a._id === agentId || 
-              a.id === agentId
-            );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-            
-            if (foundAgent) {
-              const mappedAgent = {
-                name: foundAgent.full_name || `${foundAgent.first_name || ''} ${foundAgent.last_name || ''}`.trim(),
-                phone: foundAgent.phone || foundAgent.phoneNumber,
-                email: foundAgent.email || foundAgent.emailAddress,
-                city: foundAgent.city,
-                image: foundAgent.photo || foundAgent.profileImage || foundAgent.image,
-                _id: foundAgent._id || foundAgent.id,
-                marketCenter: foundAgent.market_center_number || foundAgent.marketCenter || "",
-                kw_uid: foundAgent.kw_uid,
-                kw_id: foundAgent.kw_uid // Keep backward compatibility
-              };
-              
-              setAgent(mappedAgent);
-              if (mappedAgent.image) setImgSrc(mappedAgent.image);
+        const data = await response.json();
+        console.log('Agent API response:', data);
+        
+        if (data.success && data.agent) {
+          // Map the agent data to our component format
+          const mappedAgent = {
+            name: data.agent.full_name || data.agent.name || `${data.agent.first_name || ''} ${data.agent.last_name || ''}`.trim(),
+            fullName: data.agent.full_name || data.agent.name || `${data.agent.first_name || ''} ${data.agent.last_name || ''}`.trim(),
+            phone: data.agent.phone || data.agent.mobile_phone || data.agent.office_phone,
+            email: data.agent.email || data.agent.office_email,
+            city: data.agent.city,
+            image: data.agent.photo || data.agent.profile_image_url || data.agent.image_url,
+            _id: data.agent.kw_uid || data.agent._id,
+            marketCenter: data.agent.market_center_number || "",
+            kw_uid: data.agent.kw_uid,
+            kw_id: data.agent.kw_uid, // Keep backward compatibility
+            active: data.agent.active,
+            source_org_id: data.agent.source_org_id
+          };
+          
+          setAgent(mappedAgent);
+          if (mappedAgent.image) setImgSrc(mappedAgent.image);
 
-              // Cache the API data
-              cacheRef.current.set(cacheKey, mappedAgent);
-              // Limit cache size
-              if (cacheRef.current.size > 50) {
-                const firstKey = cacheRef.current.keys().next().value;
-                cacheRef.current.delete(firstKey);
-              }
-
-              // console.log('Agent found and set:', mappedAgent);
-            } else {
-              setError(t('Agent not found.'));
-            }
-          } else {
-            setError(t('Failed to load agent data.'));
+          // Cache the agent data
+          cacheRef.current.set(cacheKey, mappedAgent);
+          
+          // Limit cache size
+          if (cacheRef.current.size > 50) {
+            const firstKey = cacheRef.current.keys().next().value;
+            cacheRef.current.delete(firstKey);
           }
+
+          console.log('Agent found and set:', mappedAgent);
         } else {
-          throw new Error(`Failed to fetch agent data: ${agentRes.status}`);
+          setError(t('Agent not found.'));
         }
       } catch (e) {
         if (e.name === 'AbortError') {
-          // console.log('Agent fetch aborted');
+          console.log('Agent fetch aborted');
           return;
         }
-        // console.error('Error fetching agent data:', e);
+        console.error('Error fetching agent data:', e);
         setError(`${t('Failed to load agent data')}: ${e.message}`);
       } finally {
         setLoading(false);
@@ -691,7 +540,7 @@ const [buyEmail, setBuyEmail] = useState("");
         agentAbortController.current.abort();
       }
     };
-  }, [agentId, agentsWithPropertiesData, t]);
+  }, [agentId, t]);
   
   // Update filteredProperties when properties change - consolidated into main effects above
 
@@ -726,7 +575,8 @@ const [buyEmail, setBuyEmail] = useState("");
     );
   }
   
-  if (loading && !agent) {
+  // Show loading spinner while agent data is being fetched OR if no agent data yet
+  if (loading || !agent) {
     return (
       <div className='relative p-6 lg:p-8'>
         <Header />
@@ -736,18 +586,6 @@ const [buyEmail, setBuyEmail] = useState("");
           {retryCount > 0 && (
             <p className="text-gray-500 text-sm">{t("Retry attempt")} {retryCount}/3</p>
           )}
-        </div>
-        <NewFooter />
-      </div>
-    );
-  }
-  
-  if (!agent) {
-    return (
-      <div className='relative p-6 lg:p-8'>
-        <Header />
-        <div className='text-center bg-[rgb(206,32,39,255)] py-20'>
-          {error || t('Agent not found')}
         </div>
         <NewFooter />
       </div>

@@ -6,70 +6,62 @@ import Image from 'next/image';
 import Link from 'next/link';
 import NewFooter from '@/components/newfooter'
 import { CalendarDays, Clock, MapPin, DollarSign } from "lucide-react";
+import { useTranslation } from '@/contexts/TranslationContext';
 export default function EventDetailPage() {
   const params = useParams();
   const id = params.id;
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
- const [page, setPage] = useState('');
+  const [page, setPage] = useState('');
+  const { language } = useTranslation();
   useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // First try to get from localStorage (for immediate display)
-        if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('selectedEvent');
-          if (stored) {
-            const blogData = JSON.parse(stored);
-            if (blogData && blogData._id === id) {
-              setBlog(blogData);
+      const fetchBlog = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          // First try to get from localStorage (for immediate display)
+          if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('selectedEvent');
+            if (stored) {
+              const blogData = JSON.parse(stored);
+              if (blogData && blogData._id === id) {
+                setBlog(blogData);
+              }
             }
           }
-        }
 
-        // Fetch fresh data from API
-        console.log('Fetching event with ID:', id);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/event/${id}`);
-        
-        console.log('Response status:', res.status);
-        console.log('Response headers:', res.headers);
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Error response body:', errorText);
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const blogData = await res.json();
-        console.log('API Response:', blogData);
-        
-        // Handle case where API might return an array
-        if (Array.isArray(blogData)) {
-          const event = blogData.find(item => item._id === id);
-          if (event) {
-            setBlog(event);
+          // Fetch fresh data from correct API
+          let url;
+          if (language === 'ar') {
+            url = `${process.env.NEXT_PUBLIC_API_URL}/events-arabic/${id}`;
           } else {
-            setError('Event not found');
+            url = `${process.env.NEXT_PUBLIC_API_URL}/events/${id}`;
           }
-        } else {
+          const res = await fetch(url);
+          if (!res.ok) {
+            if (res.status === 404) {
+              setError(null); // Clear error before redirect or fallback
+              // Optionally, redirect or handle not found
+              return;
+            }
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const blogData = await res.json();
           setBlog(blogData);
+        } catch (error) {
+          console.error('Error fetching event:', error);
+          setError('Failed to load event. Please try again later.');
+        } finally {
+          setLoading(false);
         }
-        
-      } catch (error) {
-        console.error('Error fetching event:', error);
-        setError('Failed to load event. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
     if (id) {
       fetchBlog();
     }
-  }, [id]);
+  }, [id, language]);
 
   if (loading) return (
     <div className="p-8 text-center">
@@ -99,22 +91,22 @@ export default function EventDetailPage() {
 
       <div className="relative bg-gray-100 pb-10  ">
       <div className="pt-32 sm:pt-32 lg:pt-44 mx-4 lg:mx-36">
-        <Link href="/ourCulture/events" className="text-blue-600 hover:underline mb-4 inline-block">&larr; Back to Events</Link>
+  <Link href="/ourCulture/events" className="text-blue-600 hover:underline mb-4 inline-block">&larr; {language === 'ar' ? 'العودة إلى الفعاليات' : 'Back to Events'}</Link>
         <h1 className="lg:text-3xl text-2xl font-bold mb-4">{blog.title}</h1>
         
         
         <div className="w-full aspect-[4/3] lg:aspect-[14/6] relative mb-6">
 <Image
-  src={
-    blog.coverImage
-      ? (() => {
-          const cleanPath = blog.coverImage.replace(/\\/g, "/");
-          return cleanPath.startsWith("http")
-            ? cleanPath
-            : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
-        })()
-      : "/event.png"
-  }
+  src={(() => {
+    const img = blog.coverImage || blog.image;
+    if (img) {
+      const cleanPath = img.replace(/\\/g, "/");
+      return cleanPath.startsWith("http")
+        ? cleanPath
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/${cleanPath}`;
+    }
+    return "/event.png";
+  })()}
   alt={blog.title || "Blog image"}
   fill
   className="object-cover"
@@ -132,16 +124,29 @@ export default function EventDetailPage() {
         <div className="flex flex-col gap-4 text-gray-700 text-lg">
           <div className="flex items-center gap-3">
             <CalendarDays className="w-6 h-6 " />
-            <span>{new Date(blog.startDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</span>
+            <span>{(() => {
+              // Prefer startDate, fallback to date (for Arabic)
+              const dateVal = blog.startDate || blog.date;
+              if (!dateVal) return null;
+              try {
+                return new Date(dateVal).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                });
+              } catch {
+                return dateVal;
+              }
+            })()}</span>
           </div>
 
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 " />
-            <span>{blog.time}</span>
+            <span>{(() => {
+              // Try all possible time fields for Arabic/English events
+              const timeVal = blog.time || blog.time_ar || blog.eventTime || blog.startTime || '';
+              return (typeof timeVal === 'string' ? timeVal.trim() : timeVal) || '—';
+            })()}</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -149,16 +154,6 @@ export default function EventDetailPage() {
             <span>{blog.location}</span>
           </div>
 
-          <div className="flex items-center gap-3">
-  <Image 
-    src="/currency.png"
-    alt="Cost"
-    width={24}
-    height={24}
-    className="w-6 h-6 object-contain"
-  />
-  <span>Cost : {blog.cost}</span>
-</div>
         </div>
            <hr className="text-gray-300 my-10"></hr>
       </div>

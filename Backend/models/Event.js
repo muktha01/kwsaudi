@@ -20,7 +20,7 @@ const eventSchema = new mongoose.Schema({
   // General details
   time: { type: String },                              // Overall event time (if same for all)
   location: { type: String, default: 'Online' },
-  cost: { type: String, default: 'Free' },
+
 
   // Presenters
   presentedBy: { type: String },                       // e.g., "KTTT"

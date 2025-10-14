@@ -18,6 +18,7 @@ import homepageRoutes from './routes/homepageRoute.js';
 import blogRoutes from './routes/blogRoutes.js';
 import newsRoutes from './routes/newsRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import eventsArabicRoutes from './routes/events-arabic.js';
 import listingRoutes from './routes/listingRoutes.js'
 import agentRoutes from './routes/agentRoutes.js';
 import agentLinkRoutes from './routes/agentLinkRoutes.js';
@@ -25,6 +26,7 @@ import authRoutes from './routes/authRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import pdfRoutes from './routes/pdfRoutes.js';
 import pdfArabicRoutes from './routes/pdf-arabicRouts.js';
+import newsArabicRoutes from './routes/news-arabic.js';
 // import userRoutes from './routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
 import leadRoutes from './routes/leadRoutes.js'
@@ -137,7 +139,9 @@ app.use('/api', homepageRoutes);
 // app.use('/api', themeRoutes);
 app.use('/api', blogRoutes);
 app.use('/api', newsRoutes);
+app.use('/api', newsArabicRoutes);
 app.use('/api', eventRoutes);
+app.use('/api', eventsArabicRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/links', agentLinkRoutes);

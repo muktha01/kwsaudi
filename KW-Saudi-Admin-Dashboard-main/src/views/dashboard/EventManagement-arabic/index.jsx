@@ -34,7 +34,7 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon
 } from '@mui/icons-material';
-import { eventService } from 'api/event';
+import { eventArabicService } from 'api/event-arabic';
 import RichTextEditor from 'components/RichTextEditor';
 
 const EventManagement = () => {
@@ -54,7 +54,7 @@ const EventManagement = () => {
     endDate: '',
     time: '',
     location: '',
-  
+
     presentedBy: '',
     team: '',
     description: '',
@@ -70,7 +70,7 @@ const EventManagement = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await eventService.getAllEvents();
+  const response = await eventArabicService.getAllEvents();
       setEvents(response);
     } catch (error) {
       showMessage('error', 'Failed to fetch events');
@@ -105,7 +105,7 @@ const EventManagement = () => {
       endDate: '',
       time: '',
       location: '',
-   
+
       presentedBy: '',
       team: '',
       description: '',
@@ -123,33 +123,34 @@ const EventManagement = () => {
     setLoading(true);
 
     try {
-      const formDataToSend = new FormData();
-      
-      // Add text fields
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== '' && formData[key] !== null) {
-          if (key === 'sessions') {
-            // Handle sessions array
-            if (formData[key].length > 0) {
-              formDataToSend.append(key, JSON.stringify(formData[key]));
-            }
-          } else {
-            formDataToSend.append(key, formData[key]);
-          }
-        }
-      });
 
-      // Add cover image
-      const coverImageInput = document.querySelector('input[name="coverImage"]');
-      if (coverImageInput?.files[0]) {
-        formDataToSend.append('coverImage', coverImageInput.files[0]);
+      const formDataToSend = new FormData();
+      // Required fields for backend: title, description, date, location, image
+      if (formData.title) formDataToSend.append('title', formData.title);
+      if (formData.description) formDataToSend.append('description', formData.description);
+      // Combine startDate and time into a single ISO date string for date, but send time separately
+      if (formData.startDate) {
+        let dateString = formData.startDate;
+        if (formData.time) {
+          dateString += 'T' + formData.time;
+        }
+        formDataToSend.append('date', new Date(dateString).toISOString());
+      }
+      if (formData.time) {
+        formDataToSend.append('time', formData.time);
+      }
+      if (formData.location) formDataToSend.append('location', formData.location);
+      // Add image (backend expects 'image')
+      const imageInput = document.querySelector('input[name="coverImage"]');
+      if (imageInput?.files[0]) {
+        formDataToSend.append('image', imageInput.files[0]);
       }
 
       if (isEditing && selectedEvent) {
-        await eventService.updateEvent(selectedEvent._id, formDataToSend);
+  await eventArabicService.updateEvent(selectedEvent._id, formDataToSend);
         showMessage('success', 'Event updated successfully!');
       } else {
-        await eventService.createEvent(formDataToSend);
+  await eventArabicService.createEvent(formDataToSend);
         showMessage('success', 'Event created successfully!');
       }
 
@@ -173,7 +174,7 @@ const EventManagement = () => {
       endDate: event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : '',
       time: event.time || '',
       location: event.location || '',
-      
+    
       presentedBy: event.presentedBy || '',
       team: event.team || '',
       description: event.description || '',
@@ -191,7 +192,7 @@ const EventManagement = () => {
     }
 
     try {
-      await eventService.deleteEvent(eventId);
+  await eventArabicService.deleteEvent(eventId);
       showMessage('success', 'Event deleted successfully');
       fetchEvents();
       if (selectedEvent?._id === eventId) {
@@ -296,7 +297,7 @@ const EventManagement = () => {
                 fullWidth
               />
 
-             
+            
 
               
              
@@ -384,19 +385,19 @@ const EventManagement = () => {
               {events.map((event) => (
                 <TableRow key={event._id}>
                   <TableCell>
-                    {event.coverImage && (
+                    {event.image && (
                       <img
                         src={
-                          event.coverImage.startsWith('http')
-                            ? event.coverImage
-                            : `${import.meta.env.VITE_BASE_URL}/${event.coverImage}`
+                          event.image.startsWith('http')
+                            ? event.image
+                            : `${import.meta.env.VITE_BASE_URL}/${event.image}`
                         }
                         alt={event.title}
                         style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                       />
                     )}
                   </TableCell>
-                  <TableCell>{event.title}</TableCell>
+                  <TableCell>{event.title || '-'}</TableCell>
                   <TableCell>
                     {event.description
                       ? (typeof event.description === 'string'
@@ -405,9 +406,9 @@ const EventManagement = () => {
                       : '-'}
                   </TableCell>
                   <TableCell>
-                    {event.startDate ? new Date(event.startDate).toLocaleDateString() : '-'}
+                    {event.date ? new Date(event.date).toLocaleDateString() : '-'}
                   </TableCell>
-                  <TableCell>{event.time || '-'}</TableCell>
+                  <TableCell>{event.time || event.time_ar || event.eventTime || event.startTime || '-'}</TableCell>
                   <TableCell>{event.location || '-'}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
@@ -454,12 +455,12 @@ const EventManagement = () => {
         <DialogContent>
           {selectedEventContent && (
             <Box>
-              {selectedEventContent.coverImage && (
+              {selectedEventContent.image && (
                 <img
                   src={
-                    selectedEventContent.coverImage.startsWith('http')
-                      ? selectedEventContent.coverImage
-                      : `http://localhost:5001/${selectedEventContent.coverImage}`
+                    selectedEventContent.image.startsWith('http')
+                      ? selectedEventContent.image
+                      : `http://localhost:5001/${selectedEventContent.image}`
                   }
                   alt={selectedEventContent.title}
                   style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', marginBottom: '20px' }}
@@ -478,10 +479,10 @@ const EventManagement = () => {
                     variant="outlined"
                   />
                 )}
-                {selectedEventContent.startDate && (
+                {selectedEventContent.date && (
                   <Chip
                     icon={<span>📅</span>}
-                    label={`${new Date(selectedEventContent.startDate).toLocaleDateString('en-GB', {
+                    label={`${new Date(selectedEventContent.date).toLocaleDateString('en-GB', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'

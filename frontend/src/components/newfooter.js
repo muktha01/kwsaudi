@@ -437,7 +437,7 @@ export default function Home() {
           <Link href="/PrivacyPolicy" className="mx-2">{t('Privacy Policy')}</Link> | 
                
           <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
-          <span className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</span>
+          <span className="mx-2">{t('شركة الياسمين لإدارة و تطوير العقارات')}</span>
        </div>
         <p className="text-gray-500 mt-4">
           {t('Copyright © 1998-2025 Keller Williams Realty, LLC')} <br />
@@ -662,7 +662,7 @@ export default function Home() {
     <Link href="/TermsofUse">{t('Terms of Use')} | </Link>
   <Link href="/PrivacyPolicy" className="mx-2">{t('Privacy Policy')}</Link> | 
     <span className="mx-2">{t('REGA License Number #1200018764')}</span> | 
-                  <a href='#' className="mx-2">{t('شركة المقيّمين لإدارة وتطوير العقارات')}</a>
+                  <a href='#' className="mx-2">{t('شركة الياسمين لإدارة و تطوير العقارات')}</a>
   </div>
   <p className="text-sm mx-2 text-gray-500 mt-3 text-center lg:text-left mb-2">
                 {t('Copyright © 1998-2025 Keller Williams Realty, LLC')} <br />

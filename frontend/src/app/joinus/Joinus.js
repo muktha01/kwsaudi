@@ -1,5 +1,7 @@
 'use client'
 import React,{useState,useEffect} from 'react';
+import Select from 'react-select';
+import CountryFlag from 'react-country-flag';
 import { useTranslation } from '@/contexts/TranslationContext';
 import Image from 'next/image';
 import Box from '@/components/box';
@@ -12,8 +14,43 @@ const Joinus = (props) => {
     mobileNumber: '',
     email: '',
     city: '',
-    message: ''
+    message: '',
+    nationality: 'SA', // Default to Saudi Arabia
   });
+
+  // Nationality list for react-select with country code, label, and value
+  const nationalityList = [
+    { value: 'SA', label: 'Saudi Arabia', code: 'SA' },
+    { value: 'AE', label: 'United Arab Emirates', code: 'AE' },
+    { value: 'EG', label: 'Egypt', code: 'EG' },
+    { value: 'IN', label: 'India', code: 'IN' },
+    { value: 'PK', label: 'Pakistan', code: 'PK' },
+    { value: 'PH', label: 'Philippines', code: 'PH' },
+    { value: 'US', label: 'United States', code: 'US' },
+    { value: 'GB', label: 'United Kingdom', code: 'GB' },
+    { value: 'FR', label: 'France', code: 'FR' },
+    { value: 'DE', label: 'Germany', code: 'DE' },
+    { value: 'TR', label: 'Turkey', code: 'TR' },
+    { value: 'SD', label: 'Sudan', code: 'SD' },
+    { value: 'YE', label: 'Yemen', code: 'YE' },
+    { value: 'OM', label: 'Oman', code: 'OM' },
+    { value: 'QA', label: 'Qatar', code: 'QA' },
+    { value: 'KW', label: 'Kuwait', code: 'KW' },
+    { value: 'BH', label: 'Bahrain', code: 'BH' },
+    { value: 'JO', label: 'Jordan', code: 'JO' },
+    { value: 'LB', label: 'Lebanon', code: 'LB' },
+    { value: 'SY', label: 'Syria', code: 'SY' },
+    { value: 'MA', label: 'Morocco', code: 'MA' },
+    { value: 'DZ', label: 'Algeria', code: 'DZ' },
+    { value: 'TN', label: 'Tunisia', code: 'TN' },
+    { value: 'Other', label: 'Other', code: 'Other' },
+  ];
+
+  // Find the selected nationality option
+  const selectedNationality = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
+  // Hydration fix: Only render Select on client
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   // Handle input change
@@ -28,10 +65,12 @@ const Joinus = (props) => {
     setIsSubmitting(true);
     setSubmitMessage('');
     try {
+      // Find the selected nationality object
+      const selectedNationalityObj = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, formType: 'join-us' })
+        body: JSON.stringify({ ...formData, nationality: selectedNationalityObj.label, formType: 'join-us' })
       });
       if (response.ok) {
         setSubmitMessage(t('Thank you! Your message has been sent successfully.'));
@@ -40,7 +79,8 @@ const Joinus = (props) => {
           mobileNumber: '',
           email: '',
           city: '',
-          message: ''
+          message: '',
+          nationality: 'SA',
         });
       } else {
         setSubmitMessage(t('Sorry, there was an error sending your message. Please try again.'));
@@ -271,6 +311,7 @@ const Joinus = (props) => {
           <div className="bg-white shadow-md  p-8">
             <h3 className="text-xl font-bold text-center mb-6">{t('Join Us Today')}</h3>
             <form className="space-y-4" onSubmit={handleFormSubmit}>
+              {/* Nationality Dropdown with Flags */}
               <label className='block mb-2'>{t('Full Name')}</label>
               <input
                 type="text"
@@ -281,6 +322,81 @@ const Joinus = (props) => {
                 className="w-full px-4 py-2 border  focus:outline-none focus:ring-2"
                 required
               />
+              
+              <div className="">
+                
+                <label className="block mb-2">{t("Nationality")}</label>
+                {mounted && (
+                <Select
+  options={nationalityList}
+  value={selectedNationality}
+  onChange={(option) => setFormData((prev) => ({ ...prev, nationality: option.value }))}
+  formatOptionLabel={(option) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {option.code !== 'Other' ? (
+        <CountryFlag
+          countryCode={option.code}
+          svg
+          style={{ width: '1.5em', height: '1.5em', marginRight: 8 }}
+        />
+      ) : (
+        <span style={{ fontSize: '1.5em', marginRight: 8 }}>🌍</span>
+      )}
+      <span>{option.label}</span>
+    </div>
+  )}
+  isSearchable
+  classNamePrefix="react-select"
+  styles={{
+    control: (base, state) => ({
+      ...base,
+      minHeight: 40,
+      border: '1px solid #000', // ✅ black border like others
+      borderRadius: 0,
+      background: 'white',
+      fontSize: 16,
+      boxShadow: state.isFocused ? '0 0 0 1px #000' : 'none', // ✅ black focus outline
+      transition: 'box-shadow 0.2s, border-color 0.2s',
+      paddingLeft: '1rem',
+      paddingRight: '1rem',
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: 0,
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      paddingRight: 8,
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? '#ce2027'
+        : state.isFocused
+        ? '#f3f3f3'
+        : 'white',
+      color: state.isSelected ? 'white' : 'black',
+      display: 'flex',
+      alignItems: 'center',
+      fontWeight: state.isSelected ? 600 : 400,
+      fontSize: 16,
+      padding: '8px 16px',
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 20,
+    }),
+  }}
+/>
+
+                )}
+              </div>
+              
               <label className='block mb-2'>{t('Mobile Number')}</label>
               <input
                 type="tel"

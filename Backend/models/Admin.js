@@ -21,7 +21,7 @@ const adminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['superadmin', 'admin', 'subadmin', 'user'],
+    enum: ['superadmin', 'admin', 'subadmin', 'user', 'user-jasmin', 'user-jeddah'],
     default: 'user',
   },
   // Optional: permissions for fine-grained access (admin can set for subadmin/user)

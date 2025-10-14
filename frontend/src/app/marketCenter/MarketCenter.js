@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState } from 'react';
-import Header from '@/components/header';
 import dynamic from 'next/dynamic';
+import MarketCenterMap from './MarketCenterMap';
+import Header from '@/components/header';
+// import dynamic from 'next/dynamic';
 import { FaPhoneAlt, FaChevronRight, FaEnvelope, FaSearch } from 'react-icons/fa';
 import { useTranslationHook } from '@/hooks/useTranslation';
 
@@ -134,16 +136,7 @@ const MarketCenter = () => {
               {/* Right: Sticky Map */}
               <div className="pl-0 my-6 lg:my-10 sticky lg:top-20 h-[300px] sm:h-[400px] lg:h-[calc(100vh-5rem)]">
                 <div className="relative w-full overflow-hidden border border-gray-200 h-full">
-                  <iframe
-                    title={t('Saudi Arabia Map')}
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4444535.330365576!2d41.51259970861697!3d23.8006960408425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15e8e4f105f8aaaf%3A0x70a8a6a2cb7f9405!2sSaudi%20Arabia!5e0!3m2!1sen!2sin!4v1717315040974!5m2!1sen!2sin"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
+                  <MarketCenterMap />
                 </div>
               </div>
             </div>

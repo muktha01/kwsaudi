@@ -20,8 +20,7 @@ export async function generateMetadata() {
   }
 }
 
-// Server component rendering the client component
+import EventDetailPage from './EventDetailPage';
 export default function Mypage() {
-  const EventDetailPage = require('./EventDetailPage').default;
   return <EventDetailPage />;
 }

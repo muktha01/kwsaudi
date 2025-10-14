@@ -8,6 +8,7 @@ import { useTranslation } from '../contexts/TranslationContext';
 const Header = () => {
   const { language, isTranslating, switchToLanguage, t } = useTranslation();
   const [isMobile, setIsMobile] = useState(false);
+  const [isIpadLandscape, setIsIpadLandscape] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null);
 const [desktopAtTop, setDesktopAtTop] = useState(true);
@@ -56,10 +57,16 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
     }, []);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkDevice = () => {
+      const ua = navigator.userAgent;
+      const isIpad = (/iPad/.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua)));
+      const isLandscape = window.innerWidth > window.innerHeight;
+      setIsIpadLandscape(isIpad && isLandscape);
+      setIsMobile(window.innerWidth < 768 && !(isIpad && isLandscape));
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   // Close menu on outside click
@@ -129,17 +136,39 @@ const [desktopAtTop, setDesktopAtTop] = useState(true);
 
         {/* Desktop Controls */}
         <div className="hidden lg:flex justify-end items-center ">
-          {/* Language Dropdown */}
-          <div className="relative group">
+          {/* Language Dropdown with iPad landscape hover support */}
+          <div
+            className="relative group"
+            onMouseEnter={() => setOpenSubmenu('language')}
+            onMouseLeave={() => setOpenSubmenu(null)}
+            tabIndex={0}
+            onFocus={() => setOpenSubmenu('language')}
+            onBlur={e => {
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                setOpenSubmenu(null);
+              }
+            }}
+          >
             <button
               type="button"
               disabled={isTranslating}
               className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 xl:text-[0.9rem] lg:text-[0.7rem]  border border-gray-700 hover:bg-gray-300 hover:text-black disabled:opacity-50"
+              aria-haspopup="true"
+              aria-expanded={openSubmenu === 'language'}
+              onClick={e => {
+                if (!isIpadLandscape) {
+                  setOpenSubmenu(openSubmenu === 'language' ? null : 'language');
+                  e.stopPropagation();
+                }
+              }}
             >
               {isTranslating ? t('Translating...') : (language === 'ar' ? 'عربي' : 'English')}
               <FaChevronDown className="ml-1" />
             </button>
-            <div className="absolute left-0 top-full min-w-[120px] bg-gray-950/95 shadow-lg z-40 opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent group-hover:border-red-700 font-semibold">
+            <div
+              className={`absolute left-0 top-full min-w-[120px] bg-gray-950/95 shadow-lg z-40 transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent font-semibold ${openSubmenu === 'language' ? 'opacity-100 pointer-events-auto border-red-700' : 'opacity-0 pointer-events-none'}`}
+              style={{ touchAction: 'manipulation' }}
+            >
               <button
                 onClick={() => handleLanguageSwitch('en')}
                 disabled={isTranslating || language === 'en'}

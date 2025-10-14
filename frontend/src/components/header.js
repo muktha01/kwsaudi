@@ -20,6 +20,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isIpadLandscape, setIsIpadLandscape] = useState(false);
   const [desktopAtTop, setDesktopAtTop] = useState(true);
 
   const menuRef = useRef(null);
@@ -53,13 +54,18 @@ const Header = () => {
   };
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const checkDevice = () => {
+      const ua = navigator.userAgent;
+      // iPadOS 13+ pretends to be Mac, so check for touch support
+      const isIpad = (/iPad/.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua)));
+      const isLandscape = window.innerWidth > window.innerHeight;
+      setIsIpadLandscape(isIpad && isLandscape);
+      setIsMobile(window.innerWidth < 768 && !isIpadLandscape);
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, [isIpadLandscape]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -204,99 +210,178 @@ const Header = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex items-center header-nav">
-          {menuItems.map(item => (
-            <div key={item.key} className="relative group">
-              {item.submenu ? (
-                <>
-                  <button
-                    type="button"
-                    className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem]  text-white font-semibold transition-colors focus:outline-none
-                      ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)]' : ''}
-                      group-hover:text-white group-hover:bg-red-700 group-hover:border-red-700
-                      px-4 h-[63.5px] border border-transparent
+          {menuItems.map(item => {
+            const isDropdownOpen = openSubmenu === item.key;
+            return (
+              <div
+                key={item.key}
+                className="relative group"
+                onMouseEnter={() => setOpenSubmenu(item.key)}
+                onMouseLeave={() => setOpenSubmenu(null)}
+                tabIndex={0}
+                onFocus={() => setOpenSubmenu(item.key)}
+                onBlur={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setOpenSubmenu(null);
+                  }
+                }}
+              >
+                {item.submenu ? (
+                  <>
+                    <button
+                      type="button"
+                      className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem]  text-white font-semibold transition-colors focus:outline-none
+                        ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)]' : ''}
+                        group-hover:text-white group-hover:bg-red-700 group-hover:border-red-700
+                        px-4 h-[63.5px] border border-transparent
+                        ${isDropdownOpen ? 'bg-red-700 border-red-700' : ''}
+                      `}
+                      aria-haspopup="true"
+                      aria-expanded={isDropdownOpen}
+                      // Only allow click to open on non-iPad devices
+                      onClick={e => {
+                        if (!isIpadLandscape) {
+                          if (isDropdownOpen) {
+                            setOpenSubmenu(null);
+                          } else {
+                            setOpenSubmenu(item.key);
+                          }
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      {item.label}
+                      <FaChevronDown className="ml-1" />
+                    </button>
+                    <div
+                      className={`absolute left-0 top-full min-w-[180px] bg-gray-950/95 border-t-4 border-transparent group-hover:border-red-700
+                        shadow-lg z-40 transition-all duration-200 mt-0 py-2 px-2 space-y-1
+                        ${isDropdownOpen ? 'opacity-100 pointer-events-auto border-red-700' : 'opacity-0 pointer-events-none'}
+                      `}
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      {item.submenu.map((sub, idx) => (
+                        <React.Fragment key={sub.href}>
+                          <Link
+                            href={sub.href}
+                            className="block px-3 py-1 font-semibold text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] whitespace-nowrap transition-colors"
+                          >
+                            {sub.label}
+                          </Link>
+                          {idx !== item.submenu.length - 1 && (
+                            <div className="h-px bg-gray-700 my-1 w-full" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem] font-semibold transition-colors px-4 h-[63.5px] border border-transparent
+                      ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)] hover:text-white hover:bg-red-700 hover:border-red-700' : 'text-white hover:text-white hover:bg-red-700 hover:border-red-700'}
                     `}
                   >
                     {item.label}
-                    <FaChevronDown className="ml-1" />
-                  </button>
-                  <div className="absolute left-0 top-full min-w-[180px] bg-gray-950/95 border-t-4 border-transparent group-hover:border-red-700
-                    shadow-lg z-40 opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none transition-all duration-200 mt-0 py-2 px-2 space-y-1">
-                    {item.submenu.map((sub, idx) => (
-                      <React.Fragment key={sub.href}>
-                        <Link
-                          href={sub.href}
-                          className="block px-3 py-1 font-semibold text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] whitespace-nowrap transition-colors"
-                        >
-                          {sub.label}
-                        </Link>
-                        {idx !== item.submenu.length - 1 && (
-                          <div className="h-px bg-gray-700 my-1 w-full" />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-1 xl:text-[0.9rem] lg:text-[0.7rem] font-semibold transition-colors px-4 h-[63.5px] border border-transparent
-                    ${[t('Join Us'), t('Contact')].includes(item.label) ? 'text-[rgb(206,32,39,255)] hover:text-white hover:bg-red-700 hover:border-red-700' : 'text-white hover:text-white hover:bg-red-700 hover:border-red-700'}
-                  `}
-                >
-                  {item.label}
-                </Link>
-              )}
-            </div>
-          ))}
+                  </Link>
+                )}
+              </div>
+            );
+          })}
 
           {/* Language Dropdown */}
           <div className="flex">
-            <div className="relative group">
+            {/* Language Dropdown with iPad landscape hover support */}
+            <div
+              className="relative group"
+              onMouseEnter={() => setOpenSubmenu('language')}
+              onMouseLeave={() => setOpenSubmenu(null)}
+              tabIndex={0}
+              onFocus={() => setOpenSubmenu('language')}
+              onBlur={e => {
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                  setOpenSubmenu(null);
+                }
+              }}
+            >
               <button
                 type="button"
                 className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-gray-700 xl:text-[0.9rem] lg:text-[0.7rem] border border-gray-700 hover:bg-gray-300 hover:text-black"
                 data-no-translate="true"
                 key={`lang-btn-${language}`}
+                aria-haspopup="true"
+                aria-expanded={openSubmenu === 'language'}
+                onClick={e => {
+                  if (!isIpadLandscape) {
+                    setOpenSubmenu(openSubmenu === 'language' ? null : 'language');
+                    e.stopPropagation();
+                  }
+                }}
               >
                 {language === 'ar' ? t('عربي') : t('English')}
                 <FaChevronDown className={`ml-1 ${isRTL ? 'rtl-ml-1' : ''}`} />
               </button>
-              <div className="absolute left-0 top-full min-w-[120px] bg-gray-950/95 shadow-lg z-40
-                opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none
-                transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent group-hover:border-red-700 font-semibold"
-     data-no-translate="true"
->
-    <button
-        onClick={() => handleLanguageSwitch('en')}
-        disabled={language === 'en'}
-        className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
-    >
-        {t('English')}
-    </button>
-    <div className="h-px bg-gray-700 my-1 w-full" />
-    <button
-        onClick={() => handleLanguageSwitch('ar')}
-        disabled={language === 'ar'}
-        className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
-    >
-        {t('عربي')}
-    </button>
-</div>
-
+              <div
+                className={`absolute left-0 top-full min-w-[120px] bg-gray-950/95 shadow-lg z-40
+                  transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent font-semibold
+                  ${openSubmenu === 'language' ? 'opacity-100 pointer-events-auto border-red-700' : 'opacity-0 pointer-events-none'}
+                `}
+                data-no-translate="true"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <button
+                  onClick={() => handleLanguageSwitch('en')}
+                  disabled={language === 'en'}
+                  className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
+                >
+                  {t('English')}
+                </button>
+                <div className="h-px bg-gray-700 my-1 w-full" />
+                <button
+                  onClick={() => handleLanguageSwitch('ar')}
+                  disabled={language === 'ar'}
+                  className="w-full text-left px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)] transition-colors disabled:opacity-50"
+                >
+                  {t('عربي')}
+                </button>
+              </div>
             </div>
 
-            {/* Contact Dropdown */}
-            <div className="relative group">
+            {/* Contact Dropdown with iPad landscape hover support */}
+            <div
+              className="relative group"
+              onMouseEnter={() => setOpenSubmenu('contact')}
+              onMouseLeave={() => setOpenSubmenu(null)}
+              tabIndex={0}
+              onFocus={() => setOpenSubmenu('contact')}
+              onBlur={e => {
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                  setOpenSubmenu(null);
+                }
+              }}
+            >
               <button
                 type="button"
                 className="flex items-center font-semibold px-4 h-[63.5px] text-white bg-red-700 xl:text-[0.9rem] lg:text-[0.7rem] border border-red-700 border-l-0"
+                aria-haspopup="true"
+                aria-expanded={openSubmenu === 'contact'}
+                onClick={e => {
+                  if (!isIpadLandscape) {
+                    setOpenSubmenu(openSubmenu === 'contact' ? null : 'contact');
+                    e.stopPropagation();
+                  }
+                }}
               >
                 {t('Contact')}
                 <FaChevronDown className={`ml-1 ${isRTL ? 'rtl-ml-1' : ''}`} />
               </button>
-              <div className="absolute left-0 top-full min-w-[160px] bg-gray-950/95 shadow-lg z-40
-                opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none
-                transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent group-hover:border-red-700 font-semibold">
+              <div
+                className={`absolute left-0 top-full min-w-[160px] bg-gray-950/95 shadow-lg z-40
+                  transition-all duration-200 py-2 px-2 space-y-1 border-t-4 border-transparent font-semibold
+                  ${openSubmenu === 'contact' ? 'opacity-100 pointer-events-auto border-red-700' : 'opacity-0 pointer-events-none'}
+                `}
+                style={{ touchAction: 'manipulation' }}
+              >
                 <Link href="/agent" className="block px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)]">{t('KW Agent')}</Link>
                 <div className="h-px bg-gray-700 my-1 w-full" />
                 <Link href="/contactUs" className="block px-3 py-1 text-white xl:text-[0.9rem] lg:text-[0.7rem] hover:text-[rgb(206,32,39,255)]">{t('Contact Us')}</Link>
@@ -308,7 +393,7 @@ const Header = () => {
         {/* Mobile Menu Toggle */}
         <button
           ref={buttonRef}
-          className="lg:hidden text-white focus:outline-none p-2"
+          className={`lg:hidden text-white focus:outline-none p-2 ${isRTL ? 'ml-4' : 'mr-4'}`}
           onClick={toggleMenu}
           aria-label={isMenuOpen ? t('Close menu') : t('Open menu')}
         >

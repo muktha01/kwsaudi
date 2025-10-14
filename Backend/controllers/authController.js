@@ -153,15 +153,17 @@ export const register = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Requester admin role:', req.admin?.role);
 
-    // Only accept these fields from frontend
-    const { firstName, phoneNumber, password, role = 'user' } = req.body;
+
+  // Only accept these fields from frontend
+  const { firstName, phoneNumber, password, role = 'user', permissions = [] } = req.body;
+
 
     // Only admin or superadmin can register users with admin/subadmin roles
     if (role === 'admin' || role === 'subadmin') {
       if (!req.admin || (req.admin.role !== 'admin' && req.admin.role !== 'superadmin')) {
         return res.status(403).json({
           success: false,
-          message: 'Only admin or superadmin can create admin accounts'
+          message: 'Only admin or superadmin can create admin/subadmin accounts'
         });
       }
     }
@@ -190,12 +192,14 @@ export const register = async (req, res) => {
       });
     }
 
+
     // Create new admin with only allowed fields
     const admin = new Admin({
       firstName,
       phoneNumber,
       password,
       role: role || 'user',
+      permissions: Array.isArray(permissions) ? permissions : [],
       createdBy: req.admin?._id || null
     });
 
@@ -440,7 +444,7 @@ export const getAllAdmins = async (req, res) => {
 // Set User Role and Permissions (Admin only)
 export const setUserRoleAndPermissions = async (req, res) => {
   try {
-    const { userId, role } = req.body;
+    const { userId, role, permissions } = req.body;
 
     if (!userId || !role) {
       return res.status(400).json({
@@ -449,9 +453,15 @@ export const setUserRoleAndPermissions = async (req, res) => {
       });
     }
 
+    // Build update object
+    const update = { role };
+    if (Array.isArray(permissions)) {
+      update.permissions = permissions;
+    }
+
     const admin = await Admin.findByIdAndUpdate(
       userId,
-      { role },
+      update,
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -464,7 +474,7 @@ export const setUserRoleAndPermissions = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'User role updated successfully',
+      message: 'User role and permissions updated successfully',
       admin
     });
   } catch (error) {

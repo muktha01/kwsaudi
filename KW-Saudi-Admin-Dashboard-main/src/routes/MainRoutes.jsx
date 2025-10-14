@@ -10,6 +10,9 @@ import ErrorBoundary from './ErrorBoundary';
 // import BannerDetails from '../views/dashboard/BannerDetails';
 // import BlogManagement from 'views/dashboard/BlogManagement';
 import NewsManagement from 'views/dashboard/NewsManagement';
+import NewsManagement_Arabic from 'views/dashboard/NewsManagement_arabic';
+import EventManagement_Arabic from 'views/dashboard/EventManagement-arabic';
+
 import EventManagement from 'views/dashboard/EventManagement';
 import UserManagement from 'views/dashboard/UserManagement';
 import AgentManagement from 'views/dashboard/AgentManagement';
@@ -227,6 +230,22 @@ const MainRoutes = {
             </ProtectedRoute>
           )
         },
+        {
+          path: 'news-arabic',
+          element: (
+            <ProtectedRoute>
+              <NewsManagement_Arabic />
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: 'events-arabic',
+          element: (
+            <ProtectedRoute>
+              <EventManagement_Arabic />
+            </ProtectedRoute>
+          )
+        },
       ]
     },
   
@@ -254,7 +273,7 @@ const MainRoutes = {
     //     </ProtectedRoute>
     //   )
     // },
-    {
+  {
       path: '/leads',
       element: (
         <ProtectedRoute>
@@ -262,7 +281,7 @@ const MainRoutes = {
         </ProtectedRoute>
       )
     },
-     {
+    {
       path: '/agentlinks',
       element: (
         <ProtectedRoute>

@@ -42,12 +42,32 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [permissions, setPermissions] = useState([]);
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === 'role') {
+      if (value === 'user-jasmin') {
+        setPermissions(['jasmin-leads']);
+      } else if (value === 'user-jeddah') {
+        setPermissions(['jeddah-leads']);
+      } else {
+        setPermissions([]);
+      }
+    }
     if (error) setError('');
+  };
+
+  const handlePermissionChange = (e) => {
+    const { value, checked } = e.target;
+    if (checked) {
+      setPermissions((prev) => [...prev, value]);
+    } else {
+      setPermissions((prev) => prev.filter((perm) => perm !== value));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -77,7 +97,7 @@ export default function Register() {
     
     try {
       const { firstName, phoneNumber, password, role } = form;
-      const result = await register({ firstName, phoneNumber, password, role });
+      const result = await register({ firstName, phoneNumber, password, role, permissions });
       if (result.success) {
         setSuccess('Registration successful! Redirecting to dashboard...');
         setTimeout(() => navigate('/dashboard/users'), 1500);
@@ -292,12 +312,54 @@ export default function Register() {
                       label="Role"
                       onChange={handleChange}
                     >
+                      <MenuItem value="user-jasmin">User-Jasmin</MenuItem>
+                      <MenuItem value="user-jeddah">User-Jeddah</MenuItem>
                       <MenuItem value="user">User</MenuItem>
                       {/* <MenuItem value="subadmin">SubAdmin</MenuItem> */}
                       <MenuItem value="admin">Admin</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
+
+                {/* Permissions Selector (only for user roles) */}
+                {(form.role === 'user' || form.role === 'user-jasmin' || form.role === 'user-jeddah') && (
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                      Assign Access Permissions:
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          value="jasmin-leads"
+                          checked={permissions.includes('jasmin-leads')}
+                          onChange={handlePermissionChange}
+                          disabled={form.role === 'user-jasmin'}
+                        />
+                        Jasmin Leads
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          value="jeddah-leads"
+                          checked={permissions.includes('jeddah-leads')}
+                          onChange={handlePermissionChange}
+                          disabled={form.role === 'user-jeddah'}
+                        />
+                        Jeddah Leads
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          value="all-leads"
+                          checked={permissions.includes('all-leads')}
+                          onChange={handlePermissionChange}
+                        />
+                        All Leads
+                      </label>
+                    </Box>
+                  </Grid>
+                )}
 
                 {/* Error Alert */}
                 {error && (

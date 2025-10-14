@@ -2,6 +2,7 @@
 
 
 // Server-side dynamic metadata
+export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seo/slug/news-details`, { cache: 'no-store' });
@@ -21,7 +22,8 @@ export async function generateMetadata() {
 }
 
 // Server component rendering the client component
+import NewsDetailPage from './NewsDetailPage';
+
 export default function Mypage() {
-  const NewsDetailPage = require('./NewsDetailPage').default;
   return <NewsDetailPage />;
 }

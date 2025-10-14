@@ -50,94 +50,125 @@ export default function MainLayout() {
   // Early return after all hooks
   if (menuMasterLoading) return <Loader />;
 
- const menuItems = [
-  {
-    key: 'dashboard',
-    icon: <HomeOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Dashboard',
-    path: '/dashboard/default'
-  },
-  { type: 'divider' },
-  {
-    key: 'seo-management',
-    icon: <RocketOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'SEO Management',
-    path: '/dashboard/seo'
-  },
-  {
-    key: 'page-builder',
-    icon: <AppstoreAddOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Page Management',
-    path: '/dashboard/manage-page'
-  },
-  {
-    key: 'homepagemanagement',
-    icon: <PictureOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Home Page Management',
-    path: '/dashboard/HomePageManagement'
-  },
-  {
-    key: 'news-manager',
-    icon: <FileTextOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'News Management',
-    path: '/dashboard/news'
-  },
-  {
-    key: 'event-manager',
-    icon: <CalendarOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Event Management',
-    path: '/dashboard/events'
-  },
-  {
-    key: 'employee-management',
-    icon: <TeamOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Employee Management',
-    path: '/dashboard/employee-management'
-  },
-  {
-    key: 'user-management',
-    icon: <UserOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Manage User',
-    path: '/dashboard/users'
-  },
-  // { type: 'divider' },
-  {
-    key: 'leads',
-    icon: <ContactsOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Forms Data',
-    path: '/Leads'
-  },
-  {
-    key: 'links',
-    icon: <LinkOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Agent Links',
-    path: '/AgentLinks'
-  },
-  {
-    key: 'pdf',
-    icon: <FilePdfOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Download PDF',
-    path: '/Downloadpdf'
-  },
-   {
-    key: 'pdf2',
-    icon: <FilePdfOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Download PDF-Arabic',
-    path: '/Pdf-arabic'
-  },
-  {
-    key: 'analytics',
-    icon: <BarChartOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Google Analytics Management',
-    path: '/dashboard/analytics'
-  },
-  {
-    key: 'translation',
-    icon: <GlobalOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
-    label: 'Language Translation',
-    path: '/dashboard/translations'
-  },
-];
+  // Restrict menu for user-jeddah, user-jasmin, and user roles
+  let menuItems = [];
+  const isJasminUser = admin && (
+    admin.role === 'user-jasmin' || admin.firstName === 'user-jasmin' || admin.phoneNumber === 'user-jasmin'
+  );
+  const isJeddahUser = admin && (
+    admin.role === 'user-jeddah' || admin.firstName === 'user-jeddah' || admin.phoneNumber === 'user-jeddah'
+  );
+  const isBasicUser = admin && admin.role === 'user';
+  if (isJasminUser || isJeddahUser || isBasicUser) {
+    menuItems = [
+      {
+        key: 'leads',
+        icon: <ContactsOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Forms Data',
+        path: '/Leads'
+      }
+    ];
+  } else {
+    menuItems = [
+      {
+        key: 'dashboard',
+        icon: <HomeOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Dashboard',
+        path: '/dashboard/default'
+      },
+      { type: 'divider' },
+      {
+        key: 'seo-management',
+        icon: <RocketOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'SEO Management',
+        path: '/dashboard/seo'
+      },
+      {
+        key: 'page-builder',
+        icon: <AppstoreAddOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Page Management',
+        path: '/dashboard/manage-page'
+      },
+      {
+        key: 'homepagemanagement',
+        icon: <PictureOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Home Page Management',
+        path: '/dashboard/HomePageManagement'
+      },
+      {
+        key: 'news-manager',
+        icon: <FileTextOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'News Management',
+        path: '/dashboard/news'
+      },
+      {
+        key: 'news-manager-arabic',
+        icon: <FileTextOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'News Management-Arabic',
+        path: '/dashboard/news-arabic'
+      },
+      {
+        key: 'event-manager',
+        icon: <CalendarOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Event Management',
+        path: '/dashboard/events'
+      },
+      {
+        key: 'event-manager-arabic',
+        icon: <CalendarOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Event Management-Arabic',
+        path: '/dashboard/events-arabic'
+      },
+      {
+        key: 'employee-management',
+        icon: <TeamOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Employee Management',
+        path: '/dashboard/employee-management'
+      },
+      {
+        key: 'user-management',
+        icon: <UserOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Manage User',
+        path: '/dashboard/users'
+      },
+      {
+        key: 'leads',
+        icon: <ContactsOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Forms Data',
+        path: '/Leads'
+      },
+      {
+        key: 'links',
+        icon: <LinkOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Agent Links',
+        path: '/AgentLinks'
+      },
+      {
+        key: 'pdf',
+        icon: <FilePdfOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Download PDF',
+        path: '/Downloadpdf'
+      },
+      {
+        key: 'pdf2',
+        icon: <FilePdfOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Download PDF-Arabic',
+        path: '/Pdf-arabic'
+      },
+      {
+        key: 'analytics',
+        icon: <BarChartOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Google Analytics Management',
+        path: '/dashboard/analytics'
+      },
+      {
+        key: 'translation',
+        icon: <GlobalOutlined style={{ fontSize: '20px', color: 'rgb(206,32,39,255)' }} />,
+        label: 'Language Translation',
+        path: '/dashboard/translations'
+      },
+    ];
+  }
 
 
   const handleMenuClick = ({ key }) => {

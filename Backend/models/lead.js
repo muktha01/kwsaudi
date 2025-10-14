@@ -27,11 +27,15 @@ const leadSchema = new mongoose.Schema({
   property_type: { type: String },
   valuation_type: { type: String },
 
+
   // Franchise
   dob: { type: Date },
   educationStatus: { type: String },
   promotionalConsent: { type: Boolean, default: false },
   personalDataConsent: { type: Boolean, default: false },
+
+  // Nationality (for all forms)
+  nationality: { type: String, default: false},
 
   // Contact Us
   enquiryType: { type: String },

@@ -38,6 +38,7 @@ export const exportLeadsExcel = async (req, res) => {
       const commonColumns = [
         { header: 'Full Name', key: 'fullName', width: 20 },
         { header: 'Mobile', key: 'mobileNumber', width: 15 },
+        { header: 'Nationality', key: 'nationality', width: 18 },
         { header: 'Created At', key: 'createdAt', width: 20 },
       ];
 
@@ -130,6 +131,7 @@ export const exportLeadsExcel = async (req, res) => {
         fullName: lead.fullName || lead.fullname || '',
         email: lead.email || '',
         mobileNumber: lead.mobileNumber || lead.phone || '',
+        nationality: lead.nationality || '',
         city: lead.city || '',
         formType: lead.formType || '',
         address: lead.address || '',

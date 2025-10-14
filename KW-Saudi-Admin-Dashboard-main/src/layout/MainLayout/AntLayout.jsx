@@ -86,11 +86,23 @@ export default function AntLayout() {
       label: 'News Management',
       path: '/dashboard/news'
     },
+     {
+      key: 'news-manager-arabic',
+      icon: <FileTextOutlined />,
+      label: 'News Management-Arabic',
+      path: '/dashboard/news-arabic'
+    },
     {
       key: 'event-manager',
       icon: <FileTextOutlined />,
       label: 'Event Management',
       path: '/dashboard/events'
+    },
+     {
+      key: 'event-manager-arabic',
+      icon: <FileTextOutlined />,
+      label: 'Event Management-Arabic',
+      path: '/dashboard/events-arabic'
     },
     {
       key: 'employee-management',

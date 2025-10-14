@@ -36,8 +36,8 @@ export default function PdfManager() {
   // Define the PDF types we want to manage
   // IMPORTANT: Use names 'pdf1' and 'pdf2' for compatibility with frontend download logic
   const pdfTypes = [
-    { name: "pdf1", title: "How to Sell Your Home" },
-    { name: "pdf2", title: "How to Buy a Home" }
+    { name: "How to Sell Your Home", title: "How to Sell Your Home" },
+    { name: "How to Buy a Home", title: "How to Buy a Home" }
   ];
 
   // User hint for admins

@@ -1044,15 +1044,19 @@ export const getFilterOptions = async (req, res) => {
       let offset = 0;
       let total = 0;
       let first = true;
-      
+
       do {
         const pageURL = `https://partners.api.kw.com/v2/listings/region/50394?page[offset]=${offset}&page[limit]=${apiLimit}`;
         const pageRes = await axios.get(pageURL, { headers });
         const hits = pageRes.data?.hits?.hits ?? [];
-        allListings = allListings.concat(hits.map(hit => ({
-          ...hit._source,
-          _kw_meta: { id: hit._id, score: hit._score ?? null },
-        })));
+
+        allListings = allListings.concat(
+          hits.map(hit => ({
+            ...hit._source,
+            _kw_meta: { id: hit._id, score: hit._score ?? null },
+          }))
+        );
+
         if (first) {
           total = pageRes.data?.hits?.total?.value ?? 0;
           first = false;
@@ -1065,62 +1069,74 @@ export const getFilterOptions = async (req, res) => {
       externalListingsCache.data = allListings.slice();
     }
 
-    // Extract unique values for dropdowns
+    // Unique sets (lowercased to ensure uniqueness)
     const propertyTypes = new Set();
     const cities = new Set();
     const subTypes = new Set();
     const marketCenters = new Set();
 
     allListings.forEach(listing => {
+      const normalize = v =>
+        typeof v === 'string' ? v.trim().toLowerCase() : null;
+
       // Property Types
-      if (listing.prop_type && typeof listing.prop_type === 'string') {
-        propertyTypes.add(listing.prop_type);
-      }
-      if (listing.property_type && typeof listing.property_type === 'string') {
-        propertyTypes.add(listing.property_type);
-      }
+      const propType = normalize(listing.prop_type);
+      const propertyType = normalize(listing.property_type);
+      if (propType) propertyTypes.add(propType);
+      if (propertyType) propertyTypes.add(propertyType);
 
       // Cities
-      if (listing.city && typeof listing.city === 'string') {
-        cities.add(listing.city);
-      }
-      if (listing.list_address?.city && typeof listing.list_address.city === 'string') {
-        cities.add(listing.list_address.city);
-      }
-      if (listing.location && typeof listing.location === 'string') {
-        cities.add(listing.location);
-      }
+      const city = normalize(listing.city);
+      const city2 = normalize(listing.list_address?.city);
+      const location = normalize(listing.location);
+      if (city) cities.add(city);
+      if (city2) cities.add(city2);
+      if (location) cities.add(location);
 
-      // Property Sub Types
-      if (listing.prop_subtype && typeof listing.prop_subtype === 'string') {
-        subTypes.add(listing.prop_subtype);
-      }
-      if (listing.property_subtype && typeof listing.property_subtype === 'string') {
-        subTypes.add(listing.prop_subtype);
-      }
+      // Property Subtypes
+      const subType = normalize(listing.prop_subtype);
+      const propertySubType = normalize(listing.property_subtype);
+      if (subType) subTypes.add(subType);
+      if (propertySubType) subTypes.add(propertySubType);
 
       // Market Centers
-      if (listing.market_center && typeof listing.market_center === 'string') {
-        marketCenters.add(listing.market_center);
-      }
-      if (listing.list_office?.office_name && typeof listing.list_office.office_name === 'string') {
-        marketCenters.add(listing.list_office.office_name);
-      }
+      const marketCenter = normalize(listing.market_center);
+      const listOffice = normalize(listing.list_office?.office_name);
+      if (marketCenter) marketCenters.add(marketCenter);
+      if (listOffice) marketCenters.add(listOffice);
     });
 
-    // Convert sets to sorted arrays with proper type checking
+    // Convert to arrays, capitalize first letter for display
+    const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+
+    // Remove 'Riyadh الرياض' from cities (case-insensitive, ignore whitespace)
+    const removeCity = (arr, cityToRemove) => {
+      const norm = s => s.replace(/\s+/g, '').toLowerCase();
+      return arr.filter(
+        c => norm(c) !== norm(cityToRemove)
+      );
+    };
+
+    let citiesArr = Array.from(cities).map(capitalize);
+    citiesArr = removeCity(citiesArr, 'Riyadh الرياض');
+
     const filterOptions = {
-      propertyTypes: Array.from(propertyTypes).filter(type => type && typeof type === 'string' && type.trim() !== '').sort(),
-      cities: Array.from(cities).filter(city => city && typeof city === 'string' && city.trim() !== '').sort(),
-      subTypes: Array.from(subTypes).filter(type => type && typeof type === 'string' && type.trim() !== '').sort(),
-      marketCenters: Array.from(marketCenters).filter(center => center && typeof center === 'string' && center.trim() !== '').sort()
+      propertyTypes: Array.from(propertyTypes)
+        .map(capitalize)
+        .sort(),
+      cities: citiesArr.sort(),
+      subTypes: Array.from(subTypes)
+        .map(capitalize)
+        .sort(),
+      marketCenters: Array.from(marketCenters)
+        .map(capitalize)
+        .sort(),
     };
 
     return res.json({
       success: true,
-      data: filterOptions
+      data: filterOptions,
     });
-
   } catch (err) {
     const status = err.response?.status ?? 500;
     const message = err.response?.data ?? err.message;
@@ -1132,3 +1148,4 @@ export const getFilterOptions = async (req, res) => {
     });
   }
 };
+

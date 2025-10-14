@@ -602,7 +602,7 @@ const [buyEmail, setBuyEmail] = useState("");
                setLoadingSell(true);
                setSellEmailError("");
                try {
-                 let pdfName = "pdf1";
+                 let pdfName = "How to Sell Your Home";
                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                  if (language === "ar") {
                    pdfName = "How to Sell Your Home-Arabic";
@@ -654,7 +654,7 @@ const [buyEmail, setBuyEmail] = useState("");
                setLoadingSell(true);
                setSellEmailError("");
                try {
-                 let pdfName = "pdf1";
+                 let pdfName = "How to Sell Your Home";
                  let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                  if (language === "ar") {
                    pdfName = "How to Sell Your Home-Arabic";
@@ -751,7 +751,7 @@ const [buyEmail, setBuyEmail] = useState("");
                  setLoadingBuy(true);
                  setBuyEmailError("");
                  try {
-                   let pdfName = "pdf2";
+                   let pdfName = "How to Buy a Home";
                    let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                    if (language === "ar") {
                      pdfName = "How to Buy a Home-Arabic";
@@ -802,7 +802,7 @@ const [buyEmail, setBuyEmail] = useState("");
                  setLoadingBuy(true);
                  setBuyEmailError("");
                  try {
-                   let pdfName = "pdf2";
+                   let pdfName = "How to Buy a Home";
                    let emailApi = `${process.env.NEXT_PUBLIC_API_URL}/save-email`;
                    if (language === "ar") {
                      pdfName = "How to Buy a Home-Arabic";

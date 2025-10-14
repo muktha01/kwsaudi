@@ -485,7 +485,15 @@ const applySorting = useCallback((propertiesArray) => {
     const qpCategory = searchParams?.get('category');
     
     if (qpCity) {
-      updateDisplayFilter('city', qpCity);
+      // Find a matching city from allCities, case-insensitive
+      let matchedCity = qpCity;
+      if (allCities && allCities.length > 0) {
+        const found = allCities.find(
+          (city) => city.toLowerCase() === qpCity.toLowerCase()
+        );
+        if (found) matchedCity = found;
+      }
+      updateDisplayFilter('city', matchedCity);
     }
     
     if (qpCategory) {
@@ -505,7 +513,7 @@ const applySorting = useCallback((propertiesArray) => {
         }));
       }
     }
-  }, [searchParams]);
+  }, [searchParams, allCities]);
   // Remove this line as it's now handled in displayFilters
   const [showSSTC, setShowSSTC] = useState(true);
 
@@ -850,7 +858,16 @@ const applySorting = useCallback((propertiesArray) => {
     className="w-full bg-white px-4 py-2 text-black outline-none border border-gray-300"
     value={displayFilters.city === 'CITY' ? '' : displayFilters.city}
     onChange={(e) => {
-      updateDisplayFilter('city', e.target.value || 'CITY');
+      const inputValue = e.target.value;
+      if (!inputValue) {
+        updateDisplayFilter('city', 'CITY');
+      } else {
+        // Find the city in allCities that matches inputValue case-insensitively
+        const matchedCity = allCities.find(
+          (city) => city.toLowerCase() === inputValue.toLowerCase()
+        );
+        updateDisplayFilter('city', matchedCity || inputValue);
+      }
     }}
   >
     <option value="">{t("Select Location")}</option>

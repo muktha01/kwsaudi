@@ -46,6 +46,7 @@ export const getAgentByEmail = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 export const fetchAgentOrProperties = async (req, res) => {
   try {
     const { org_id, singleAgent, page: reqPage, limit: reqLimit } = { 
@@ -54,23 +55,120 @@ export const fetchAgentOrProperties = async (req, res) => {
     };
     const agentId = req.params.agentId;  // Expect agentId in route param
 
-    // Single agent fetch case
+    // Single agent fetch case - fetch from KW API similar to getKWPeopleData
     if (agentId) {
-      let agent = null;
-
-      // Try find by kw_uid first
-      agent = await Agent.findOne({ kw_uid: agentId });
-
-      // Fallback to MongoDB _id search (in case frontend passes _id)
-      if (!agent && /^[0-9a-fA-F]{24}$/.test(agentId)) {
-        agent = await Agent.findById(agentId);
+      // Check cache first for this specific agent
+      const cacheKey = `agent-byid-${agentId}`;
+      const cachedAgent = getCachedData(cacheKey);
+      
+      if (cachedAgent) {
+        console.log('Returning cached agent data for:', agentId);
+        return res.status(200).json({
+          success: true,
+          agent: cachedAgent,
+          cached: true,
+          timestamp: new Date().toISOString()
+        });
       }
 
-      if (!agent) {
-        return res.status(404).json({ success: false, message: 'Agent not found' });
-      }
+      const headers = {
+        Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+        Accept: 'application/json',
+      };
 
-      return res.status(200).json({ success: true, agent });
+      // Use similar approach to getKWPeopleData - fetch reasonable chunks from both orgs
+      const urls = [
+        'https://partners.api.kw.com/v2/listings/orgs/2414288/people?offset=0&limit=1000',
+        'https://partners.api.kw.com/v2/listings/orgs/50449/people?offset=0&limit=1000'
+      ];
+
+      console.log(`Searching for agent ${agentId} in KW APIs:`, urls);
+
+      try {
+        // Fetch from both URLs in parallel (similar to getKWPeopleData pattern)
+        const responses = await Promise.all(
+          urls.map(async (url) => {
+            console.log(`Searching in: ${url}`);
+            const response = await axios.get(url, { 
+              headers, 
+              timeout: 15000,
+              maxRedirects: 3,
+              validateStatus: function (status) {
+                return status >= 200 && status < 300;
+              }
+            });
+
+            // Handle quota exceeded errors
+            if (response.data && response.data.success === 'false' && (response.data.errorCode === 'TOO_MANY_REQUESTS' || response.data.message?.toLowerCase().includes('quota'))) {
+              throw new Error(response.data.message || 'KW API quota exceeded or too many requests');
+            }
+
+            const people = response.data.data || response.data.people || [];
+            return {
+              url: url,
+              success: true,
+              total: response.data.meta?.total || people.length,
+              count: people.length,
+              data: people,
+              orgId: url.includes('2414288') ? 2414288 : 50449
+            };
+          })
+        );
+
+        // Search for agent in combined results
+        let foundAgent = null;
+        let sourceOrgId = null;
+
+        for (const response of responses) {
+          if (response.success && response.data) {
+            foundAgent = response.data.find(agent => String(agent.kw_uid) === String(agentId));
+            if (foundAgent) {
+              sourceOrgId = response.orgId;
+              console.log(`Agent ${agentId} found in org ${sourceOrgId}`);
+              break;
+            }
+          }
+        }
+
+        if (!foundAgent) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Agent not found',
+            searchedInOrgs: [2414288, 50449],
+            totalAgentsSearched: responses.reduce((total, resp) => total + (resp.count || 0), 0)
+          });
+        }
+
+        // Format agent data consistently
+        const formattedAgent = {
+          kw_uid: foundAgent.kw_uid,
+          first_name: foundAgent.first_name,
+          last_name: foundAgent.last_name,
+          full_name: foundAgent.full_name || `${foundAgent.first_name} ${foundAgent.last_name || ''}`.trim(),
+          email: foundAgent.email || '',
+          phone: foundAgent.phone || '',
+          market_center_number: foundAgent.market_center_number || '',
+          city: foundAgent.city || '',
+          active: foundAgent.active !== false,
+          photo: foundAgent.photo || '',
+          source_org_id: sourceOrgId
+        };
+
+        // Cache the formatted agent data
+        setCachedData(cacheKey, formattedAgent);
+
+        return res.status(200).json({ success: true, agent: formattedAgent });
+
+      } catch (apiError) {
+        console.error('Agent by ID API Error:', apiError?.response?.data || apiError.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch agent from KW API',
+          error: apiError.message,
+          agentId: agentId,
+          errorCode: apiError.response?.data?.errorCode || null
+        });
+      }
     }
 
     // Properties fetch logic (unchanged from your previous code)
@@ -1087,6 +1185,357 @@ export const getAllAgentsWithPropertyCounts = async (req, res) => {
   }
 };
 
+// Get People/Agents from KW API - Separate endpoint for the specific URLs
+export const getKWPeopleData = async (req, res) => {
+  try {
+    // Check cache first (using static cache key since URLs are fixed)
+    const cacheKey = 'kw-people-data-both-orgs';
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached people data for:', cacheKey);
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Same authentication as combined data endpoint
+    const headers = {
+      Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+      Accept: 'application/json',
+    };
+
+    // Only agent URLs - removed properties URL for better separation
+    const urls = [
+      'https://partners.api.kw.com/v2/listings/orgs/2414288/people?offset=0&limit=1000',
+      'https://partners.api.kw.com/v2/listings/orgs/50449/people?offset=0&limit=1000'
+    ];
+    
+    console.log(`Fetching KW People data from agent URLs:`, urls);
+    
+    try {
+      // Fetch from both URLs in parallel
+      const responses = await Promise.all(
+        urls.map(async (url) => {
+          console.log(`Fetching from: ${url}`);
+          const response = await axios.get(url, { 
+            headers, 
+            timeout: 15000,
+            maxRedirects: 3,
+            validateStatus: function (status) {
+              return status >= 200 && status < 300;
+            }
+          });
+
+          // Handle quota exceeded errors
+          if (response.data && response.data.success === 'false' && (response.data.errorCode === 'TOO_MANY_REQUESTS' || response.data.message?.toLowerCase().includes('quota'))) {
+            throw new Error(response.data.message || 'KW API quota exceeded or too many requests');
+          }
+
+          const people = response.data.data || response.data.people || [];
+          const total = response.data.meta?.total || response.data.pagination?.total || people.length;
+
+          return {
+            url: url,
+            success: true,
+            total: total,
+            count: people.length,
+            data: people
+          };
+        })
+      );
+
+      // Combine data from both organizations
+      let allPeople = [];
+      let totalFromAPIs = 0;
+      const apiResults = [];
+
+      responses.forEach(response => {
+        allPeople = allPeople.concat(response.data);
+        totalFromAPIs += response.total;
+        apiResults.push({
+          url: response.url,
+          total: response.total,
+          count: response.count
+        });
+      });
+
+      const responseData = {
+        success: true,
+        message: 'KW People data fetched successfully from both organizations (agents only)',
+        timestamp: new Date().toISOString(),
+        urls: urls,
+        apiResults: apiResults,
+        combined: {
+          totalFromAPIs: totalFromAPIs,
+          totalCombined: allPeople.length,
+          count: allPeople.length
+        },
+        data: allPeople
+      };
+
+      // Cache the response
+      setCachedData(cacheKey, responseData);
+
+      res.status(200).json(responseData);
+
+    } catch (apiError) {
+      console.error('KW People API Error:', apiError?.response?.data || apiError.message);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch people data from KW API (agents only)',
+        error: apiError.message,
+        urls: urls,
+        errorCode: apiError.response?.data?.errorCode || null
+      });
+    }
+
+  } catch (error) {
+    console.error('KW People Data Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch KW people data',
+      error: error.message
+    });
+  }
+};
+
+// Get agent counts only from both organizations (Jeddah and Jasmin)
+export const getAgentCounts = async (req, res) => {
+  try {
+    // Check cache first
+    const cacheKey = 'agent-counts-jeddah-jasmin';
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached agent counts');
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const headers = {
+      Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+      Accept: 'application/json',
+    };
+
+    // Define the URLs with organization names
+    const organizations = [
+      {
+        name: 'Jeddah',
+        orgId: '2414288',
+        url: 'https://partners.api.kw.com/v2/listings/orgs/2414288/people?offset=0&limit=1'
+      },
+      {
+        name: 'Jasmin',
+        orgId: '50449', 
+        url: 'https://partners.api.kw.com/v2/listings/orgs/50449/people?offset=0&limit=1'
+      }
+    ];
+
+    console.log('Fetching agent counts from both organizations...');
+
+    try {
+      // Fetch from both URLs in parallel (using limit=1 for efficiency since we only need count)
+      const responses = await Promise.all(
+        organizations.map(async (org) => {
+          console.log(`Fetching count from ${org.name}: ${org.url}`);
+          const response = await axios.get(org.url, { 
+            headers, 
+            timeout: 10000,
+            maxRedirects: 3,
+            validateStatus: function (status) {
+              return status >= 200 && status < 300;
+            }
+          });
+
+          // Handle quota exceeded errors
+          if (response.data && response.data.success === 'false' && (response.data.errorCode === 'TOO_MANY_REQUESTS' || response.data.message?.toLowerCase().includes('quota'))) {
+            throw new Error(response.data.message || 'KW API quota exceeded or too many requests');
+          }
+
+          const total = response.data.meta?.total || response.data.pagination?.total || 0;
+
+          return {
+            name: org.name,
+            orgId: org.orgId,
+            url: org.url,
+            success: true,
+            total: total
+          };
+        })
+      );
+
+      // Calculate total count
+      const totalCount = responses.reduce((sum, org) => sum + org.total, 0);
+
+      const responseData = {
+        success: true,
+        message: 'Agent counts fetched successfully from both organizations',
+        timestamp: new Date().toISOString(),
+        organizations: responses.map(org => ({
+          name: org.name,
+          orgId: org.orgId,
+          count: org.total
+        })),
+        totalCount: totalCount,
+        summary: {
+          jeddah: responses.find(org => org.name === 'Jeddah')?.total || 0,
+          jasmin: responses.find(org => org.name === 'Jasmin')?.total || 0,
+          total: totalCount
+        }
+      };
+
+      // Cache the response
+      setCachedData(cacheKey, responseData);
+
+      res.status(200).json(responseData);
+
+    } catch (apiError) {
+      console.error('Agent Counts API Error:', apiError?.response?.data || apiError.message);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch agent counts from KW API',
+        error: apiError.message,
+        organizations: organizations.map(org => ({ name: org.name, orgId: org.orgId })),
+        errorCode: apiError.response?.data?.errorCode || null
+      });
+    }
+
+  } catch (error) {
+    console.error('Agent Counts Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agent counts',
+      error: error.message
+    });
+  }
+};
+
+// Get Properties by Agent KW UID - Separate endpoint for fetching agent's properties
+export const getPropertiesByAgent = async (req, res) => {
+  try {
+    const { kw_uid } = req.params;
+
+    if (!kw_uid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Agent kw_uid is required'
+      });
+    }
+
+    // Check cache first
+    const cacheKey = `agent-properties-${kw_uid}`;
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached properties for agent:', kw_uid);
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const headers = {
+      Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+      Accept: 'application/json',
+    };
+
+    console.log(`Fetching properties for agent kw_uid: ${kw_uid}`);
+
+    // Define allowed status values
+    const allowedStatuses = ['Active', 'Sold', 'Rented/Leased', 'Off Market'];
+    
+    // Note: KW API doesn't support reliable status filtering in query params
+    // So we fetch all properties and filter efficiently on our side
+    let allProperties = [];
+    let offset = 0; // Initialize offset for pagination
+    const listingsURL = `https://partners.api.kw.com/v2/listings/region/50394?page[offset]=${offset}&page[limit]=3000`;
+    
+    try {
+      console.log(`Fetching FILTERED properties from: ${listingsURL}`);
+      const listingsResponse = await axios.get(listingsURL, { 
+        headers,
+        timeout: 30000, // Increased timeout for large response
+        maxRedirects: 3,
+        validateStatus: function (status) {
+          return status >= 200 && status < 300;
+        }
+      });
+
+      // Handle quota exceeded errors
+      if (listingsResponse.data && listingsResponse.data.success === 'false' && (listingsResponse.data.errorCode === 'TOO_MANY_REQUESTS' || listingsResponse.data.message?.toLowerCase().includes('quota'))) {
+        throw new Error(listingsResponse.data.message || 'KW API quota exceeded or too many requests');
+      }
+
+      const hits = listingsResponse.data?.hits?.hits ?? [];
+      const listings = hits.map(hit => ({
+        ...hit._source,
+        _kw_meta: { id: hit._id, score: hit._score ?? null },
+      }));
+
+      allProperties = listings;
+      console.log(`Successfully fetched ${allProperties.length} total properties from KW API`);
+
+    } catch (error) {
+      console.error('Error fetching properties:', error.message);
+      throw error;
+    }
+
+    // Step 1: Filter properties for the specific agent
+    const agentProperties = allProperties.filter(property => {
+      const listKwUid = property.list_kw_uid || property.listing_agent_kw_uid || property.agent_kw_uid || '';
+      return String(listKwUid) === String(kw_uid);
+    });
+
+    // Step 2: Apply status filtering to agent properties only (efficient)
+    const filteredAgentProperties = agentProperties.filter(property => {
+      const status = property.list_status;
+      return status && allowedStatuses.includes(status);
+    });
+
+    console.log(`Found ${agentProperties.length} total properties for agent ${kw_uid}`);
+    console.log(`After status filtering: ${filteredAgentProperties.length} properties with allowed statuses`);
+
+    const responseData = {
+      success: true,
+      message: `Properties fetched successfully for agent ${kw_uid}`,
+      timestamp: new Date().toISOString(),
+      agentKwUid: kw_uid,
+      summary: {
+        totalPropertiesScanned: allProperties.length, // All properties in system
+        agentPropertiesTotal: agentProperties.length, // Agent's total properties
+        agentPropertiesFiltered: filteredAgentProperties.length, // After status filtering
+        propertiesReturned: filteredAgentProperties.length,
+        allowedStatuses: allowedStatuses,
+        filteringApproach: "client_side_efficient", // Clear about filtering method
+        note: "KW API does not support reliable status filtering at query level"
+      },
+      properties: filteredAgentProperties,
+      count: agentProperties.length
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error('Properties by Agent Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch properties for agent',
+      error: error.message,
+      agentKwUid: req.params.kw_uid
+    });
+  }
+};
+
 // export const getCombinedListings = async (req, res) => {
 //   try {
 //     const regionIds = ['50394', '50449', '2414288'];
@@ -1097,7 +1546,7 @@ export const getAllAgentsWithPropertyCounts = async (req, res) => {
 //     let allListings = [];
 
 //     const headers = {
-//       Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
+//       Authorization: 'Basic b2FoNkRibjE2dHFvOE56M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVZpckl3Mg==',
 //       Accept: 'application/json',
 //     };
 

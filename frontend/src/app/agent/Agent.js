@@ -39,62 +39,52 @@ const AgentMap = React.memo(({
   t,
   filterName // Add filterName prop to determine map center
 }) => {
-  
-  // Function to determine map center based on search term or agents
-  const getMapCenter = () => {
-    // City coordinates for major Saudi cities
-    const cityCoordinates = {
-      'riyadh': { lat: 24.7136, lng: 46.6753, zoom: 10 },
-      'jeddah': { lat: 21.4225, lng: 39.8262, zoom: 10 },
-      'mecca': { lat: 21.3891, lng: 39.8579, zoom: 10 },
-      'medina': { lat: 24.5247, lng: 39.5692, zoom: 10 },
-      'dammam': { lat: 26.4282, lng: 50.1020, zoom: 10 },
-      'khobar': { lat: 26.2172, lng: 50.1971, zoom: 10 },
-      'dhahran': { lat: 26.2361, lng: 50.1455, zoom: 10 },
-      'tabuk': { lat: 28.3998, lng: 36.5700, zoom: 10 }
-    };
+  // --- Fit bounds for both Riyadh and Jeddah if both are present ---
+  const mapRef = useRef(null);
+  // Debounce timer for hover flicker fix
+  const hoverTimeout = useRef();
 
-    // If there's a search term, check if it matches a city
-    if (filterName && filterName.trim()) {
-      const searchTerm = filterName.trim().toLowerCase();
-      if (cityCoordinates[searchTerm]) {
-        return cityCoordinates[searchTerm];
-      }
-    }
-
-    // If agents are available, try to center based on their locations
-    if (agents && agents.length > 0) {
-      // Check if most agents are from a specific city
-      const cityCounts = {};
-      agents.forEach(agent => {
-        if (agent.city) {
-          const cityKey = agent.city.toLowerCase().trim();
-          cityCounts[cityKey] = (cityCounts[cityKey] || 0) + 1;
-        }
-      });
-
-      // Find the city with most agents
-      const dominantCity = Object.keys(cityCounts).reduce((a, b) => 
-        cityCounts[a] > cityCounts[b] ? a : b, null
-      );
-
-      if (dominantCity && cityCoordinates[dominantCity]) {
-        return cityCoordinates[dominantCity];
-      }
-    }
-
-    // Default to Saudi Arabia center view
-    return { lat: 24.7136, lng: 46.6753, zoom: 6 };
-  };
-
-  const mapCenter = getMapCenter();
-
-  // Cleanup timeout on unmount
   useEffect(() => {
-    return () => {
-      // No cleanup needed for simplified hover
-    };
-  }, []);
+    if (!isLoaded || !window.google || !mapRef.current || !agents || agents.length === 0) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    let hasMarker = false;
+    agents.forEach(agent => {
+      let lat = null, lng = null;
+      if (agent.latitude && agent.longitude) {
+        lat = agent.latitude;
+        lng = agent.longitude;
+      } else if (agent.lat && agent.lng) {
+        lat = agent.lat;
+        lng = agent.lng;
+      } else if (agent.location && agent.location.lat && agent.location.lng) {
+        lat = agent.location.lat;
+        lng = agent.location.lng;
+      } else if (agent.coordinates && Array.isArray(agent.coordinates) && agent.coordinates.length === 2) {
+        lat = agent.coordinates[0];
+        lng = agent.coordinates[1];
+      } else if (agent.city) {
+        const cityCoordinates = {
+          'riyadh': { lat: 24.7136, lng: 46.6753 },
+          'jeddah': { lat: 21.4858, lng: 39.1925 }
+        };
+        const cityKey = agent.city.toLowerCase().trim();
+        if (cityCoordinates[cityKey]) {
+          lat = cityCoordinates[cityKey].lat;
+          lng = cityCoordinates[cityKey].lng;
+        }
+      }
+      if (lat && lng) {
+        bounds.extend({ lat, lng });
+        hasMarker = true;
+      }
+    });
+    // Always include both Riyadh and Jeddah in bounds for consistent view
+    bounds.extend({ lat: 24.7136, lng: 46.6753 });
+    bounds.extend({ lat: 21.4858, lng: 39.1925 });
+    if (hasMarker) {
+      mapRef.current.fitBounds(bounds, 100);
+    }
+  }, [isLoaded, agents]);
 
   if (!isLoaded) {
     return (
@@ -108,11 +98,12 @@ const AgentMap = React.memo(({
     <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-gray-100"><Spinner size="lg" color="red" text={t('Loading map...')} /></div>}>
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={{ lat: mapCenter.lat, lng: mapCenter.lng }} // Dynamic center based on search or agents
-        zoom={mapCenter.zoom} // Dynamic zoom level
+        center={{ lat: 24.7136, lng: 46.6753 }} // Default center, will be overridden by fitBounds if both cities present
+        zoom={6}
         onLoad={(map) => {
           setDesktopMap(map);
           setMapProjection(map.getProjection());
+          mapRef.current = map;
         }}
         options={{
           streetViewControl: false,
@@ -175,48 +166,88 @@ const AgentMap = React.memo(({
               lat = agent.coordinates[0];
               lng = agent.coordinates[1];
             }
-            // Fifth priority: Try to use city coordinates as fallback - ENHANCED
+            // Fifth priority: Try to use city coordinates as fallback (NO random offset, strict match)
             else if (agent.city) {
-              // Add some default city coordinates for major Saudi cities
+              // Add more cities as needed
               const cityCoordinates = {
                 'riyadh': { lat: 24.7136, lng: 46.6753 },
-                'jeddah': { lat: 21.4225, lng: 39.8262 },
-                'mecca': { lat: 21.3891, lng: 39.8579 },
-                'medina': { lat: 24.5247, lng: 39.5692 },
-                'dammam': { lat: 26.4282, lng: 50.1020 },
+                'الرياض': { lat: 24.7136, lng: 46.6753 }, // Arabic for Riyadh
+                'الريـاض': { lat: 24.7136, lng: 46.6753 }, // Arabic variant with tatweel
+                'jeddah': { lat: 21.4858, lng: 39.1925 },
+                'makkah': { lat: 21.3891, lng: 39.8579 },
+                'dammam': { lat: 26.4207, lng: 50.0888 },
                 'khobar': { lat: 26.2172, lng: 50.1971 },
-                'dhahran': { lat: 26.2361, lng: 50.1455 },
-                'tabuk': { lat: 28.3998, lng: 36.5700 }
+                'medina': { lat: 24.5247, lng: 39.5692 },
+                'madinah': { lat: 24.5247, lng: 39.5692 },
+                'mecca': { lat: 21.3891, lng: 39.8579 },
+                'al khobar': { lat: 26.2172, lng: 50.1971 },
+                'al-khobar': { lat: 26.2172, lng: 50.1971 },
+                'tabuk': { lat: 28.3838, lng: 36.5550 },
+                'abha': { lat: 18.2465, lng: 42.5117 },
+                'hail': { lat: 27.5114, lng: 41.7208 },
+                'qassim': { lat: 26.2074, lng: 43.4837 },
+                'al ahsa': { lat: 25.3832, lng: 49.5958 },
+                'al-ahsa': { lat: 25.3832, lng: 49.5958 },
+                'taif': { lat: 21.4373, lng: 40.5127 },
+                'yanbu': { lat: 24.0895, lng: 38.0618 },
+                // Add more as needed
               };
-              
-              const cityKey = agent.city.toLowerCase().trim();
+              // Normalize city name: lowercase, trim, replace dashes/underscores with space, collapse spaces
+              let cityKey = agent.city.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+              // Try direct match, then try removing spaces
               if (cityCoordinates[cityKey]) {
-                lat = cityCoordinates[cityKey].lat + (Math.random() - 0.5) * 0.1; // Add small random offset
-                lng = cityCoordinates[cityKey].lng + (Math.random() - 0.5) * 0.1;
-                // console.log(`📍 Using city fallback for ${agent.name} in ${agent.city}:`, lat, lng);
+                lat = cityCoordinates[cityKey].lat;
+                lng = cityCoordinates[cityKey].lng;
+              } else if (cityCoordinates[cityKey.replace(/\s/g, '')]) {
+                lat = cityCoordinates[cityKey.replace(/\s/g, '')].lat;
+                lng = cityCoordinates[cityKey.replace(/\s/g, '')].lng;
+              } else {
+                // Try to match any city key that matches after removing all spaces
+                const cityKeyNoSpace = cityKey.replace(/\s/g, '');
+                for (const key in cityCoordinates) {
+                  if (key.replace(/\s/g, '') === cityKeyNoSpace) {
+                    lat = cityCoordinates[key].lat;
+                    lng = cityCoordinates[key].lng;
+                    break;
+                  }
+                }
               }
             }
-            
-            // Final fallback: If still no coordinates, use Riyadh center with random offset
+            // Final fallback: If still no coordinates, skip rendering this agent on the map
             if (!lat || !lng) {
-              lat = 24.7136 + (Math.random() - 0.5) * 0.2; // Random around Riyadh
-              lng = 46.6753 + (Math.random() - 0.5) * 0.2;
-              // console.log(`🔄 Using final fallback coordinates for ${agent.name}:`, lat, lng);
+              return null;
             }
 
-            // Handle overlapping coordinates
-            const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+            // Handle overlapping coordinates: always offset if more than one agent at same spot
+            const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
             coordSeen[key] = (coordSeen[key] || 0) + 1;
-            const offsetCoords = getOffsetCoords([lat, lng], coordSeen[key] - 1);
+            // Offset every marker after the first at this location
+            const offsetAmount = 0.01; // ~1km offset, adjust as needed
+            let offsetCoords = { lat, lng };
+            if (coordSeen[key] > 1) {
+              // Spread markers in a circle around the original point
+              const angle = (coordSeen[key] - 2) * (2 * Math.PI / 8); // 8 possible directions
+              offsetCoords = {
+                lat: lat + Math.cos(angle) * offsetAmount,
+                lng: lng + Math.sin(angle) * offsetAmount
+              };
+            }
 
-            const isActive = hoveredAgent && hoveredAgent._id === agent._id;
-            const isFixed = hoveredAgent?.fixed && hoveredAgent?._id === agent._id;
+            const isActive = hoveredAgent && hoveredAgent._id === agent._id && !hoveredAgent.fixed;
+            const isFixed = hoveredAgent && hoveredAgent._id === agent._id && hoveredAgent.fixed;
             const showAbove = shouldShowAbove(offsetCoords);
             
-            // // Debug log for map card visibility
-            // if (isActive || isFixed) {
-            //   console.log(`🗺️ Showing map card for agent: ${agent.name}, isActive: ${isActive}, isFixed: ${isFixed}`);
-            // }
+            // --- Shared hover logic for badge and card ---
+            let hoverTimeout = null;
+            const handleMouseEnter = () => {
+              if (hoverTimeout) clearTimeout(hoverTimeout);
+              if (!isFixed) setHoveredAgent({ ...agent });
+            };
+            const handleMouseLeave = () => {
+              if (!isFixed) {
+                hoverTimeout = setTimeout(() => setHoveredAgent(null), 120); // Small delay to allow moving between badge and card
+              }
+            };
             
             // Create truly unique key for map markers
             const mapUniqueKey = `map-agent-${idx}-${agent._id || 'unknown'}-${agent.name || 'unnamed'}-${lat.toFixed(4)}-${lng.toFixed(4)}`.replace(/\s+/g, '-');
@@ -240,68 +271,29 @@ const AgentMap = React.memo(({
                         transition: 'transform 0.2s ease-out',
                         willChange: 'transform'
                       }}
-                      onMouseEnter={(e) => {
-                        e.stopPropagation();
-                        
-                        // Simple immediate hover like properties
-                        if (!hoveredAgent || hoveredAgent._id !== agent._id) {
-                          setHoveredAgent({ ...agent, latitude: lat, longitude: lng });
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.stopPropagation();
-                        
-                        // Simple delayed clear like properties
-                        setTimeout(() => {
-                          setHoveredAgent(prev => {
-                            // If current hovered agent is fixed, don't clear it
-                            if (prev && prev.fixed && prev._id === agent._id) {
-                              return prev;
-                            }
-                            // Only clear if this is the correct agent and not fixed
-                            if (prev && prev._id === agent._id && !prev.fixed) {
-                              return null;
-                            }
-                            return prev;
-                          });
-                        }, 100);
-                      }}
+                      onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
                       onClick={() => {
-                        // If already fixed and clicked again, navigate to agent details
-                        if (hoveredAgent?.fixed && hoveredAgent?._id === agent._id) {
+                        if (isFixed) {
                           handleAgentClick(agent);
                           return;
                         }
-                        
-                        // If not fixed, make it fixed (pinned) on first click
-                        if (!hoveredAgent?.fixed || hoveredAgent?._id !== agent._id) {
-                          setHoveredAgent({ 
-                            ...agent, 
-                            latitude: lat, 
-                            longitude: lng, 
-                            fixed: true 
-                          });
-                          
-                          // Smart pan behavior (same as properties)
-                          if (desktopMap && mapProjection) {
-                            const latLng = new window.google.maps.LatLng(offsetCoords.lat, offsetCoords.lng);
-                            const projPoint = mapProjection.fromLatLngToPoint(latLng);
-                            const scale = Math.pow(2, desktopMap.getZoom());
-                            const bounds = desktopMap.getBounds();
-                            
-                            if (bounds) {
-                              const ne = bounds.getNorthEast();
-                              const sw = bounds.getSouthWest();
-                              const topRight = mapProjection.fromLatLngToPoint(ne);
-                              const bottomLeft = mapProjection.fromLatLngToPoint(sw);
-                              const y = (projPoint.y - topRight.y) * scale;
-                              const mapHeight = desktopMap.getDiv().clientHeight;
-                              
-                              // If marker is in bottom 65% of map, pan up
-                              if (y > mapHeight * 0.65) {
-                                const panAmount = Math.min(300, mapHeight * 0.3);
-                                desktopMap.panBy(0, -panAmount);
-                              }
+                        setHoveredAgent({ ...agent, fixed: true });
+                        if (desktopMap && mapProjection) {
+                          const latLng = new window.google.maps.LatLng(offsetCoords.lat, offsetCoords.lng);
+                          const projPoint = mapProjection.fromLatLngToPoint(latLng);
+                          const scale = Math.pow(2, desktopMap.getZoom());
+                          const bounds = desktopMap.getBounds();
+                          if (bounds) {
+                            const ne = bounds.getNorthEast();
+                            const sw = bounds.getSouthWest();
+                            const topRight = mapProjection.fromLatLngToPoint(ne);
+                            const bottomLeft = mapProjection.fromLatLngToPoint(sw);
+                            const y = (projPoint.y - topRight.y) * scale;
+                            const mapHeight = desktopMap.getDiv().clientHeight;
+                            if (y > mapHeight * 0.65) {
+                              const panAmount = Math.min(300, mapHeight * 0.3);
+                              desktopMap.panBy(0, -panAmount);
                             }
                           }
                         }
@@ -327,34 +319,13 @@ const AgentMap = React.memo(({
                       position: 'relative' 
                     }}>
                       <div 
-                        className="bg-white  shadow-xl max-w-xs w-72 cursor-pointer border border-gray-200 relative"
-                        onMouseEnter={(e) => {
-                          e.stopPropagation();
-                          
-                          // Simple immediate hover like properties
-                          if (!hoveredAgent || hoveredAgent._id !== agent._id) {
-                            setHoveredAgent({ ...agent, latitude: lat, longitude: lng });
-                          }
+                        className="bg-white shadow-xl max-w-xs w-72 cursor-pointer border border-gray-200 relative"
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                        onClick={() => {
+                          setHoveredAgent({ ...agent, fixed: true });
                         }}
-                        onMouseLeave={(e) => {
-                          e.stopPropagation();
-                          
-                          // Simple delayed clear like properties
-                          setTimeout(() => {
-                            setHoveredAgent(prev => {
-                              // If current hovered agent is fixed, don't clear it
-                              if (prev && prev.fixed && prev._id === agent._id) {
-                                return prev;
-                              }
-                              // Clear hover state
-                              if (prev && prev._id === agent._id && !prev.fixed) {
-                                return null;
-                              }
-                              return prev;
-                            });
-                          }, 100);
-                        }}
-                        onClick={() => handleAgentClick(agent)}
+                        style={{ zIndex: 100 }}
                       >
                         <div className="p-4">
                           {/* Close button for fixed cards */}
@@ -404,6 +375,7 @@ const AgentMap = React.memo(({
                           </div>
                           <button
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               handleAgentClick(agent);
                             }}
@@ -484,9 +456,7 @@ const AgentContent = () => {
   const [filterMarket, setFilterMarket] = useState("");
   const [filterCity, setFilterCity] = useState("");
 
-  // Cache for API responses with localStorage persistence
-  const cacheRef = useRef(new Map());
-  const [cacheInitialized, setCacheInitialized] = useState(false);
+  // Removed complex caching - now using direct API calls
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -562,46 +532,16 @@ const AgentContent = () => {
   //   }
   // }, [hoveredAgent, desktopMap]);
 
-  // Initialize cache from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !cacheInitialized) {
-      try {
-        const savedCache = localStorage.getItem('agents-cache');
-        const savedTimestamp = localStorage.getItem('agents-cache-timestamp');
-        const now = Date.now();
-      const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+  // Removed cache initialization
 
-        
-        if (savedCache && savedTimestamp && (now - parseInt(savedTimestamp)) < CACHE_DURATION) {
-          const parsedCache = JSON.parse(savedCache);
-          cacheRef.current = new Map(parsedCache);
-        }
-      } catch (error) {
-        // console.warn('Failed to load cache from localStorage:', error);
-      }
-      setCacheInitialized(true);
-    }
-  }, [cacheInitialized]);
-
-  // Cached API fetch function with localStorage persistence
-  const fetchAgentsWithCache = useCallback(async (page = 1, pageSize = 6) => {
-    const cacheKey = `agents-page-${page}-size-${pageSize}`;
-    
-    // Check memory cache first
-    if (cacheRef.current.has(cacheKey)) {
-      return cacheRef.current.get(cacheKey);
-    }
-
+  // Simple API fetch function without caching
+  const fetchAgents = useCallback(async (page = 1, pageSize = 6) => {
     try {
-      // Use pagination parameters to reduce load time
       const offset = (page - 1) * pageSize;
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=${offset}&limit=${pageSize}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/people-data?offset=${offset}&limit=${pageSize}`;
       
-
-      
-      // Add timeout to prevent hanging requests
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced to 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const res = await fetch(url, {
         method: 'GET',
@@ -616,178 +556,11 @@ const AgentContent = () => {
       }
       
       const data = await res.json();
-      // console.log('API Response Structure:', data);
-      
-      // Extract coordinates mapping from different data sources
-      const coordinatesMap = new Map();
-      
-      // Process all results to build coordinate mapping
-      if (data.success && Array.isArray(data.results)) {
-        data.results.forEach(result => {
-          if (result.success && result.data) {
-            // Check if this is coordinates data (typically from 50394)
-            if (result.type && result.type.includes('listings')) {
-              // console.log('Found coordinates data from listings:', result.type);
-              result.data.forEach(item => {
-                if (item._source && item._source.list_address) {
-                  // Try multiple sources for agent identification
-                  const kw_uid = item._source.co_list_kw_uid || 
-                               item._source.kw_uid || 
-                               item._source.list_kw_uid ||
-                               item._source.list_agent_kw_uid ||
-                               item._source.listing_agent_kw_uid ||
-                               item._id;
-                  
-                  // Also get email for matching
-                  const email = item._source.list_agent_email || 
-                               item._source.agent_email || 
-                               item._source.email;
-                  
-                  const coordinates = item._source.list_address.coordinates_gp || item._source.list_address.coordinates_gs;
-                  
-                  if ((kw_uid || email) && coordinates) {
-                    // Store with multiple key formats for better matching
-                    const coordData = {
-                      lat: coordinates.lat || coordinates.coordinates?.[1],
-                      lng: coordinates.lon || coordinates.coordinates?.[0],
-                      city: item._source.city || item._source.list_address.city,
-                      email: email,
-                      kw_uid: kw_uid
-                    };
-                    
-                    if (coordData.lat && coordData.lng) {
-                      // Store with different key formats including email
-                      const keys = [];
-                      
-                      // Add kw_uid based keys
-                      if (kw_uid) {
-                        keys.push(
-                          kw_uid.toString(),
-                          parseInt(kw_uid).toString(),
-                          `kw_${kw_uid}`,
-                          kw_uid
-                        );
-                      }
-                      
-                      // Add email based keys
-                      if (email) {
-                        keys.push(
-                          email.toLowerCase(),
-                          `email_${email.toLowerCase()}`
-                        );
-                      }
-                      
-                      // Add _id based keys
-                      if (item._id) {
-                        keys.push(
-                          item._id.toString(),
-                          `id_${item._id}`
-                        );
-                      }
-                      
-                      keys.forEach(key => {
-                        coordinatesMap.set(key, coordData);
-                      });
-                      
-                      // console.log(`Mapped coordinates for kw_uid ${kw_uid}, email ${email}, _id ${item._id} (multiple formats):`, coordData.lat, coordData.lng);
-                    } else if (Array.isArray(coordinates.coordinates)) {
-                      const coordData2 = {
-                        lat: coordinates.coordinates[1],
-                        lng: coordinates.coordinates[0],
-                        city: item._source.city || item._source.list_address.city,
-                        email: email,
-                        kw_uid: kw_uid
-                      };
-                      
-                      // Store with different key formats including email
-                      const keys = [];
-                      
-                      // Add kw_uid based keys
-                      if (kw_uid) {
-                        keys.push(
-                          kw_uid.toString(),
-                          parseInt(kw_uid).toString(),
-                          `kw_${kw_uid}`,
-                          kw_uid
-                        );
-                      }
-                      
-                      // Add email based keys
-                      if (email) {
-                        keys.push(
-                          email.toLowerCase(),
-                          `email_${email.toLowerCase()}`
-                        );
-                      }
-                      
-                      // Add _id based keys
-                      if (item._id) {
-                        keys.push(
-                          item._id.toString(),
-                          `id_${item._id}`
-                        );
-                      }
-                      
-                      keys.forEach(key => {
-                        coordinatesMap.set(key, coordData2);
-                      });
-                      
-                      // console.log(`Mapped array coordinates for kw_uid ${kw_uid}, email ${email}, _id ${item._id} (multiple formats):`, coordinates.coordinates);
-                    }
-                  }
-                }
-              });
-            }
-            
-            // Check if this is region data (50394)
-            if (result.type && result.type.includes('region')) {
-              // console.log('Found region data:', result.type);
-              result.data.forEach(item => {
-                if (item._source) {
-                  const coordinates = item._source.coordinates_gp || item._source.coordinates_gs;
-                  const city = item._source.city;
-                  
-                  if (coordinates && city) {
-                    // Store city-level coordinates as fallback
-                    const cityKey = `city_${city.toLowerCase()}`;
-                    if (coordinates.lat && coordinates.lon) {
-                      coordinatesMap.set(cityKey, {
-                        lat: coordinates.lat,
-                        lng: coordinates.lon,
-                        city: city,
-                        isCity: true
-                      });
-                      // console.log(`Mapped city coordinates for ${city}:`, coordinates.lat, coordinates.lon);
-                    }
-                  }
-                }
-              });
-            }
-          }
-        });
-      }
-      
-      // console.log('Coordinates Map:', coordinatesMap);
-      
-      // Store coordinates map for use in processAgentData
-      data.coordinatesMap = coordinatesMap;
-      
-      // Cache the response in memory
-      cacheRef.current.set(cacheKey, data);
-      
-      // Save to localStorage with timestamp
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('agents-cache', JSON.stringify([...cacheRef.current.entries()]));
-          localStorage.setItem('agents-cache-timestamp', Date.now().toString());
-        } catch (error) {
-          // console.warn('Failed to save cache to localStorage:', error);
-        }
-      }
+      console.log('API Response Structure:', data);
       
       return data;
     } catch (error) {
-      // console.error('Failed to fetch agents:', error);
+      console.error('Failed to fetch agents:', error);
       throw error;
     }
   }, []);
@@ -837,128 +610,102 @@ const AgentContent = () => {
     }
   }, [searchParams, filterName]);
 
-  // Optimized agent processing function
+  // Optimized agent processing function with enhanced coordinate mapping
   const processAgentData = useCallback((data) => {
-    if (!data.success || !Array.isArray(data.results)) {
+    if (!data.success) {
       throw new Error(data.message || 'Invalid response format');
     }
 
-    const coordinatesMap = data.coordinatesMap || new Map();
-    // console.log('Processing agents with coordinates map:', coordinatesMap);
-    // console.log('Available coordinate keys:', Array.from(coordinatesMap.keys()));
-
+    // Handle new people-data endpoint structure
     let fetchedAgents = [];
-    data.results.forEach(result => {
-      if (result.success && result.type && result.type.startsWith('people_org')) {
-        const agentData = result.data || [];
-        fetchedAgents = fetchedAgents.concat(agentData);
-      }
-    });
-
-    // console.log('Sample agent kw_uids:', fetchedAgents.slice(0, 5).map(agent => ({
-    //   name: `${agent.first_name} ${agent.last_name}`,
-    //   kw_uid: agent.kw_uid,
-    //   id: agent.id,
-    //   _id: agent._id,
-    //   email: agent.email || agent.work_email
-    // })));
+    if (Array.isArray(data.data)) {
+      // New people-data endpoint: agents are directly in data array
+      fetchedAgents = data.data;
+    } else if (Array.isArray(data.results)) {
+      // Old combined-data endpoint: agents are in results with type checking
+      data.results.forEach(result => {
+        if (result.success && result.type && result.type.startsWith('people_org')) {
+          const agentData = result.data || [];
+          fetchedAgents = fetchedAgents.concat(agentData);
+        }
+      });
+    }
 
     return fetchedAgents.map(item => {
-      // Extract coordinates from API response
+      // Extract coordinates from API response with enhanced fallback
       let latitude = null, longitude = null;
       const kw_uid = item.kw_uid || item.id || item._id;
       const email = item.email || item.work_email;
       
-      // First priority: Try to get coordinates from the coordinates map using kw_uid
-      if (kw_uid && coordinatesMap.has(kw_uid)) {
-        const coords = coordinatesMap.get(kw_uid);
-        latitude = coords.lat;
-        longitude = coords.lng;
-      //   console.log(`✓ Agent ${item.first_name} ${item.last_name}: Found mapped coordinates for kw_uid ${kw_uid}:`, latitude, longitude);
-       }
-      
-      // Also try alternative kw_uid formats if no match found
-      if (!latitude && !longitude && kw_uid) {
-        // Try with different kw_uid formats that might be in the coordinates map
-        const alternativeKeys = [
-          kw_uid.toString(),
-          parseInt(kw_uid).toString(),
-          `kw_${kw_uid}`,
-          item.id?.toString(),
-          item._id?.toString(),
-          `id_${item.id}`,
-          `id_${item._id}`
-        ];
-        
-        for (const altKey of alternativeKeys) {
-          if (altKey && coordinatesMap.has(altKey)) {
-            const coords = coordinatesMap.get(altKey);
-            latitude = coords.lat;
-            longitude = coords.lng;
-            //console.log(`✓ Agent ${item.first_name} ${item.last_name}: Found mapped coordinates with alternative key ${altKey}:`, latitude, longitude);
-            break;
-          }
+      // Check for direct coordinates in agent data first
+      if (item.coordinates_gp) {
+        if (item.coordinates_gp.lat && item.coordinates_gp.lon) {
+          latitude = item.coordinates_gp.lat;
+          longitude = item.coordinates_gp.lon;
+        } else if (item.coordinates_gp.coordinates && Array.isArray(item.coordinates_gp.coordinates)) {
+          longitude = item.coordinates_gp.coordinates[0];
+          latitude = item.coordinates_gp.coordinates[1];
         }
       }
       
-      // Try email matching if still no coordinates found
-      if (!latitude && !longitude && email) {
-        const emailKeys = [
-          email.toLowerCase(),
-          `email_${email.toLowerCase()}`
-        ];
-        
-        for (const emailKey of emailKeys) {
-          if (coordinatesMap.has(emailKey)) {
-            const coords = coordinatesMap.get(emailKey);
-            latitude = coords.lat;
-            longitude = coords.lng;
-            //console.log(`✓ Agent ${item.first_name} ${item.last_name}: Found mapped coordinates with email ${email}:`, latitude, longitude);
-            break;
-          }
-        }
-      }
-      
-      // Second priority: Check for direct coordinates in agent data
-      if (!latitude || !longitude) {
-        if (item.coordinates_gp) {
-          if (item.coordinates_gp.lat && item.coordinates_gp.lon) {
-            latitude = item.coordinates_gp.lat;
-            longitude = item.coordinates_gp.lon;
-            //console.log(`Agent ${item.first_name} ${item.last_name}: Direct coordinates from coordinates_gp:`, latitude, longitude);
-          } else if (item.coordinates_gp.coordinates && Array.isArray(item.coordinates_gp.coordinates)) {
-            longitude = item.coordinates_gp.coordinates[0];
-            latitude = item.coordinates_gp.coordinates[1];
-            //console.log(`Agent ${item.first_name} ${item.last_name}: Direct array coordinates from coordinates_gp:`, latitude, longitude);
-          }
-        }
-      }
-      
-      // Third priority: Check coordinates_gs
+      // Check coordinates_gs
       if (!latitude || !longitude) {
         if (item.coordinates_gs) {
           if (item.coordinates_gs.lat && item.coordinates_gs.lon) {
             latitude = item.coordinates_gs.lat;
             longitude = item.coordinates_gs.lon;
-            //console.log(`Agent ${item.first_name} ${item.last_name}: Direct coordinates from coordinates_gs:`, latitude, longitude);
           } else if (item.coordinates_gs.coordinates && Array.isArray(item.coordinates_gs.coordinates)) {
             longitude = item.coordinates_gs.coordinates[0];
             latitude = item.coordinates_gs.coordinates[1];
-            //console.log(`Agent ${item.first_name} ${item.last_name}: Direct array coordinates from coordinates_gs:`, latitude, longitude);
           }
         }
       }
       
-      // Fourth priority: City-level coordinates as fallback
+      // Enhanced city coordinate fallback with more cities and Arabic support
       if (!latitude || !longitude) {
-        const agentCity = item.city || item.work_city || item.office_city || item.address_city;
-        if (agentCity) {
-          const cityKey = `city_${agentCity.toLowerCase()}`;
-          if (coordinatesMap.has(cityKey)) {
-            const cityCoords = coordinatesMap.get(cityKey);
-            latitude = cityCoords.lat;
-            longitude = cityCoords.lng;
-            //console.log(`Agent ${item.first_name} ${item.last_name}: Using city coordinates for ${agentCity}:`, latitude, longitude);
+        const agentCity = (item.city || item.work_city || item.office_city || item.address_city || '').toLowerCase().trim();
+        const cityCoordinates = {
+          'riyadh': { lat: 24.7136, lng: 46.6753 },
+          'الرياض': { lat: 24.7136, lng: 46.6753 }, // Arabic for Riyadh
+          'الريـاض': { lat: 24.7136, lng: 46.6753 }, // Arabic variant with tatweel
+          'jeddah': { lat: 21.4858, lng: 39.1925 },
+          'makkah': { lat: 21.3891, lng: 39.8579 },
+          'dammam': { lat: 26.4207, lng: 50.0888 },
+          'khobar': { lat: 26.2172, lng: 50.1971 },
+          'medina': { lat: 24.5247, lng: 39.5692 },
+          'madinah': { lat: 24.5247, lng: 39.5692 },
+          'mecca': { lat: 21.3891, lng: 39.8579 },
+          'al khobar': { lat: 26.2172, lng: 50.1971 },
+          'al-khobar': { lat: 26.2172, lng: 50.1971 },
+          'tabuk': { lat: 28.3838, lng: 36.5550 },
+          'abha': { lat: 18.2465, lng: 42.5117 },
+          'hail': { lat: 27.5114, lng: 41.7208 },
+          'qassim': { lat: 26.2074, lng: 43.4837 },
+          'al ahsa': { lat: 25.3832, lng: 49.5958 },
+          'al-ahsa': { lat: 25.3832, lng: 49.5958 },
+          'taif': { lat: 21.4373, lng: 40.5127 },
+          'yanbu': { lat: 24.0895, lng: 38.0618 }
+        };
+        
+        // Normalize city name: lowercase, trim, replace dashes/underscores with space, collapse spaces
+        let cityKey = agentCity.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+        
+        // Try direct match, then try removing spaces
+        if (cityCoordinates[cityKey]) {
+          latitude = cityCoordinates[cityKey].lat;
+          longitude = cityCoordinates[cityKey].lng;
+        } else if (cityCoordinates[cityKey.replace(/\s/g, '')]) {
+          latitude = cityCoordinates[cityKey.replace(/\s/g, '')].lat;
+          longitude = cityCoordinates[cityKey.replace(/\s/g, '')].lng;
+        } else {
+          // Try to match any city key that matches after removing all spaces
+          const cityKeyNoSpace = cityKey.replace(/\s/g, '');
+          for (const key in cityCoordinates) {
+            if (key.replace(/\s/g, '') === cityKeyNoSpace) {
+              latitude = cityCoordinates[key].lat;
+              longitude = cityCoordinates[key].lng;
+              break;
+            }
           }
         }
       }
@@ -967,9 +714,6 @@ const AgentContent = () => {
       if (!latitude || !longitude) {
         latitude = item.latitude || item.lat;
         longitude = item.longitude || item.lng || item.lon;
-        if (latitude && longitude) {
-          //console.log(`Agent ${item.first_name} ${item.last_name}: Fallback direct coordinates:`, latitude, longitude);
-        }
       }
 
       const agentData = {
@@ -992,77 +736,57 @@ const AgentContent = () => {
         longitude: longitude,
         coordinates: latitude && longitude ? [latitude, longitude] : null,
         // Add kw_uid for easy identification
-        kw_uid: item.kw_uid
+        kw_uid: item.kw_uid,
+        // Add sorting fields for better alphabetical sorting
+        firstName: item.first_name || '',
+        lastName: item.last_name || ''
       };
 
-      // Log agent with coordinates for debugging
-      // if (latitude && longitude) {
-      //   console.log(`✓ Agent with coordinates:`, agentData.name, `(${latitude}, ${longitude})`, `kw_uid: ${agentData.kw_uid}`);
-      // } else {
-      //   console.log(`⚠ Agent without coordinates:`, agentData.name, `City: ${agentData.city}`, `kw_uid: ${agentData.kw_uid}`);
-      // }
-
       return agentData;
+    }).sort((a, b) => {
+      // Sort by first name first, then by last name
+      const aFirstName = (a.firstName || '').toLowerCase().trim();
+      const bFirstName = (b.firstName || '').toLowerCase().trim();
+      const aLastName = (a.lastName || '').toLowerCase().trim();
+      const bLastName = (b.lastName || '').toLowerCase().trim();
+      
+      // Primary sort: first name
+      if (aFirstName !== bFirstName) {
+        return aFirstName.localeCompare(bFirstName);
+      }
+      
+      // Secondary sort: last name
+      return aLastName.localeCompare(bLastName);
     });
   }, []);
 
-  // Fetch initial agents with improved caching
+  // Fetch initial agents without caching
   useEffect(() => {
-    if (!cacheInitialized) return; // Wait for cache to initialize
-    
-    async function fetchAgents() {
+    async function loadAgents() {
       setLoading(true);
       setError(null);
-      setLoadingProgress(10); // Initial progress
+      setLoadingProgress(10);
 
       try {
-        setLoadingProgress(30); // Progress update
-        const data = await fetchAgentsWithCache(1, 6); // Start with 6 agents for fastest initial load
-        setLoadingProgress(60); // Progress update
+        setLoadingProgress(30);
+        const data = await fetchAgents(1, 6);
+        setLoadingProgress(60);
         const mappedAgents = processAgentData(data);
-        setLoadingProgress(80); // Progress update
+        setLoadingProgress(80);
         
-        // Immediately update state for faster UI response
         setAllAgents(mappedAgents);
-        setLoadingProgress(100); // Complete
+        setLoadingProgress(100);
         
-        // Store in localStorage for persistence
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('agents-local-data', JSON.stringify(mappedAgents));
-            localStorage.setItem('agents-local-timestamp', Date.now().toString());
-          } catch (error) {
-            // console.warn('Failed to save agents to localStorage:', error);
-          }
-        }
       } catch (err) {
         setError(err.message || 'Failed to load agents');
-        
-        // Try to load from localStorage as fallback
-        if (typeof window !== 'undefined') {
-          try {
-            const savedAgents = localStorage.getItem('agents-local-data');
-            const savedTimestamp = localStorage.getItem('agents-local-timestamp');
-            const now = Date.now();
-            const FALLBACK_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-            
-            if (savedAgents && savedTimestamp && (now - parseInt(savedTimestamp)) < FALLBACK_DURATION) {
-              const parsedAgents = JSON.parse(savedAgents);
-              setAllAgents(parsedAgents);
-              setError(null); // Clear error since we have fallback data
-            }
-          } catch (fallbackError) {
-            //console.warn('Failed to load fallback agents:', fallbackError);
-          }
-        }
       } finally {
         setLoading(false);
-        setLoadingProgress(0); // Reset progress
+        setLoadingProgress(0);
       }
     }
 
-    fetchAgents();
-  }, [fetchAgentsWithCache, processAgentData, cacheInitialized]);
+    loadAgents();
+  }, [fetchAgents, processAgentData]);
 
   // Initialize market centers data
   // useEffect(() => {
@@ -1124,63 +848,30 @@ const AgentContent = () => {
     updateDisplayedData();
   }, [updateDisplayedData]);
 
-  // Optimized load more function
+  // Optimized load more function without caching
   const loadMoreAgents = useCallback(async () => {
     if (loadingMore || !allAgents.length) return;
     
     setLoadingMore(true);
-    const nextPage = Math.floor(allAgents.length / 6) + 1; // Use 6 as page size for faster loading
+    const nextPage = Math.floor(allAgents.length / 6) + 1;
     
     try {
-      const data = await fetchAgentsWithCache(nextPage, 6);
+      const data = await fetchAgents(nextPage, 6);
       const newAgents = processAgentData(data);
       
-      // Immediate state update
-      setAllAgents(prev => {
-        const updated = [...prev, ...newAgents];
-        
-        // Update localStorage with new data
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('agents-local-data', JSON.stringify(updated));
-            localStorage.setItem('agents-local-timestamp', Date.now().toString());
-          } catch (error) {
-           // console.warn('Failed to update agents in localStorage:', error);
-          }
-        }
-        
-        return updated;
-      });
+      setAllAgents(prev => [...prev, ...newAgents]);
     } catch (err) {
-      //console.warn('Error loading more agents:', err);
+      console.warn('Error loading more agents:', err);
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, allAgents.length, fetchAgentsWithCache, processAgentData]);
+  }, [loadingMore, allAgents.length, fetchAgents, processAgentData]);
 
   // Stabilize handleAgentClick with useCallback
   const handleAgentClick = useCallback((agent) => {
-    if (typeof window !== 'undefined') {
-      // Store the complete agent data in localStorage for the details page
-      const agentDataForStorage = {
-        _id: agent._id,
-        name: agent.name,
-        phone: agent.phone,
-        email: agent.email,
-        image: agent.image,
-        office: agent.office,
-        license: agent.license,
-        kw_uid: agent.mls_id, // Store kw_uid for property filtering
-        kw_id: agent.mls_id, // Keep backward compatibility
-        city: agent.city || '', // Use office as city fallback
-        marketCenter: agent.office || ''
-      };
-      localStorage.setItem('selectedAgent', JSON.stringify(agentDataForStorage));
-      
-      // Navigate to dynamic route with agent ID
-      const agentId = agent._id || agent.kw_id || agent.kwId || agent.id;
-      router.push(`/agent/${agentId}`);
-    }
+    // Navigate to dynamic route with agent ID only - no localStorage needed
+    const agentId = agent._id || agent.kw_uid || agent.kw_id || agent.kwId || agent.id;
+    router.push(`/agent/${agentId}`);
   }, [router]);
 
   // Stabilize handleMarketCenterClick with useCallback
@@ -1398,6 +1089,23 @@ const AgentContent = () => {
 
                   {/* Show Agents when filter is "agent" or "market" */}
                   {!loading && !error && (filter === "agent" || filter === "market") && agents.map((agent, idx) => {
+                    // Validate agent data before rendering to prevent incomplete cards
+                    if (!agent || !agent._id) {
+                      console.warn('Invalid agent data detected:', agent);
+                      return null;
+                    }
+
+                    // Ensure required fields have fallback values
+                    const safeAgent = {
+                      ...agent,
+                      name: agent.name || agent.fullName || `${agent.first_name || ''} ${agent.last_name || ''}`.trim() || 'Unknown Agent',
+                      phone: agent.phone || agent.mobile_phone || agent.work_phone || 'N/A',
+                      email: agent.email || agent.work_email || 'N/A',
+                      image: agent.image || agent.photo || agent.profile_image || '/avtar.jpg',
+                      office: agent.office || agent.office_name || agent.marketCenter || '',
+                      city: agent.city || agent.work_city || agent.office_city || ''
+                    };
+
                     // Try to get coordinates from agent object - use same priority as map component
                     let lat = null, lng = null;
                     
@@ -1443,7 +1151,7 @@ const AgentContent = () => {
                     }
                     
                     // Create truly unique key by combining multiple identifiers with index
-                    const uniqueKey = `agent-${idx}-${agent._id || 'unknown'}-${agent.name || 'unnamed'}-${agent.phone || 'no-phone'}`.replace(/\s+/g, '-');
+                    const uniqueKey = `agent-${idx}-${agent._id || 'unknown'}-${safeAgent.name || 'unnamed'}-${safeAgent.phone || 'no-phone'}`.replace(/\s+/g, '-');
                     
                     return (
                       <article
@@ -1452,21 +1160,21 @@ const AgentContent = () => {
                         onMouseEnter={() => {
                           // Enhanced hover like properties - set agent with coordinates
                           if (lat && lng) {
-                           // console.log(`🖱️ Hovering over agent: ${agent.name} at coordinates:`, lat, lng);
+                           // console.log(`🖱️ Hovering over agent: ${safeAgent.name} at coordinates:`, lat, lng);
                             setHoveredAgent({ 
-                              ...agent, 
+                              ...safeAgent, 
                               latitude: lat, 
                               longitude: lng,
                               // Add flag to indicate this came from sidebar hover
                               fromSidebar: true
                             });
                           } else {
-                            //console.log(`⚠️ Agent ${agent.name} has no coordinates to show on map - City: ${agent.city}`);
+                            //console.log(`⚠️ Agent ${safeAgent.name} has no coordinates to show on map - City: ${safeAgent.city}`);
                             // Even without exact coordinates, try to show something on map if we have city
-                            if (agent.city) {
-                             // console.log(`📍 Trying to show ${agent.name} using city fallback`);
+                            if (safeAgent.city) {
+                             // console.log(`📍 Trying to show ${safeAgent.name} using city fallback`);
                               setHoveredAgent({ 
-                                ...agent, 
+                                ...safeAgent, 
                                 latitude: lat || 24.7136, // Riyadh fallback
                                 longitude: lng || 46.6753,
                                 fromSidebar: true,
@@ -1477,63 +1185,72 @@ const AgentContent = () => {
                         }}
                         onMouseLeave={() => {
                           // Simple leave like properties - clear hover state unless fixed
-                          //console.log(`🖱️ Left agent: ${agent.name}`);
+                          //console.log(`🖱️ Left agent: ${safeAgent.name}`);
                           setHoveredAgent(prev => {
                             // If current hovered agent is fixed, don't clear it
                             if (prev && prev.fixed && prev._id === agent._id) {
-                              ////console.log(`🔒 Agent ${agent.name} is fixed, not clearing hover`);
+                              ////console.log(`🔒 Agent ${safeAgent.name} is fixed, not clearing hover`);
                               return prev;
                             }
                             // Clear hover state
-                          //  console.log(`🧹 Clearing hover for agent: ${agent.name}`);
+                          //  console.log(`🧹 Clearing hover for agent: ${safeAgent.name}`);
                             return null;
                           });
                         }}
                       >
                         <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 relative">
                           <Image
-                            src={agent.image || "/avtar.jpg"}
-                            alt={t(`Portrait of ${agent.name}`)}
+                            src={safeAgent.image}
+                            alt={t(`Portrait of ${safeAgent.name}`)}
                             width={128}
                             height={128}
                             className="object-cover w-full h-full"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleAgentClick(agent);
+                              handleAgentClick(safeAgent);
+                            }}
+                            onError={(e) => {
+                              e.target.src = '/avtar.jpg'; // Fallback image on error
                             }}
                           />
                         </div>
-                        <div className="flex-1">
-  <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold mb-2">{agent.name}</h3>
-  
-  <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2">
-    <FaPhoneAlt className="text-gray-600" /> {agent.phone}
-  </p>
-  
-  <p className="text-sm sm:text-base mb-4 break-all flex items-center gap-2">
-    <FaEnvelope className="text-gray-600" /> {agent.email}
-  </p>
-  
-  {agent.office && (
-    <p className="text-sm text-gray-500 mb-2">
-      {t('Office:')} {agent.office}
-    </p>
-  )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-lg lg:text-2xl font-semibold mb-2 text-gray-800 truncate">
+                            {safeAgent.name}
+                          </h3>
+                          
+                          <p className="text-sm sm:text-base mb-2 break-all flex items-center gap-2 text-gray-700">
+                            <FaPhoneAlt className="text-gray-600 flex-shrink-0" /> 
+                            <span className="truncate">{safeAgent.phone}</span>
+                          </p>
+                          
+                          <p className="text-sm sm:text-base mb-4 break-all flex items-center gap-2 text-gray-700">
+                            <FaEnvelope className="text-gray-600 flex-shrink-0" /> 
+                            <span className="truncate">{safeAgent.email}</span>
+                          </p>
+                          
+                          {safeAgent.office && (
+                            <p className="text-sm text-gray-500 mb-2 truncate">
+                              {t('Office:')} {safeAgent.office}
+                            </p>
+                          )}
 
-  <button
-    onClick={() => handleAgentClick(agent)}
-    className={`hover:text-[rgb(206,32,39,255)] font-semibold transition-colors py-2 sm:py-3 flex items-center 
-      ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} 
-      gap-1 sm:gap-2 text-xs sm:text-base`}
-  >
-    <span data-translate>{t('View Details & Properties')}</span>
-  <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} lg:w-3 lg:h-3 w-2 h-2 mt-0.5`} />
-  </button>
-</div>
-
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAgentClick(safeAgent);
+                            }}
+                            className={`hover:text-[rgb(206,32,39,255)] font-semibold transition-colors py-2 sm:py-3 flex items-center 
+                              ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} 
+                              gap-1 sm:gap-2 text-xs sm:text-base text-gray-800 hover:text-[rgb(206,32,39,255)]`}
+                          >
+                            <span data-translate>{t('View Details & Properties')}</span>
+                            <FaChevronRight className={`${isRTL ? 'rotate-180' : ''} lg:w-3 lg:h-3 w-2 h-2 mt-0.5 flex-shrink-0`} />
+                          </button>
+                        </div>
                       </article>
                     );
-                  })}
+                  }).filter(Boolean)} {/* Filter out any null entries */}
 
                   {/* Show Market Centers when filter is "market" */}
                   {/* {!loading && !error && filter === "market" && marketCenters.map((center, idx) => (

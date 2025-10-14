@@ -28,9 +28,25 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Leads() {
-  const [activePage, setActivePage] = useState('contactus');
+  // If user is jasmin-only, default to 'jasmin' tab
+  const { admin } = useAuth();
+  const hasJasminLeads = admin && Array.isArray(admin.permissions) && admin.permissions.includes('jasmin-leads');
+  const isJasminOnly = hasJasminLeads && (!admin.permissions.includes('all-leads'));
+  const isJasminUser = admin && (
+    admin.role === 'user-jasmin' ||
+    admin.firstName === 'user-jasmin' ||
+    admin.phoneNumber === 'user-jasmin' ||
+    (admin.role === 'admin' && hasJasminLeads && !admin.permissions.includes('all-leads'))
+  );
+  const isJeddahUser = admin && (
+    admin.role === 'user-jeddah' ||
+    admin.firstName === 'user-jeddah' ||
+    admin.phoneNumber === 'user-jeddah'
+  );
+  const [activePage, setActivePage] = useState(isJasminUser ? 'jasmin' : 'contactus');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -48,26 +64,28 @@ export default function Leads() {
       setLoading(true);
       let url = `${import.meta.env.VITE_API_URL}/leads-export`;
       const params = new URLSearchParams();
-      
-      // Add formType filter (except 'contactus' which is 'contact-us')
+
+      // Determine formType for restricted users
       let formType = activePage;
+      if (isJasminUser) formType = 'jasmin';
+      if (isJeddahUser) formType = 'jeddah';
       if (formType === 'contactus') formType = 'contact-us';
       if (formType && formType !== 'all') {
         params.append('formType', formType);
       }
-      
+
       // Add time filter
       if (timeFilter && timeFilter !== 'all') {
         params.append('range', timeFilter);
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
 
       const res = await fetch(url, { method: 'GET' });
       if (!res.ok) throw new Error('Failed to download Excel');
-      
+
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = window.URL.createObjectURL(blob);
@@ -76,7 +94,7 @@ export default function Leads() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(a.href);
-      
+
       setSnackbar({ open: true, message: 'Excel file downloaded successfully!', severity: 'success' });
     } catch (err) {
       console.error('Excel download error:', err);
@@ -92,6 +110,8 @@ export default function Leads() {
   
   // Form state for editing
   const [editFormData, setEditFormData] = useState({});
+
+  // ...existing code...
 
   useEffect(() => {
     fetchLeads();
@@ -168,6 +188,7 @@ export default function Leads() {
       mobileNumber: lead.mobileNumber || '',
       email: lead.email || '',
       city: lead.city || '',
+      nationality: lead.nationality || '',
       message: lead.message || '',
       address: lead.address || '',
       bedrooms: lead.bedrooms || '',
@@ -188,8 +209,9 @@ export default function Leads() {
     setDeleteDialogOpen(true);
   };
 
-  // Filter leads by form type
+  // Filter leads by form type, restrict for jasmin-only users
   const getLeadsByType = (formType) => {
+    if (isJasminOnly && formType !== 'jasmin') return [];
     return leads.filter(lead => lead.formType === formType && !lead.isAgent && isWithinFilter(lead.createdAt));
   };
 
@@ -220,6 +242,10 @@ export default function Leads() {
               {(formType === 'jasmin' || formType === 'jeddah' || formType === 'franchise' || formType === 'instant-valuation' || formType === 'join-us') && (
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>City</TableCell>
               )}
+              {/* Nationality column for all forms except contact-us */}
+              {(formType === 'jasmin' || formType === 'jeddah' || formType === 'franchise' || formType === 'instant-valuation' || formType === 'join-us' || formType === 'contact-us') && (
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nationality</TableCell>
+              )}
               {formType === 'instant-valuation' && (
                 <>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Bedrooms</TableCell>
@@ -247,7 +273,6 @@ export default function Leads() {
           <TableBody>
             {filteredLeads.map((lead) => (
               <TableRow key={lead._id} hover>
-              
                 <TableCell>{lead.fullName || lead.fullname || 'N/A'}</TableCell>
                 {formType !== 'instant-valuation' && (
                   <TableCell>{lead.email || 'N/A'}</TableCell>
@@ -255,6 +280,10 @@ export default function Leads() {
                 <TableCell>{lead.mobileNumber || 'N/A'}</TableCell>
                 {(formType === 'jasmin' || formType === 'jeddah' || formType === 'franchise' || formType === 'instant-valuation' || formType === 'join-us') && (
                   <TableCell>{lead.city || 'N/A'}</TableCell>
+                )}
+                {/* Nationality cell for all forms except contact-us */}
+                {(formType === 'jasmin' || formType === 'jeddah' || formType === 'franchise' || formType === 'instant-valuation' || formType === 'join-us' || formType === 'contact-us') && (
+                  <TableCell>{lead.nationality || 'N/A'}</TableCell>
                 )}
                 {formType === 'instant-valuation' && (
                   <>
@@ -344,7 +373,6 @@ export default function Leads() {
       <Typography variant="h4" sx={{ mb: 3 }}>
         Leads Management
       </Typography>
-
       {/* Time filter - dropdown for cleaner UI */}
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <TextField
@@ -366,88 +394,115 @@ export default function Leads() {
           Download Excel
         </Button>
       </Stack>
-
       {/* Tab Navigation */}
       <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-        <Button
-          variant={activePage === 'contactus' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('contactus')}
-        >
-          Contact Us
-        </Button>
-        <Button
-          variant={activePage === 'jasmin' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('jasmin')}
-        >
-          Jasmin
-        </Button>
-        <Button
-          variant={activePage === 'jeddah' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('jeddah')}
-        >
-          Jeddah
-        </Button>
-        <Button
-          variant={activePage === 'franchise' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('franchise')}
-        >
-          Franchise
-        </Button>
-        <Button
-          variant={activePage === 'instant-valuation' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('instant-valuation')}
-        >
-          Instant Valuation
-        </Button>
-        <Button
-          variant={activePage === 'join-us' ? 'contained' : 'outlined'}
-          onClick={() => setActivePage('join-us')}
-        >
-          Join Us
-        </Button>
+        {isJasminUser ? (
+          <Button
+            variant={activePage === 'jasmin' ? 'contained' : 'outlined'}
+            onClick={() => setActivePage('jasmin')}
+            disabled={false}
+          >
+            Jasmin
+          </Button>
+        ) : isJeddahUser ? (
+          <Button
+            variant={activePage === 'jeddah' ? 'contained' : 'outlined'}
+            onClick={() => setActivePage('jeddah')}
+            disabled={false}
+          >
+            Jeddah
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant={activePage === 'contactus' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('contactus')}
+            >
+              Contact Us
+            </Button>
+            <Button
+              variant={activePage === 'jasmin' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('jasmin')}
+            >
+              Jasmin
+            </Button>
+            <Button
+              variant={activePage === 'jeddah' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('jeddah')}
+            >
+              Jeddah
+            </Button>
+            <Button
+              variant={activePage === 'franchise' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('franchise')}
+            >
+              Franchise
+            </Button>
+            <Button
+              variant={activePage === 'instant-valuation' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('instant-valuation')}
+            >
+              Instant Valuation
+            </Button>
+            <Button
+              variant={activePage === 'join-us' ? 'contained' : 'outlined'}
+              onClick={() => setActivePage('join-us')}
+            >
+              Join Us
+            </Button>
+          </>
+        )}
       </Stack>
-
       {/* Content based on active tab */}
-      {activePage === 'contactus' && (
-        <Box>
-          <Typography variant="h5" sx={{ mb: 2 }}>Contact Us </Typography>
-          {renderTable('contact-us', 'Contact Us')}
-        </Box>
-      )}
-
-      {activePage === 'jasmin' && (
+      {(isJasminOnly || (admin && admin.role === 'user-jasmin')) ? (
         <Box>
           <Typography variant="h5" sx={{ mb: 2 }}>Jasmin</Typography>
           {renderTable('jasmin', 'Jasmin')}
         </Box>
-      )}
-
-      {activePage === 'jeddah' && (
+      ) : isJeddahUser ? (
         <Box>
           <Typography variant="h5" sx={{ mb: 2 }}>Jeddah</Typography>
           {renderTable('jeddah', 'Jeddah')}
         </Box>
-      )}
-
-      {activePage === 'franchise' && (
-        <Box>
-          <Typography variant="h5" sx={{ mb: 2 }}>Franchise</Typography>
-          {renderTable('franchise', 'Franchise')}
-        </Box>
-      )}
-
-      {activePage === 'instant-valuation' && (
-        <Box>
-          <Typography variant="h5" sx={{ mb: 2 }}>Instant Valuation</Typography>
-          {renderTable('instant-valuation', 'Instant Valuation')}
-        </Box>
-      )}
-
-      {activePage === 'join-us' && (
-        <Box>
-          <Typography variant="h5" sx={{ mb: 2 }}>Join Us</Typography>
-          {renderTable('join-us', 'Join Us')}
-        </Box>
+      ) : (
+        <>
+          {activePage === 'contactus' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Contact Us </Typography>
+              {renderTable('contact-us', 'Contact Us')}
+            </Box>
+          )}
+          {activePage === 'jasmin' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Jasmin</Typography>
+              {renderTable('jasmin', 'Jasmin')}
+            </Box>
+          )}
+          {activePage === 'jeddah' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Jeddah</Typography>
+              {renderTable('jeddah', 'Jeddah')}
+            </Box>
+          )}
+          {activePage === 'franchise' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Franchise</Typography>
+              {renderTable('franchise', 'Franchise')}
+            </Box>
+          )}
+          {activePage === 'instant-valuation' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Instant Valuation</Typography>
+              {renderTable('instant-valuation', 'Instant Valuation')}
+            </Box>
+          )}
+          {activePage === 'join-us' && (
+            <Box>
+              <Typography variant="h5" sx={{ mb: 2 }}>Join Us</Typography>
+              {renderTable('join-us', 'Join Us')}
+            </Box>
+          )}
+        </>
       )}
 
       {/* View Message Dialog */}
@@ -533,6 +588,12 @@ export default function Leads() {
               label="City"
               value={editFormData.city || ''}
               onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Nationality"
+              value={editFormData.nationality || ''}
+              onChange={(e) => setEditFormData({ ...editFormData, nationality: e.target.value })}
               fullWidth
             />
             <TextField
@@ -630,6 +691,13 @@ export default function Leads() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Message for restricted access */}
+      {isJasminOnly && (
+        <Box sx={{ mt: 4, color: 'error.main', fontWeight: 'bold' }}>
+          You do not have access to other dashboard modules.
+        </Box>
+      )}
     </Box>
   );
 }

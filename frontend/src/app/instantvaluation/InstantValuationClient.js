@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
+import Select from 'react-select';
+import CountryFlag from 'react-country-flag';
 import Image from 'next/image';
 import Header from '@/components/header';
 import NewFooter from "@/components/newfooter";
@@ -29,9 +31,45 @@ const InstantValuationClient = () => {
     bedrooms: '',
     property_type: '',
     valuation_type: '',
+    nationality: 'SA', // Default to Saudi Arabia
     promotionalConsent: false,
     personalDataConsent: false
   });
+
+  // Nationality list for react-select with country code, label, and value
+  const nationalityList = [
+    { value: 'SA', label: 'Saudi Arabia', code: 'SA' },
+    { value: 'AE', label: 'United Arab Emirates', code: 'AE' },
+    { value: 'EG', label: 'Egypt', code: 'EG' },
+    { value: 'IN', label: 'India', code: 'IN' },
+    { value: 'PK', label: 'Pakistan', code: 'PK' },
+    { value: 'PH', label: 'Philippines', code: 'PH' },
+    { value: 'US', label: 'United States', code: 'US' },
+    { value: 'GB', label: 'United Kingdom', code: 'GB' },
+    { value: 'FR', label: 'France', code: 'FR' },
+    { value: 'DE', label: 'Germany', code: 'DE' },
+    { value: 'TR', label: 'Turkey', code: 'TR' },
+    { value: 'SD', label: 'Sudan', code: 'SD' },
+    { value: 'YE', label: 'Yemen', code: 'YE' },
+    { value: 'OM', label: 'Oman', code: 'OM' },
+    { value: 'QA', label: 'Qatar', code: 'QA' },
+    { value: 'KW', label: 'Kuwait', code: 'KW' },
+    { value: 'BH', label: 'Bahrain', code: 'BH' },
+    { value: 'JO', label: 'Jordan', code: 'JO' },
+    { value: 'LB', label: 'Lebanon', code: 'LB' },
+    { value: 'SY', label: 'Syria', code: 'SY' },
+    { value: 'MA', label: 'Morocco', code: 'MA' },
+    { value: 'DZ', label: 'Algeria', code: 'DZ' },
+    { value: 'TN', label: 'Tunisia', code: 'TN' },
+    { value: 'Other', label: 'Other', code: 'Other' },
+  ];
+
+  // Find the selected nationality option
+  const selectedNationality = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
+
+  // Hydration fix: Only render Select on client
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
@@ -72,8 +110,11 @@ const InstantValuationClient = () => {
     setIsSubmitting(true);
     setSubmitMessage('');
     try {
+      // Find the selected nationality object
+      const selectedNationalityObj = nationalityList.find(n => n.value === formData.nationality) || nationalityList[0];
       const payload = {
         ...formData,
+        nationality: selectedNationalityObj.label, // send full label
         formType: 'instant-valuation'
       };
       const response = await api.post('/leads', payload);
@@ -87,6 +128,7 @@ const InstantValuationClient = () => {
           bedrooms: '',
           property_type: '',
           valuation_type: '',
+          nationality: 'SA',
           promotionalConsent: false,
           personalDataConsent: false
         });
@@ -270,7 +312,7 @@ const InstantValuationClient = () => {
                 {t('Your Free, Online Valuation Starts Here..')}
               </h3>
               <form className="space-y-4" onSubmit={handleSubmit}>
-                <input
+                 <input
                   type="text"
                   name="city"
                   placeholder={t("Enter your city")}
@@ -288,6 +330,78 @@ const InstantValuationClient = () => {
                   required
                   className="w-full px-4 py-2 border border-gray-400 focus:outline-none focus:ring-2"
                 />
+                {/* Nationality Dropdown with Flags */}
+                <div className="mb-2">
+                  
+                  {mounted && (
+                    <Select
+  options={nationalityList}
+  value={selectedNationality}
+  onChange={(option) =>
+    setFormData((prev) => ({ ...prev, nationality: option.value }))
+  }
+  formatOptionLabel={(option) => (
+    <div className="flex items-center gap-2">
+      {option.code !== "Other" ? (
+        <CountryFlag countryCode={option.code} svg className="w-6 h-6" />
+      ) : (
+        <span className="text-xl">🌍</span>
+      )}
+      <span>{option.label}</span>
+    </div>
+  )}
+  isSearchable
+  classNamePrefix="react-select"
+  styles={{
+    control: (base, state) => ({
+      ...base,
+      minHeight: "42px",
+      border: state.isFocused ? "1px solid black" : "1px solid #9ca3af", // gray-400 when idle
+      borderRadius: "0px",
+      backgroundColor: "white",
+      fontSize: "16px",
+      boxShadow: state.isFocused ? "0 0 0 2px #ce2027" : "none", // black focus ring
+      transition: "all 0.2s ease",
+      paddingLeft: "1rem",
+      paddingRight: "1rem",
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0",
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      paddingRight: "0.5rem",
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "#ce2027"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "black",
+      fontWeight: state.isSelected ? 600 : 400,
+      fontSize: "16px",
+      padding: "8px 16px",
+      cursor: "pointer",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 20,
+      marginTop: 2,
+    }),
+  }}
+/>
+
+                  )}
+                </div>
+               
                 <input
                   type="text"
                   name="mobileNumber"
@@ -297,6 +411,7 @@ const InstantValuationClient = () => {
                   required
                   className="w-full px-4 py-2 border border-gray-400 focus:outline-none focus:ring-2"
                 />
+
                 <select 
                   name="bedrooms"
                   value={formData.bedrooms}

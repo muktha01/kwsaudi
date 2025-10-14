@@ -10,11 +10,13 @@ import NavGroup from './NavGroup';
 import menuItems from 'menu-items';
 
 import { useGetMenuMaster } from 'api/menu';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // ==============================|| SIDEBAR MENU LIST ||============================== //
 
 function MenuList() {
   const { menuMaster } = useGetMenuMaster();
+  const { admin } = useAuth();
   const drawerOpen = menuMaster.isDashboardDrawerOpened;
 
   const [selectedID, setSelectedID] = useState('');
@@ -69,6 +71,20 @@ function MenuList() {
         );
     }
   });
+
+
+  // Hide all menu items except Jasmin Leads if user is admin with only jasmin-leads permission
+  const isJasminOnly = admin && Array.isArray(admin.permissions) && admin.permissions.includes('jasmin-leads') && !admin.permissions.includes('all-leads');
+  if (isJasminOnly) {
+    return (
+      <Box sx={{ mt: 1.5, p: 2 }}>
+        <Typography variant="h6" color="error" align="center">
+          You do not have access to other modules.<br />
+          Only Jasmin Leads are available.
+        </Typography>
+      </Box>
+    );
+  }
 
   return <Box {...(drawerOpen && { sx: { mt: 1.5 } })}>{navItems}</Box>;
 }

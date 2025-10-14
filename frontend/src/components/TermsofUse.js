@@ -13,7 +13,7 @@ export default function TermsOfUse() {
         <div className="pt-32 sm:pt-32 lg:pt-44">
     
     <div className="min-h-screen  py-10 px-4 lg:px-20">
-      <div className=" mx-auto p-8 space-y-12">
+      <div className=" mx-auto  space-y-12">
         
         {/* English Section */}
         <div>
