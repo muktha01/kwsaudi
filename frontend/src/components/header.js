@@ -185,7 +185,7 @@ const Header = () => {
           <Link href="/" className="block h-full">
             <Image
               src={language === 'ar' ? "/logoarebic.png" : "/headerlogo.png"}
-              alt={t('KW Saudi Arabia Logo')}
+              alt={t('KW Saudi Arabia')}
               width={279}
               height={64}
               className="h-full w-auto object-contain"
@@ -199,7 +199,7 @@ const Header = () => {
           <Link href="/" className="block h-full">
             <Image
               src="/kwline.png"
-              alt={t('KW Saudi Arabia Logo')}
+              alt={t('KW Saudi Arabia')}
               width={279}
               height={64}
               className="h-full w-auto object-contain"

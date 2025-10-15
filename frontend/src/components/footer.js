@@ -221,7 +221,7 @@ const Footer = () => {
           <div className="flex items-center h-12 lg:h-14">
             <Image
               src="/footerlogo.jpg"
-              alt="KW Saudi Arabia Logo"
+              alt="KW Saudi Arabia"
               width={200}
               height={50}
               className="h-55 w-55 object-contain"
