@@ -26,6 +26,29 @@ export default function Home() {
   const [loginError, setLoginError] = useState(null);
   const [mobileLoginError, setMobileLoginError] = useState(null);
   const [footerContent, setFooterContent] = useState("");
+  const [footerAgents, setFooterAgents] = useState([]);
+  const [footerAgentsError, setFooterAgentsError] = useState(null);
+  // Test input for alternate sign-in
+  const [testAgentEmail, setTestAgentEmail] = useState("");
+  const [testLoginError, setTestLoginError] = useState(null);
+  // Handler for test sign-in
+  const handleTestSignIn = () => {
+    const trimmedEmail = testAgentEmail.trim();
+    if (!trimmedEmail) {
+      setTestLoginError(t('Please enter your email address.'));
+      return;
+    }
+    const found = footerAgents.find(agent => {
+      const emails = [agent.email, agent.work_email, agent.kw_email].filter(Boolean);
+      return emails.some(e => e.toLowerCase() === trimmedEmail.toLowerCase());
+    });
+    if (found) {
+      setTestLoginError(null);
+  router.push(`/signinagent?email=${encodeURIComponent(trimmedEmail)}`);
+    } else {
+      setTestLoginError('Agent not found. Please check your email address.');
+    }
+  };
   const router=useRouter();
 
   // Fetch analytics footer content
@@ -34,6 +57,19 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => {
         setFooterContent(data.footer || "");
+      });
+
+    // Fetch agent data for footer
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/people-data?offset=0&limit=1000`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch agents');
+        return res.json();
+      })
+      .then((data) => {
+        setFooterAgents(data.data || []);
+      })
+      .catch((err) => {
+        setFooterAgentsError('Failed to fetch agents');
       });
   }, []);
 
@@ -72,54 +108,26 @@ export default function Home() {
       return;
     }
 
-    // Fetch agents and validate email
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=1000`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.results) {
-          let allAgents = [];
-          // Extract agents from the API response
-          data.results.forEach(result => {
-            if (result.success && result.type.includes('people_org') && result.data?.data) {
-              allAgents = allAgents.concat(result.data.data);
-            }
-          });
+    // Validate email using footerAgents fetched from /people-data
+    const found = footerAgents.some(agent => {
+      const emails = [agent.email, agent.work_email, agent.kw_email].filter(Boolean);
+      return emails.some(e => e.toLowerCase() === email.toLowerCase());
+    });
 
-          // Check if the email exists in agent data
-          const found = allAgents.some(agent => {
-            return (agent.email && agent.email.toLowerCase() === email.toLowerCase()) ||
-                   (agent.work_email && agent.work_email.toLowerCase() === email.toLowerCase());
-          });
-
-          if (found) {
-            setAgentLoginSuccess(true);
-            setLoginError(null);
-            setMobileLoginError(null);
-            if (typeof window !== "undefined") {
-              // Store the agent email for the signin page
-              localStorage.setItem('agentEmail', email);
-              router.push(`/signinagent?email=${encodeURIComponent(email)}`);
-            }
-          } else {
-            setAgentLoginSuccess(false);
-            setLoginError(t('You must login with a registered agent email.'));
-            setMobileLoginError(t('You must login with a registered agent email.'));
-          }
-        } else {
-          setAgentLoginSuccess(false);
-          setLoginError(t('Error loading agent data.'));
-          setMobileLoginError(t('Error loading agent data.'));
-        }
-      })
-      .catch(() => {
-        setAgentLoginSuccess(false);
-        setLoginError(t('Error validating agent email.'));
-        setMobileLoginError(t('Error validating agent email.'));
-      });
+    if (found) {
+      setAgentLoginSuccess(true);
+      setLoginError(null);
+      setMobileLoginError(null);
+      router.push(`/signinagent?email=${encodeURIComponent(email)}`);
+    } else {
+      setAgentLoginSuccess(false);
+      setLoginError(t('You must login with a registered agent email.'));
+      setMobileLoginError(t('You must login with a registered agent email.'));
+    }
   };
 
-  // Function to handle manual email login
-  const handleManualLogin = async (email, isMobile = false) => {
+  // Function to handle manual email login using footerAgents
+  const handleManualLogin = (email, isMobile = false) => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       if (isMobile) {
@@ -130,71 +138,40 @@ export default function Home() {
       return;
     }
 
-    try {
-      // Fetch agents from the combined API
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=1000`);
-      const data = await res.json();
+    // Find agent by email in footerAgents
+    const found = footerAgents.find(agent => {
+      const emails = [agent.email, agent.work_email, agent.kw_email].filter(Boolean);
+      return emails.some(e => e.toLowerCase() === trimmedEmail.toLowerCase());
+    });
 
-      if (data.success && data.results) {
-        let allAgents = [];
-        
-        // Extract agents from the API response
-        data.results.forEach(result => {
-          if (result.success && result.type.includes('people_org') && result.data?.data) {
-            allAgents = allAgents.concat(result.data.data);
-          }
-        });
+    if (found) {
+      // Map the agent data properly
+      const mappedAgent = {
+        _id: found.kw_uid || found._id,
+        name: found.first_name && found.last_name 
+          ? `${found.first_name} ${found.last_name}`.trim()
+          : found.name || 'Unknown Agent',
+        phone: found.phone || found.mobile_phone || found.work_phone || 'N/A',
+        email: found.email || found.work_email || trimmedEmail,
+        image: found.photo || found.profile_image || '/avtar.jpg',
+        city: found.city || "",
+        kw_uid: found.kw_uid
+      };
 
-        // Find agent by email
-        const found = allAgents.find(agent => {
-          return (agent.email && agent.email.toLowerCase() === trimmedEmail.toLowerCase()) ||
-                 (agent.work_email && agent.work_email.toLowerCase() === trimmedEmail.toLowerCase());
-        });
-
-        if (found) {
-          // Map the agent data properly
-          const mappedAgent = {
-            _id: found.kw_uid || found._id,
-            name: found.first_name && found.last_name 
-              ? `${found.first_name} ${found.last_name}`.trim()
-              : found.name || 'Unknown Agent',
-            phone: found.phone || found.mobile_phone || found.work_phone || 'N/A',
-            email: found.email || found.work_email || trimmedEmail,
-            image: found.photo || found.profile_image || '/avtar.jpg',
-            city:found.city||"",
-            kw_uid: found.kw_uid
-          };
-
-          localStorage.setItem('selectedAgent', JSON.stringify(mappedAgent));
-          localStorage.setItem('agentEmail', trimmedEmail);
-          
-          if (isMobile) {
-            setMobileLoginError(null);
-          } else {
-            setLoginError(null);
-          }
-          
-          router.push(`/signinagent?email=${encodeURIComponent(trimmedEmail)}`);
-        } else {
-          if (isMobile) {
-            setMobileLoginError('Agent not found. Please check your email address.');
-          } else {
-            setLoginError('Agent not found. Please check your email address.');
-          }
-        }
-      } else {
-        if (isMobile) {
-          setMobileLoginError('Error loading agent data.');
-        } else {
-          setLoginError('Error loading agent data.');
-        }
-      }
-    } catch (err) {
-      // console.error('Error fetching agent data:', err);
+  // Removed localStorage usage
+      
       if (isMobile) {
-        setMobileLoginError('Error connecting to server.');
+        setMobileLoginError(null);
       } else {
-        setLoginError('Error connecting to server.');
+        setLoginError(null);
+      }
+      
+  router.push(`/signinagent?email=${encodeURIComponent(trimmedEmail)}`);
+    } else {
+      if (isMobile) {
+        setMobileLoginError('Agent not found. Please check your email address.');
+      } else {
+        setLoginError('Agent not found. Please check your email address.');
       }
     }
   };
@@ -209,74 +186,7 @@ export default function Home() {
     onError: handleGoogleFailure,
   });
 
-  useEffect(() => {
-    async function fetchAllAgents() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Fetch all agents (no pagination on API call)
-        const queryParams = new URLSearchParams({
-          offset: '0',
-          limit: '1000', // Get all agents
-        });
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?${queryParams}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json',
-            'Authorization': `Bearer ${googleIdToken}` 
-
-          },
-        });
-
-        const data = await res.json();
-        // console.log('API Response:', data);
-
-        if (data.success && data.results) {
-          let allFetchedAgents = [];
-          
-          // Extract agent data from the results array
-          data.results.forEach(result => {
-            if (result.success && result.type.includes('people_org')) {
-              // Get the actual agent data from the nested structure
-              const agentData = result.data?.data || [];
-              allFetchedAgents = allFetchedAgents.concat(agentData);
-            }
-          });
-          
-          // console.log('Extracted agents:', allFetchedAgents);
-          
-          // Map the API response to agent format
-          const mappedAgents = allFetchedAgents.map(item => ({
-            _id: item.kw_uid || item.id || item._id,
-            name: item.first_name && item.last_name 
-              ? `${item.first_name} ${item.last_name}`.trim()
-              : item.first_name || item.last_name || item.name || 'Unknown Agent',
-            phone: item.phone || item.mobile_phone || item.work_phone || 'N/A',
-            email: item.email || item.work_email || 'N/A',
-            image: item.photo || item.profile_image || '/avtar.jpg',
-            office: item.office_name || item.market_center || '',
-            license: item.license_number || '',
-            mls_id: item.kw_uid || item.mls_id || '',
-            active: item.active !== false
-          }));
-
-          // Store all agents
-          setAllAgents(mappedAgents);
-        } else {
-          setError(data.message || 'Failed to load agents');
-        }
-      } catch (err) {
-        setError('Failed to load agents');
-        // console.error('Error fetching agents:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Fetch all agents once
-    fetchAllAgents();
-  }, [googleIdToken]); // Only run once on mount
+  // (Removed old combined-data fetch for allAgents)
   
   return (
     <div className="flex flex-col ">
@@ -284,6 +194,28 @@ export default function Home() {
      
 
       {/* Footer */}
+      {/* Test Sign-In Section (for testing in a different place) */}
+      {/* <div className="w-full flex flex-col items-center my-6">
+        <div className="max-w-xs w-full bg-gray-100 p-4 rounded shadow border border-gray-200">
+          <h4 className="font-semibold mb-2 text-gray-700">{t('Test Agent Sign In')}</h4>
+          <input
+            type="email"
+            value={testAgentEmail}
+            onChange={e => setTestAgentEmail(e.target.value)}
+            placeholder={t('Enter your agent email')}
+            className="w-full px-3 py-2 mb-2 border border-gray-300 rounded text-sm"
+            onKeyPress={e => { if (e.key === 'Enter') handleTestSignIn(); }}
+          />
+          <button
+            type="button"
+            onClick={handleTestSignIn}
+            className="w-full bg-[rgb(206,32,39,255)] text-white py-2 rounded font-medium hover:bg-[rgb(186,22,29,255)] transition-colors"
+          >
+            {t('Test Sign In')}
+          </button>
+          {testLoginError && <p className="text-red-600 text-xs mt-2">{testLoginError}</p>}
+        </div>
+      </div> */}
       <footer className="mt-auto lg:mt-10 lg:mx-8">
         {/* Desktop Footer */}
         <div className="border-t border-gray-300 hidden lg:block">
@@ -428,6 +360,23 @@ export default function Home() {
           {/* Bottom Footer */}
           <div className="border-t border-gray-300 mt-6">
   <div className="lg:mx-8 mx-auto py-6">
+    {/* Agent List Section - Desktop */}
+    {/* {footerAgents.length > 0 && (
+      <div className="my-6">
+        <h4 className="font-semibold mb-2 text-gray-700">{t('Our Agents')}</h4>
+        <ul className="text-sm text-gray-700 max-h-60 overflow-y-auto">
+          {footerAgents.map((agent, idx) => {
+            // Always include idx in the key to guarantee uniqueness
+            const key = `${agent.kw_uid || agent._id || 'noid'}-${agent.email || agent.work_email || 'noemail'}-${idx}`;
+            return (
+              <li key={key}>
+                {(agent.name || `${agent.first_name || ''} ${agent.last_name || ''}`)} - {(agent.email || agent.work_email)}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    )} */}
     <div className="flex flex-col lg:flex-row lg:justify-between items-start text-sm text-gray-600">
 
       {/* Left Text */}
@@ -467,6 +416,7 @@ export default function Home() {
         </a>
       </div>
     </div>
+
 </div>
     <hr className="border-gray-300 " />
 
@@ -479,6 +429,7 @@ export default function Home() {
 <div className="  p-6 lg:hidden">
   {/* Menu Sections */}
   <div className="space-y-3">
+   
     {/* OUR CULTURE */}
     <div>
       <button

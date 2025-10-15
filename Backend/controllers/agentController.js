@@ -1,7 +1,34 @@
 
-
 import Agent from '../models/Agent.js';
 import axios from 'axios';
+// Get agent by email (same structure as byid, but using email)
+export const fetchAgentByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+    // Check cache first for this specific agent
+    const cacheKey = `agent-byemail-${email.toLowerCase()}`;
+    const cachedAgent = getCachedData(cacheKey);
+    if (cachedAgent) {
+      return res.status(200).json({
+        success: true,
+        agent: cachedAgent,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+    // Use kw_email for lookup (case-insensitive)
+    const agent = await Agent.findOne({ kw_email: { $regex: `^${email}$`, $options: 'i' } });
+    if (!agent) return res.status(404).json({ success: false, message: "Agent not found" });
+    setCachedData(cacheKey, agent);
+    res.status(200).json({ success: true, agent });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
 
 // Simple in-memory cache
 const cache = new Map();
@@ -1614,6 +1641,115 @@ export const getPropertiesByAgent = async (req, res) => {
 //   }
 // };
 
+
+export const getALLPropertiesByAgent = async (req, res) => {
+  try {
+    const { kw_uid } = req.params;
+
+    if (!kw_uid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Agent kw_uid is required'
+      });
+    }
+
+    // Check cache first
+    const cacheKey = `agent-properties-${kw_uid}`;
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached properties for agent:', kw_uid);
+      return res.status(200).json({
+        ...cachedData,
+        cached: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const headers = {
+      Authorization: 'Basic b2FoNkRibjE2dHFvOE52M0RaVXk0NHFVUXAyRjNHYjI6eHRscnJmNUlqYVpckl3Mg==',
+      Accept: 'application/json',
+    };
+
+    console.log(`Fetching properties for agent kw_uid: ${kw_uid}`);
+
+    let allProperties = [];
+    let offset = 0;
+    const listingsURL = `https://partners.api.kw.com/v2/listings/region/50394?page[offset]=${offset}&page[limit]=3000`;
+    
+    try {
+      console.log(`Fetching properties from: ${listingsURL}`);
+      const listingsResponse = await axios.get(listingsURL, { 
+        headers,
+        timeout: 30000,
+        maxRedirects: 3,
+        validateStatus: function (status) {
+          return status >= 200 && status < 300;
+        }
+      });
+
+      if (
+        listingsResponse.data &&
+        listingsResponse.data.success === 'false' &&
+        (listingsResponse.data.errorCode === 'TOO_MANY_REQUESTS' ||
+          listingsResponse.data.message?.toLowerCase().includes('quota'))
+      ) {
+        throw new Error(listingsResponse.data.message || 'KW API quota exceeded or too many requests');
+      }
+
+      const hits = listingsResponse.data?.hits?.hits ?? [];
+      const listings = hits.map(hit => ({
+        ...hit._source,
+        _kw_meta: { id: hit._id, score: hit._score ?? null },
+      }));
+
+      allProperties = listings;
+      console.log(`Successfully fetched ${allProperties.length} total properties from KW API`);
+
+    } catch (error) {
+      console.error('Error fetching properties:', error.message);
+      throw error;
+    }
+
+    // Filter properties belonging to the specific agent
+    const agentProperties = allProperties.filter(property => {
+      const listKwUid = property.list_kw_uid || property.listing_agent_kw_uid || property.agent_kw_uid || '';
+      return String(listKwUid) === String(kw_uid);
+    });
+
+    console.log(`Found ${agentProperties.length} properties for agent ${kw_uid}`);
+
+    const responseData = {
+      success: true,
+      message: `Properties fetched successfully for agent ${kw_uid}`,
+      timestamp: new Date().toISOString(),
+      agentKwUid: kw_uid,
+      summary: {
+        totalPropertiesScanned: allProperties.length,
+        agentPropertiesTotal: agentProperties.length,
+        propertiesReturned: agentProperties.length,
+        filteringApproach: "client_side",
+        note: "No status filtering applied"
+      },
+      properties: agentProperties,
+      count: agentProperties.length
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error('Properties by Agent Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch properties for agent',
+      error: error.message,
+      agentKwUid: req.params.kw_uid
+    });
+  }
+};
 
 
 

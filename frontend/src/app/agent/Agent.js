@@ -1101,9 +1101,18 @@ const AgentContent = () => {
                       name: agent.name || agent.fullName || `${agent.first_name || ''} ${agent.last_name || ''}`.trim() || 'Unknown Agent',
                       phone: agent.phone || agent.mobile_phone || agent.work_phone || 'N/A',
                       email: agent.email || agent.work_email || 'N/A',
-                      image: agent.image || agent.photo || agent.profile_image || '/avtar.jpg',
+                      image: agent.image || agent.photo || agent.profile_image || '',
                       office: agent.office || agent.office_name || agent.marketCenter || '',
                       city: agent.city || agent.work_city || agent.office_city || ''
+                    };
+
+                    // Helper to get a valid agent image with fallback
+                    const getAgentImage = () => {
+                      const img = safeAgent.image;
+                      if (img && typeof img === 'string' && img.trim() !== '' && !img.includes('undefined')) {
+                        return img;
+                      }
+                      return '/avtar.jpg';
                     };
 
                     // Try to get coordinates from agent object - use same priority as map component
@@ -1200,7 +1209,7 @@ const AgentContent = () => {
                       >
                         <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 relative">
                           <Image
-                            src={safeAgent.image}
+                            src={getAgentImage()}
                             alt={t(`Portrait of ${safeAgent.name}`)}
                             width={128}
                             height={128}
@@ -1209,9 +1218,7 @@ const AgentContent = () => {
                               e.stopPropagation();
                               handleAgentClick(safeAgent);
                             }}
-                            onError={(e) => {
-                              e.target.src = '/avtar.jpg'; // Fallback image on error
-                            }}
+                            // No onError: fallback handled in getAgentImage
                           />
                         </div>
                         <div className="flex-1 min-w-0">

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
+  domains: [
       'static.wixstatic.com',
       'storage.googleapis.com',
       'source.unsplash.com',
@@ -16,7 +16,8 @@ const nextConfig = {
       'api.dicebear.com',
       'www.kw.com','encrypted-tbn0.gstatic.com',
       "www.kw.com",
-      'avatar.kwconnect.com',
+  'avatar.kwconnect.com',
+  'kwconnect.com',
       
       'kwsaudi.x-360.ai' ,
       'kwlast-j4yv.vercel.app',

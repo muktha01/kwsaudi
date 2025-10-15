@@ -20,8 +20,7 @@ const AgentProfile = () => {
     const [events, setEvents] = useState([]);
     const [agent, setAgent] = useState(null);
     const [properties, setProperties] = useState([]);
-    const [combinedApiData, setCombinedApiData] = useState(null); // Cache combined API response
-    const [agentsWithPropertiesData, setAgentsWithPropertiesData] = useState(null); // Cache new API response
+  // Removed cache state: combinedApiData, agentsWithPropertiesData
     const [loading, setLoading] = useState(true);
     const [propertiesLoading, setPropertiesLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -53,12 +52,9 @@ const AgentProfile = () => {
     const bathIconUrl = "/bath.png";
     
     // Function to handle read more
-      const handleReadMore = (post) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('selectedEvent', JSON.stringify(post));
-       router.push(`/ourCulture/events/${post._id}`);
-    }
-  };
+    const handleReadMore = (post) => {
+      router.push(`/ourCulture/events/${post._id}`);
+    };
     
     // Function to retry fetching properties
     const retryFetchProperties = () => {
@@ -210,313 +206,151 @@ const AgentProfile = () => {
     };
 
   useEffect(() => {
-    const fetchAgentsWithPropertiesData = async () => {
+    // Fetch agent data from /agents/kw/people-data?offset=0&limit=1000 API with robust mapping
+    const fetchAgentFromPeopleData = async () => {
+      if (!agentEmail) {
+        setError('No agent email provided.');
+        setPropertiesLoading(false);
+        setLoading(false);
+        setAgent(null);
+        setAgentProperties([]);
+        setProperties([]);
+        return;
+      }
+      setPropertiesLoading(true);
+      setLoading(true);
+      setError(null);
       try {
-        //console.log("Fetching enhanced agents with properties data...");
-        setPropertiesLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=100`
-        );
-
+        // 1. Fetch agent info
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/people-data?offset=0&limit=1000`);
         if (response.ok) {
           const data = await response.json();
-
-          // Find the agent that matches the current agentEmail
-          const selectedAgent = data.agentsWithProperties.find(
-            (agent) => {
-              return (agent.email && agent.email.toLowerCase() === agentEmail?.toLowerCase()) ||
-                     (agent.work_email && agent.work_email.toLowerCase() === agentEmail?.toLowerCase());
-            }
-          );
-
+          const selectedAgent = (data.data || []).find((agent) => {
+            const emails = [
+              agent.email,
+              agent.work_email,
+              agent.kw_email,
+              agent.primaryEmail,
+              agent.workEmail,
+              agent.marketing_email,
+              agent.recovery_email
+            ].filter(Boolean);
+            return emails.some(e => e.toLowerCase() === agentEmail?.toLowerCase());
+          });
           if (selectedAgent) {
-            setAgentProperties(selectedAgent.properties || []);
-            //console.log("Selected Agent:", selectedAgent.name);
-            //console.log("Properties:", selectedAgent.properties);
-            setPropertiesLoading(false);
+            // Compose full name with fallbacks
+            const name = selectedAgent.name
+              || selectedAgent.fullName
+              || ((selectedAgent.first_name || selectedAgent.firstName || "") + " " + (selectedAgent.last_name || selectedAgent.lastName || "")).trim()
+              || selectedAgent.username
+              || "-";
+            const phone = selectedAgent.phone
+              || selectedAgent.mobile_phone
+              || selectedAgent.mobilePhone
+              || selectedAgent.work_phone
+              || selectedAgent['phone:']
+              || selectedAgent['mobile_phone:']
+              || "-";
+            const email = selectedAgent.email
+              || selectedAgent.work_email
+              || selectedAgent.kw_email
+              || selectedAgent.primaryEmail
+              || selectedAgent.workEmail
+              || selectedAgent.marketing_email
+              || selectedAgent.recovery_email
+              || "-";
+            const city = selectedAgent.city
+              || selectedAgent.primaryCity
+              || selectedAgent.work_city
+              || selectedAgent.office_city
+              || selectedAgent.address_city
+              || "-";
+            const image = selectedAgent.photo
+              || selectedAgent.profile_image
+              || selectedAgent.image
+              || (selectedAgent.photo && selectedAgent.photo.startsWith('http') ? selectedAgent.photo : null)
+              || '/avtar.jpg';
+            const kw_uid = selectedAgent.kw_uid
+              || selectedAgent.kwUid
+              || selectedAgent.id
+              || selectedAgent._id
+              || selectedAgent.recruit_id
+              || "-";
+            const marketCenter = selectedAgent.market_center_number
+              || selectedAgent.marketCenterNumber
+              || selectedAgent.office_name
+              || selectedAgent.market_center
+              || selectedAgent.marketCenter
+              || "";
+            setAgent({
+              name,
+              phone,
+              email,
+              city,
+              image,
+              _id: selectedAgent._id || selectedAgent.id || kw_uid,
+              marketCenter,
+              kw_uid,
+              kw_id: kw_uid
+            });
+            setImgSrc(image);
+            // 2. Fetch agent properties by kw_uid
+            if (kw_uid && kw_uid !== '-') {
+              const propRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=1000`);
+              if (propRes.ok) {
+                const propData = await propRes.json();
+                // Find agent by kw_uid
+                const agentWithProps = (propData.agentsWithProperties || []).find(a => String(a.kw_uid) === String(kw_uid));
+                if (agentWithProps) {
+                  setAgentProperties(agentWithProps.properties || []);
+                  setProperties(agentWithProps.properties || []);
+                } else {
+                  setAgentProperties([]);
+                  setProperties([]);
+                }
+              } else {
+                setAgentProperties([]);
+                setProperties([]);
+              }
+            } else {
+              setAgentProperties([]);
+              setProperties([]);
+            }
+            setError(null);
           } else {
-            //console.warn("No agent found with this email");
+            setAgent(null);
             setAgentProperties([]);
-            setPropertiesLoading(false);
+            setProperties([]);
+            setError('Agent not found.');
           }
-
-          // Store full agents data if needed
-          setAgentsWithPropertiesData(data);
         } else {
-          //console.log("Enhanced API not available, will use fallback");
-          setPropertiesLoading(false);
+          setAgent(null);
+          setAgentProperties([]);
+          setProperties([]);
+          setError('Failed to load agent data.');
         }
       } catch (error) {
-        //console.log("Enhanced API error, will use fallback:", error);
+        setAgent(null);
+        setAgentProperties([]);
+        setProperties([]);
+        setError('Failed to load agent data.');
+      } finally {
         setPropertiesLoading(false);
+        setLoading(false);
       }
     };
-
-    if (agentEmail) {
-      fetchAgentsWithPropertiesData();
-    }
+    fetchAgentFromPeopleData();
   }, [agentEmail]);
   
   
-    useEffect(() => {
-      // Fetch agent data using email from URL params
-      const fetchAgentData = async () => {
-        if (!agentEmail) {
-          setError('No agent email provided.');
-          setLoading(false);
-          return;
-        }
-        
-        setLoading(true);
-        setError(null);
-        
-        try {
-          //console.log('Fetching agent data for email:', agentEmail);
-          
-          // First check if agent data is available in localStorage (from property details page)
-          if (typeof window !== 'undefined') {
-            const storedAgent = localStorage.getItem('selectedAgent');
-            if (storedAgent) {
-              try {
-                const agentData = JSON.parse(storedAgent);
-                // Check if the stored agent matches the current agentEmail
-                const storedEmail = String(agentData.email || '').toLowerCase();
-              const currentEmail = String(agentEmail || '').toLowerCase();
-              
-              // console.log('Comparing emails:', {
-              //   storedEmail,
-              //   currentEmail,
-              //   match: storedEmail === currentEmail
-              // });
-              
-                if (storedEmail === currentEmail) {
-                 // console.log('Using stored agent data:', agentData);
-                  setAgent(agentData);
-                  if (agentData.image) setImgSrc(agentData.image);
-                  setLoading(false);
-                  return;
-                }
-              } catch (e) {
-                //console.log('Error parsing stored agent data:', e);
-              }
-            }
-          }
-          
-          // First try to find agent in enhanced API data
-          if (agentsWithPropertiesData && agentsWithPropertiesData.success) {
-            //console.log('Searching in enhanced API data...');
-            
-            // Safely handle the arrays
-            const agentsWithProps = Array.isArray(agentsWithPropertiesData.agentsWithProperties) 
-              ? agentsWithPropertiesData.agentsWithProperties 
-              : [];
-            const agentsWithoutProps = Array.isArray(agentsWithPropertiesData.agentsWithoutProperties) 
-              ? agentsWithPropertiesData.agentsWithoutProperties 
-              : [];
-              
-            const allEnhancedAgents = [...agentsWithProps, ...agentsWithoutProps];
-            
-            const foundEnhancedAgent = allEnhancedAgents.find(agent => {
-              return (agent.email && agent.email.toLowerCase() === agentEmail.toLowerCase()) ||
-                     (agent.work_email && agent.work_email.toLowerCase() === agentEmail.toLowerCase());
-            });
-            
-            if (foundEnhancedAgent) {
-              //console.log('Found agent in enhanced API:', foundEnhancedAgent);
-              const mappedAgent = {
-                name: foundEnhancedAgent.name,
-                phone: foundEnhancedAgent.phone,
-                email: foundEnhancedAgent.email || foundEnhancedAgent.work_email,
-                city: foundEnhancedAgent.city,
-                image: foundEnhancedAgent.photo || foundEnhancedAgent.image,
-                _id: foundEnhancedAgent._id,
-                marketCenter: foundEnhancedAgent.market_center_number || "",
-                kw_uid: foundEnhancedAgent.kw_uid,
-                kw_id: foundEnhancedAgent.kw_uid // Keep backward compatibility
-              };
-              
-              setAgent(mappedAgent);
-              if (mappedAgent.image) setImgSrc(mappedAgent.image);
-              
-              // Set properties directly from enhanced API
-              if (foundEnhancedAgent.properties && Array.isArray(foundEnhancedAgent.properties) && foundEnhancedAgent.properties.length > 0) {
-               // console.log(`Setting ${foundEnhancedAgent.properties.length} properties from enhanced API`);
-                setProperties(foundEnhancedAgent.properties);
-              } else {
-                //console.log('No properties found for this agent in enhanced API');
-                setProperties([]);
-              }
-              
-              setLoading(false);
-              return;
-            }
-          }
-          
-          // If no stored data or no match, fetch from API
-          const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/combined-data?offset=0&limit=100`);
-          
-          if (agentRes.ok) {
-            const agentData = await agentRes.json();
-           // console.log('Agents API response:', agentData);
-            
-            // Cache the combined API data for use in properties extraction
-            setCombinedApiData(agentData);
-            
-            if (agentData.success && agentData.results) {
-              // Extract agents from people results
-              let allAgents = [];
-              
-              agentData.results.forEach(result => {
-                if (result.success && result.type.includes('people_org') && result.data?.data) {
-                  allAgents = allAgents.concat(result.data.data);
-                }
-              });
-              
-              // Find the specific agent by email
-              const foundAgent = allAgents.find(a => {
-                return (a.email && a.email.toLowerCase() === agentEmail.toLowerCase()) ||
-                       (a.work_email && a.work_email.toLowerCase() === agentEmail.toLowerCase());
-              });
-              
-              if (foundAgent) {
-                const mappedAgent = {
-                  name: foundAgent.full_name || `${foundAgent.first_name || ''} ${foundAgent.last_name || ''}`.trim(),
-                  phone: foundAgent.phone || foundAgent.phoneNumber,
-                  email: foundAgent.email || foundAgent.work_email || agentEmail,
-                  city: foundAgent.city,
-                  image: foundAgent.photo || foundAgent.profileImage || foundAgent.image,
-                  _id: foundAgent._id || foundAgent.id,
-                  marketCenter: foundAgent.market_center_number || foundAgent.marketCenter || "",
-                  kw_uid: foundAgent.kw_uid,
-                  kw_id: foundAgent.kw_uid // Keep backward compatibility
-                };
-                
-                setAgent(mappedAgent);
-                if (mappedAgent.image) setImgSrc(mappedAgent.image);
-               // console.log('Agent found and set:', mappedAgent);
-              } else {
-                setError('Agent not found.');
-              }
-            } else {
-              setError('Failed to load agent data.');
-            }
-          } else {
-            throw new Error(`Failed to fetch agent data: ${agentRes.status}`);
-          }
-        } catch (e) {
-         // console.error('Error fetching agent data:', e);
-          setError(`Failed to load agent data: ${e.message}`);
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      if (agentEmail) {
-        fetchAgentData();
-      }
-    }, [agentEmail, agentsWithPropertiesData]);
+    // Removed cache-based agent fetch effect
     
     // Update filteredProperties when properties change
     useEffect(() => {
       setFilteredProperties(properties);
     }, [properties]);
   
-    useEffect(() => {
-      // Extract properties from the cached combined API data and filter for this agent
-      const extractAndFilterProperties = () => {
-        if (!agent || !combinedApiData) {
-          //console.log('Missing data:', { agent: !!agent, combinedApiData: !!combinedApiData });
-          return;
-        }
-        setPropertiesLoading(true);
-        setError(null);
-        
-        try {
-          // console.log('Starting property extraction...');
-          // console.log('Extracting properties for agent:', agent);
-          // console.log('Agent kw_uid:', agent.kw_uid);
-          // console.log('Combined API Data structure:', combinedApiData);
-          
-          if (combinedApiData.success && combinedApiData.results) {
-            // Extract properties from the listings results
-            let allProperties = [];
-            
-            combinedApiData.results.forEach(result => {
-              if (result.success && result.type.includes('listings_region')) {
-                // Handle different possible data structures
-                let properties = [];
-                
-                if (result.data?.hits?.hits) {
-                  // Elasticsearch structure
-                  properties = result.data.hits.hits.map(hit => ({
-                    ...hit._source,
-                    _kw_meta: { id: hit._id, score: hit._score ?? null },
-                  }));
-                } else if (result.data?.data) {
-                  // Direct data array structure
-                  properties = result.data.data.map((property, index) => ({
-                    ...property,
-                    _kw_meta: { id: property.id || index, score: null },
-                  }));
-                } else if (Array.isArray(result.data)) {
-                  // Direct array structure
-                  properties = result.data.map((property, index) => ({
-                    ...property,
-                    _kw_meta: { id: property.id || index, score: null },
-                  }));
-                }
-                
-                allProperties = allProperties.concat(properties);
-              }
-            });
-            
-            //console.log('All extracted properties:', allProperties.length);
-            //console.log('Sample property structure:', allProperties[0]);
-            
-            // Filter properties by agent's kw_uid
-            const agentPropertiesFromCombined = allProperties.filter(property => {
-              const listKwUid = property.list_kw_uid || property.listing_agent_kw_uid || property.agent_kw_uid || '';
-              const match = String(listKwUid) === String(agent.kw_uid);
-              if (match) {
-                //console.log('Found matching property for agent:', property);
-              }
-              return match;
-            });
-            
-           // console.log('Filtered properties for agent:', agentPropertiesFromCombined.length);
-            //console.log('Agent kw_uid being searched:', agent.kw_uid);
-            // console.log('Sample property kw_uid values:', allProperties.slice(0, 3).map(p => ({
-            //   id: p._kw_meta?.id,
-            //   list_kw_uid: p.list_kw_uid,
-            //   listing_agent_kw_uid: p.listing_agent_kw_uid,
-            //   agent_kw_uid: p.agent_kw_uid
-            // })));
-            
-            setProperties(agentPropertiesFromCombined);
-            
-            // Fallback: if no agent-specific properties found, show some sample properties for testing
-            if (agentPropertiesFromCombined.length === 0 && allProperties.length > 0) {
-              //console.log('No agent-specific properties found. Showing first 6 properties for testing...');
-              setProperties(allProperties.slice(0, 6));
-            }
-          } else {
-            //console.log('No valid data in cached API response');
-            setProperties([]);
-          }
-          
-        } catch (e) {
-         // console.error('Error extracting properties:', e);
-          setError(`Failed to load properties: ${e.message}`);
-          setProperties([]);
-        } finally {
-          setPropertiesLoading(false);
-        }
-      };
-      
-      if (agent && combinedApiData && agentProperties.length === 0) {
-        extractAndFilterProperties();
-      }
-    }, [agent, combinedApiData, retryCount, agentProperties.length]);
+    // Removed fallback property extraction from combinedApiData
   
       useEffect(() => {
         const fetchEvents = async () => {
@@ -592,17 +426,7 @@ const AgentProfile = () => {
       );
     }
     
-    if (!agent && !loading) {
-      return (
-        <div className='relative p-6 lg:p-8'>
-          <HeaderAgent />
-          <div className='text-center bg-[rgb(206,32,39,255)] py-20'>
-            {!agentEmail ? t('No agent email provided') : (error || t('Agent not found'))}
-          </div>
-          <NewFooter />
-        </div>
-      );
-    }
+
 
   return (
     <div className="relative p-4 sm:p-6 lg:p-8">
@@ -684,11 +508,11 @@ const AgentProfile = () => {
           <main className="flex-1 p-2 sm:p-4 lg:p-6">
           
             
-            <div className="bg-white mt-8 lg:mt-20 px-2 sm:px-6 lg:px-10 lg:px-20" ref={profileRef}>
+            <div className="bg-white mt-8 lg:mt-20 px-2 sm:px-6 lg:px-20" ref={profileRef}>
 <p className="font-semibold pt-4 text-[rgb(206,32,39,255)] text-2xl lg:px-10">{t('Agent Space')}</p>
-  <p className="font-semibold text-gray-600 text-lg lg:px-10">KW {agent.city}</p>
+  <p className="font-semibold text-gray-600 text-lg lg:px-10">KW {agent?.city || '-'}</p>
             
-            {/* Profile Card with loading skeleton */}
+        
             {loading ? (
               <div className="hidden lg:flex flex-col lg:flex-row lg:mt-10 mt-10 shadow-xl rounded-3xl overflow-hidden w-full animate-pulse">
                 <div className="w-full bg-gray-300 min-h-[80vh] flex flex-col justify-center px-6 sm:px-10 lg:px-16">
@@ -704,47 +528,50 @@ const AgentProfile = () => {
             ) : agent ? (
               <>
 <div className="hidden lg:flex flex-col md:flex-row md:mt-10 lg:mt-6 mt-10 shadow-xl rounded-3xl overflow-hidden w-full">
-  {/* Left Section */}
+
   <div className="w-full md:w-1/2 text-white px-6 sm:px-10 md:px-10 lg:px-16 bg-[rgb(206,32,39,255)] min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] flex flex-col justify-center">
-    <div className="text-center md:text-left">
-      <h1
-        className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl break-words mt-4 sm:mt-2 ${
+  <div className="text-center md:text-left">
+    {/* Heading */}
+    <h1
+      className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl break-words mt-4 sm:mt-2 ${
+        isRTL ? "text-right" : "text-left"
+      }`}
+    >
+      {t("Property Sales in Saudi Arabia")}
+    </h1>
+
+    {/* Content */}
+    <div className="text-sm sm:text-base md:text-lg lg:text-xl">
+      {/* Property Expert */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-10 md:mt-12 lg:mt-20 items-center sm:items-start lg:items-center">
+        <p className="tracking-[2.5px]">{t("Property Expert")}</p>
+      </div>
+
+      {/* Agent Name */}
+      <div
+        className={`flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 items-start break-words ${
           isRTL ? "text-right" : "text-left"
         }`}
       >
-        {t("Property Sales in Saudi Arabia")}
-      </h1>
+        <span className="whitespace-normal break-words">
+          {agent?.name || agent?.fullName || ""}
+        </span>
+      </div>
 
-      <div className="text-sm sm:text-base md:text-lg lg:text-xl">
-        {/* Property Expert */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-6 sm:mt-10 md:mt-12 lg:mt-20 items-center sm:items-start lg:items-center">
-          <p className="tracking-[2.5px]">{t("Property Expert")}</p>
-        </div>
-
-        {/* Agent Name */}
-        <div
-          className={`flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 items-start break-words ${
-            isRTL ? "text-right" : "text-left"
-          }`}
-        >
-          <span className="whitespace-normal break-words">
-            {agent.name || agent.fullName || ""}
-          </span>
-        </div>
-
-        {/* Powered by */}
-        <div className="flex mt-6 sm:mt-8 md:mt-10 lg:mt-20 justify-center md:justify-start">
-          <Image
-            src="/powerdby.png"
-            alt="Powered by Keller Williams"
-            width={220}
-            height={70}
-            className="h-auto w-auto"
-          />
-        </div>
+      {/* Powered by Keller Williams */}
+      <div className="flex mt-6 sm:mt-8 md:mt-10 lg:mt-20 justify-center md:justify-start">
+        <Image
+          src="/powerdby.png"
+          alt={t("Powered by Keller Williams")}
+          width={220}
+          height={70}
+          className="h-auto w-auto"
+        />
       </div>
     </div>
   </div>
+</div>
+
 
   {/* Right Section */}
   <div className="w-full md:w-1/2 relative flex items-center justify-center bg-[rgb(206,32,39,255)] md:bg-transparent lg:bg-transparent mt-8 md:mt-0 lg:mt-0">
@@ -758,9 +585,9 @@ const AgentProfile = () => {
     <div className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 aspect-square">
       <Image
         src={agent.image || "/avtar.jpg"}
-        alt={agent.name || agent.fullName || t("Agent")}
-        fill
-        className="object-cover"
+  alt={agent?.name || agent?.fullName || t("Agent")}
+  fill
+  className="object-cover"
       />
     </div>
   </div>
@@ -776,8 +603,8 @@ const AgentProfile = () => {
   <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mt-4 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-100">
   
       <Image
-       src={agent.image||'/avtar.jpg'}
-        alt={agent.name || agent.fullName || 'Agent'}
+  src={agent?.image||'/avtar.jpg'}
+   alt={agent?.name || agent?.fullName || 'Agent'}
         width={160}
         height={160}
         className="object-cover w-full h-full"
@@ -826,15 +653,15 @@ const AgentProfile = () => {
     <span className="text-[rgb(206,32,39,255)]">{t('Sell your home with ')}</span>
     <span>
   {(() => {
-    const fullName = agent?.name || agent?.fullName || "-";
-    const parts = fullName.split(" "); // split by space
-    const firstName = parts[0] || "";
-    const lastName = parts.slice(1).join(" "); // supports multiple surnames
+  const fullName = agent?.name || agent?.fullName || "-";
+  const parts = fullName.split(" "); // split by space
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" "); // supports multiple surnames
 
     return (
       <>
-        <span className="text-gray-500">{firstName}</span>{" "}
-        <span className="text-[rgb(206,32,39,255)] font-semibold">{lastName}</span>
+  <span className="text-gray-500">{firstName}</span>{" "}
+  <span className="text-[rgb(206,32,39,255)] font-semibold">{lastName}</span>
       </>
     );
   })()}
@@ -847,7 +674,7 @@ const AgentProfile = () => {
   {/* Phone */}
   <span className="flex items-center gap-1 text-gray-500 text-base lg:text-lg">
     {t('Call')}:
-    <span className="text-[rgb(206,32,39,255)]">{agent?.phone || "-"}</span>
+  <span className="text-[rgb(206,32,39,255)]">{agent?.phone || "-"}</span>
   </span>
 
   {/* Divider for desktop */}
@@ -877,7 +704,7 @@ const AgentProfile = () => {
 <div className='bg-white'>
    <p className="flex flex-wrap justify-center items-center text-2xl lg:text-3xl mt-10 lg:mt-20 font-semibold mb-6 lg:mb-12 text-center">
   <span className='text-[rgb(206,32,39,255)] mr-2'>{t("Properties from")}</span>
-  <span className="break-words">{agent.name || agent.fullName || '-'}</span>
+  <span className="break-words">{agent?.name || agent?.fullName || '-'}</span>
 </p>
 
 {propertiesLoading ? (
@@ -915,7 +742,6 @@ const AgentProfile = () => {
           key={property._kw_meta?.id || property.id }
           className="bg-white shadow-2xl overflow-hidden w-full cursor-pointer"
           onClick={() => {
-            localStorage.setItem("selectedProperty", JSON.stringify(property));
             const propertyId = property._kw_meta?.id || property.id || property.list_id || idx;
             router.push(`/propertydetails/${propertyId}`);
           }}
@@ -1081,7 +907,7 @@ const AgentProfile = () => {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[rgb(206,32,39,255)] text-white px-6 sm:px-16 lg:px-24 lg:px-40 tracking-[1.5px] py-4 sm:py-6 text-lg sm:text-2xl font-semibold transition cursor-pointer inline-block text-center hover:bg-[rgb(180,28,35)]"
+              className="bg-[rgb(206,32,39,255)] text-white px-6 sm:px-16 lg:px-40 tracking-[1.5px] py-4 sm:py-6 text-lg sm:text-2xl font-semibold transition cursor-pointer inline-block text-center hover:bg-[rgb(180,28,35)]"
             >
              {t("View")} {t(link.name)}
             </a>
@@ -1114,7 +940,7 @@ const AgentProfile = () => {
     
           {/* Blog Cards */}
           {!loading && !error && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-10 p-2 sm:p-4  lg:px-16 ">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-10 p-4 ">
         {events.length === 0 ? (
           <div className="col-span-full text-center py-20">
             <div className="text-lg text-gray-600">{t("No events found.")}</div>

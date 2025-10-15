@@ -1,7 +1,8 @@
 import express from 'express';
 
-import { syncAgentsFromKWPeople, fetchAgentOrProperties, syncAgentsFromMultipleKWPeople, getAgentByEmail, getKWPeopleByOrg, getKWListingsByRegion, getAgentWithProperties, getAllAgentsWithPropertyCounts, getKWAgentsOnly, getKWPeopleData, getPropertiesByAgent, getAgentCounts } from '../controllers/agentController.js';
+import { syncAgentsFromKWPeople, fetchAgentOrProperties,getALLPropertiesByAgent, syncAgentsFromMultipleKWPeople, getAgentByEmail, getKWPeopleByOrg, getKWListingsByRegion, getAgentWithProperties, getAllAgentsWithPropertyCounts, getKWAgentsOnly, getKWPeopleData, getPropertiesByAgent, getAgentCounts } from '../controllers/agentController.js';
 const router = express.Router();
+
 router.get('/agents/by-email', getAgentByEmail);
 router.get('/agents/byid/:agentId', fetchAgentOrProperties);
 
@@ -17,8 +18,9 @@ router.get('/kw/orgs/:orgId/people', getKWPeopleByOrg);
 router.get('/kw/regions/:regionId/listings', getKWListingsByRegion);
 router.get('/kw/agents-only', getKWAgentsOnly); // Fast agents endpoint
 router.get('/kw/people-data', getKWPeopleData); // Separate people endpoint
-router.get('/kw/agent-counts', getAgentCounts); // Get counts from Jeddah and Jasmin organizations
-
+// router.get('/kw/agent-counts', getAgentCounts); // Get counts from Jeddah and Jasmin organizations
+// Get all properties by agent (for /:kw_uid/properties/all)
+router.get('/:kw_uid/properties/all', getALLPropertiesByAgent);
 // NEW: Properties by specific agent
 router.get('/properties/by-agent/:kw_uid', getPropertiesByAgent); // Get properties for specific agent
 
