@@ -716,9 +716,9 @@ const [buyEmail, setBuyEmail] = useState("");
       </div>
 
       {/* Agent Name */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 justify-center items-center sm:items-start lg:items-center">
-        <span className="truncate">{agent.name || agent.fullName || '-'}</span>
-      </div>
+     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-2xl sm:text-3xl lg:text-4xl font-semibold mt-4 justify-center items-center sm:items-start lg:items-center text-center sm:text-left">
+  <span className="break-words whitespace-normal">{agent.name || agent.fullName || '-'}</span>
+</div>
 
       {/* Powered by */}
       <div className="flex items-center justify-center mt-6 mb-4 sm:mt-8 lg:mt-30">
@@ -1323,5 +1323,6 @@ const [buyEmail, setBuyEmail] = useState("");
     </div>
   );
 };
+
 
 export default AgentProfile;
