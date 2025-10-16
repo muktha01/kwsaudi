@@ -206,7 +206,7 @@ export default function Home() {
 
       {/* Footer */}
       {/* Test Sign-In Section (for testing in a different place) */}
-      <div className="w-full flex flex-col items-center my-6">
+      {/* <div className="w-full flex flex-col items-center my-6">
         <div className="max-w-xs w-full bg-gray-100 p-4 rounded shadow border border-gray-200">
           <h4 className="font-semibold mb-2 text-gray-700">{t('Test Agent Sign In')}</h4>
           <input
@@ -226,7 +226,7 @@ export default function Home() {
           </button>
           {testLoginError && <p className="text-red-600 text-xs mt-2">{testLoginError}</p>}
         </div>
-      </div>
+      </div> */}
       <footer className="mt-auto lg:mt-10 lg:mx-8">
         {/* Desktop Footer */}
         <div className="border-t border-gray-300 hidden lg:block">
