@@ -44,7 +44,11 @@ export default function Home() {
     });
     if (found) {
       setTestLoginError(null);
-  router.push(`/signinagent?email=${encodeURIComponent(trimmedEmail)}`);
+  const kwUid = found.kw_uid || '';
+  const url = kwUid
+    ? `/signinagent?email=${encodeURIComponent(trimmedEmail)}&kw_uid=${encodeURIComponent(kwUid)}`
+    : `/signinagent?email=${encodeURIComponent(trimmedEmail)}`;
+  router.push(url);
     } else {
       setTestLoginError('Agent not found. Please check your email address.');
     }
@@ -109,16 +113,20 @@ export default function Home() {
     }
 
     // Validate email using footerAgents fetched from /people-data
-    const found = footerAgents.some(agent => {
+    const foundAgent = footerAgents.find(agent => {
       const emails = [agent.email, agent.work_email, agent.kw_email].filter(Boolean);
       return emails.some(e => e.toLowerCase() === email.toLowerCase());
     });
 
-    if (found) {
+    if (foundAgent) {
       setAgentLoginSuccess(true);
       setLoginError(null);
       setMobileLoginError(null);
-      router.push(`/signinagent?email=${encodeURIComponent(email)}`);
+      const kwUid = foundAgent.kw_uid || '';
+      const url = kwUid
+        ? `/signinagent?email=${encodeURIComponent(email)}&kw_uid=${encodeURIComponent(kwUid)}`
+        : `/signinagent?email=${encodeURIComponent(email)}`;
+      router.push(url);
     } else {
       setAgentLoginSuccess(false);
       setLoginError(t('You must login with a registered agent email.'));
@@ -165,8 +173,11 @@ export default function Home() {
       } else {
         setLoginError(null);
       }
-      
-  router.push(`/signinagent?email=${encodeURIComponent(trimmedEmail)}`);
+      const kwUid = mappedAgent.kw_uid || '';
+      const url = kwUid
+        ? `/signinagent?email=${encodeURIComponent(trimmedEmail)}&kw_uid=${encodeURIComponent(kwUid)}`
+        : `/signinagent?email=${encodeURIComponent(trimmedEmail)}`;
+      router.push(url);
     } else {
       if (isMobile) {
         setMobileLoginError('Agent not found. Please check your email address.');
@@ -195,7 +206,7 @@ export default function Home() {
 
       {/* Footer */}
       {/* Test Sign-In Section (for testing in a different place) */}
-      {/* <div className="w-full flex flex-col items-center my-6">
+      <div className="w-full flex flex-col items-center my-6">
         <div className="max-w-xs w-full bg-gray-100 p-4 rounded shadow border border-gray-200">
           <h4 className="font-semibold mb-2 text-gray-700">{t('Test Agent Sign In')}</h4>
           <input
@@ -215,7 +226,7 @@ export default function Home() {
           </button>
           {testLoginError && <p className="text-red-600 text-xs mt-2">{testLoginError}</p>}
         </div>
-      </div> */}
+      </div>
       <footer className="mt-auto lg:mt-10 lg:mx-8">
         {/* Desktop Footer */}
         <div className="border-t border-gray-300 hidden lg:block">

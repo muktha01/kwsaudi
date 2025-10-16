@@ -15,198 +15,130 @@ const AgentProfile = () => {
    const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const agentEmail = searchParams.get('email');
+  const agentEmail = searchParams.get('email');
+  const agentKwUid = searchParams.get('kw_uid') || searchParams.get('kwUid') || searchParams.get('kw');
     const { t, isRTL } = useTranslation();
     const [events, setEvents] = useState([]);
     const [agent, setAgent] = useState(null);
     const [properties, setProperties] = useState([]);
-  // Removed cache state: combinedApiData, agentsWithPropertiesData
-    const [loading, setLoading] = useState(true);
-    const [propertiesLoading, setPropertiesLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [imgSrc, setImgSrc] = useState(null);
-    const [filteredProperties, setFilteredProperties] = useState([]);
-    const [visibleCount, setVisibleCount] = useState(6);
-    const [retryCount, setRetryCount] = useState(0);
+    // Missing states and refs used throughout the component
     const [agentProperties, setAgentProperties] = useState([]);
-    const [blogs, setBLogs] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [propertiesLoading, setPropertiesLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(6);
+    const [filteredProperties, setFilteredProperties] = useState([]);
+    const [imgSrc, setImgSrc] = useState('/avtar.jpg');
     const [links, setLinks] = useState([]);
-    const eventsRef = useRef(null);
-    const agentDriveRef = useRef(null);
-    const calendarRef = useRef(null);
+
     const profileRef = useRef(null);
-    
-    // Function to scroll to section
-    const scrollToSection = (ref, topOffset = 150) => {
-  if (ref && ref.current) {
-    const element = ref.current;
-    const y = element.getBoundingClientRect().top + window.scrollY - topOffset;
-    window.scrollTo({ top: y, behavior: 'smooth' });
-  }
-};
+    const calendarRef = useRef(null);
+    const agentDriveRef = useRef(null);
+    const eventsRef = useRef(null);
 
-    
-    // Icon URLs
-    const bedIconUrl = "/bed.png";
-    const bathIconUrl = "/bath.png";
-    
-    // Function to handle read more
-    const handleReadMore = (post) => {
-      router.push(`/ourCulture/events/${post._id}`);
+    // Small helper assets / urls used in markup
+    const bedIconUrl = '/bed.png';
+    const bathIconUrl = '/bath.png';
+
+    // Helpers
+    const formatPrice = (val) => {
+      if (val == null) return '';
+      try {
+        const n = Number(val);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(n);
+      } catch (e) {
+        return val;
+      }
     };
-    
-    // Function to retry fetching properties
+
+    const scrollToSection = (ref) => {
+      try {
+        if (ref && ref.current) ref.current.scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {}
+    };
+
     const retryFetchProperties = () => {
-      setRetryCount(prev => prev + 1);
-      setError(null);
-      setPropertiesLoading(true);
-      // The useEffect will run again due to retryCount change
-    };
-    const agentBios = {
-      1: {
-        text: `
-          As a proud member of Keller Williams Saudi Arabia, I am committed to providing personalized, professional, and client-focused real estate services. 
-          My knowledge of the local market, paired with a global network, allows me to guide buyers, sellers, and investors toward informed decisions and successful outcomes. 
-          Saudi Arabia’s Vision 2030 drives me to contribute to our nation’s growth by helping families and businesses find properties that meet their needs, enhance their lifestyles, and support long-term prosperity.
-        `
-      },
-      2: {
-        text: `
-          At Keller Williams Saudi Arabia, I dedicate myself to delivering exceptional results through honesty, transparency, and market expertise. 
-          My approach is rooted in understanding each client’s unique goals and creating a seamless real estate experience. 
-          With Vision 2030 transforming our cities into world-class hubs, I take pride in connecting people to properties that align with both their personal aspirations and the Kingdom’s bright future.
-        `
-      },
-      3: {
-        text: `
-          As a real estate professional with Keller Williams Saudi Arabia, I combine in-depth market insights with a people-first philosophy to create meaningful property solutions. 
-          I believe real estate is more than transactions — it’s about building lasting relationships and helping clients achieve their dreams. 
-          In this era of transformation under Vision 2030, I am inspired to support the growth of vibrant communities by helping individuals and families secure homes and investments that stand the test of time.
-        `
-      },
-      4: {
-        text: `
-          Working with Keller Williams Saudi Arabia allows me to bring world-class real estate practices to our rapidly evolving market. 
-          My mission is to empower clients with the knowledge and resources they need to make confident property decisions. 
-          Saudi Arabia’s Vision 2030 fuels my passion for contributing to the nation’s development, whether by assisting a family in finding their perfect home or guiding an investor toward high-potential opportunities.
-        `
-      },
-      5: {
-        text: `
-          At Keller Williams Saudi Arabia, I approach every client relationship with integrity, dedication, and a genuine desire to help. 
-          By blending local expertise with global standards, I provide a real estate experience that is both personalized and results-driven. 
-          The energy of Vision 2030 motivates me to connect people with properties that contribute to their success and play a role in shaping the Kingdom’s future landscape.
-        `
-      },
-      6: {
-        text: `
-          As part of Keller Williams Saudi Arabia, I am passionate about guiding clients through one of life’s most important decisions — buying or selling a property. 
-          My focus is on understanding needs, anticipating challenges, and delivering solutions that exceed expectations. 
-          The rapid progress of Vision 2030 inspires me to help build communities that reflect the ambition, innovation, and diversity of our great nation.
-        `
-      },
-      7: {
-        text: `
-          Proudly representing Keller Williams Saudi Arabia, I am committed to offering expert guidance and unwavering support throughout every step of the real estate process. 
-          I work to ensure that each transaction is handled with professionalism, care, and attention to detail. 
-          Vision 2030’s transformative projects and urban expansion drive my commitment to helping clients invest wisely and secure homes that enhance their quality of life.
-        `
-      },
-      8: {
-        text: `
-          As a real estate agent with Keller Williams Saudi Arabia, I aim to simplify the complex world of property transactions. 
-          By combining market analysis, negotiation skills, and client-focused service, I help people make informed and confident choices. 
-          Inspired by Vision 2030, I take pride in contributing to the Kingdom’s growth by matching clients with properties that offer both immediate value and long-term potential.
-        `
-      },
-      9: {
-        text: `
-          At Keller Williams Saudi Arabia, I believe in creating real estate experiences that are as rewarding as the results themselves. 
-          My goal is to understand each client’s unique story and translate that into the perfect property match. 
-          With Vision 2030 reshaping our cities, I am motivated to help families, investors, and entrepreneurs secure properties that align with both their dreams and the nation’s future.
-        `
-      },
-      10: {
-        text: `
-          Representing Keller Williams Saudi Arabia, I am dedicated to providing exceptional service that blends market expertise with a personal touch. 
-          I focus on building trust, offering honest advice, and delivering outstanding results. 
-          Saudi Arabia’s Vision 2030 inspires me to actively contribute to our growing real estate sector by connecting people to homes and investments that reflect the Kingdom’s ambition.
-        `
-      },
-      11: {
-        text: `
-          Being part of Keller Williams Saudi Arabia allows me to serve clients with a blend of local insight and international best practices. 
-          I am driven by a commitment to help people navigate the market with confidence and clarity. 
-          Vision 2030’s transformative goals encourage me to help shape the future of our communities by guiding clients toward properties that enrich their lives and secure their futures.
-        `
-      },
-      12: {
-        text: `
-          As a real estate professional at Keller Williams Saudi Arabia, I view my role as more than selling properties — it’s about guiding people toward opportunities that truly make a difference in their lives. 
-          In alignment with Vision 2030, I strive to help clients find properties that not only meet their immediate needs but also position them to benefit from the Kingdom’s long-term growth.
-        `
-      },
-      13: {
-        text: `
-          At Keller Williams Saudi Arabia, I am committed to excellence in every transaction. 
-          I focus on listening to my clients, understanding their vision, and working tirelessly to make it a reality. 
-          With Vision 2030 driving urban innovation and development, I take pride in helping clients secure properties that are part of this exciting transformation.
-        `
-      },
-      14: {
-        text: `
-          Proud to be part of Keller Williams Saudi Arabia, I believe that successful real estate service is built on trust, expertise, and genuine care for each client’s goals. 
-          The opportunities emerging from Vision 2030 motivate me to guide clients toward properties that will grow in value, enhance their lifestyles, and contribute to the Kingdom’s evolving landscape.
-        `
-      },
-      15: {
-        text: `
-          As a representative of Keller Williams Saudi Arabia, I bring passion, professionalism, and market knowledge to every client I serve. 
-          My mission is to make the process of buying, selling, or investing as smooth and rewarding as possible. 
-          Vision 2030’s blueprint for the Kingdom’s future inspires me to help people find properties that reflect both their aspirations and the exciting new era of growth and innovation in Saudi Arabia.
-        `
-      }
-    };
-    
-    // Helper function to format price
-    const formatPrice = (price) => {
-      if (!price) return '0';
-      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    };
-  
-    // Helper function to get agent bio based on agent data
-    const getAgentBio = (agent) => {
-      if (!agent) return t('agentBio1');
-      
-      // Get agent ID or create a hash from agent properties for consistent bio assignment
-      let agentIdentifier = 0;
-      
-      // Try to get a numeric ID first
-      if (agent.id && !isNaN(agent.id)) {
-        agentIdentifier = parseInt(agent.id);
-      } else if (agent.agent_id && !isNaN(agent.agent_id)) {
-        agentIdentifier = parseInt(agent.agent_id);
-      } else if (agent.list_id && !isNaN(agent.list_id)) {
-        agentIdentifier = parseInt(agent.list_id);
-      } else if (agent.kw_id && !isNaN(agent.kw_id)) {
-        agentIdentifier = parseInt(agent.kw_id);
-      } else {
-        // If no numeric ID, create a hash from agent name/email for consistent assignment
-        const agentString = (agent.name || agent.fullName || agent.email || 'default').toString();
-        for (let i = 0; i < agentString.length; i++) {
-          agentIdentifier += agentString.charCodeAt(i);
-        }
-      }
-      
-      // Cycle through the 15 bios: agent 1 gets bio 1, agent 16 gets bio 1 again, etc.
-      const bioIndex = ((agentIdentifier - 1) % 15) + 1;
-      
-      return t(`agentBio${bioIndex}`);
+      // simple retry: reload current page to re-trigger data fetch useEffect
+      if (typeof window !== 'undefined') window.location.reload();
     };
 
+    const handleReadMore = (post) => {
+      if (!post) return;
+      const id = post._id || post.id;
+      if (id) router.push(`/events/${id}`);
+    };
   useEffect(() => {
-    // Fetch agent data from /agents/kw/people-data?offset=0&limit=1000 API with robust mapping
+    // If kw_uid is present in query params, prefer fetching agent by id and properties by-agent
+    const fetchAgentByKwUid = async (kw_uid) => {
+      setPropertiesLoading(true);
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch agent details from backend by id (backend normalizes agent object)
+        const agentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/agents/byid/${encodeURIComponent(kw_uid)}`);
+        if (agentRes.ok) {
+          const agentData = await agentRes.json();
+          if (agentData.success && agentData.agent) {
+            const a = agentData.agent;
+            const mapped = {
+              name: a.full_name || a.name || `${a.first_name || ''} ${a.last_name || ''}`.trim(),
+              phone: a.phone || a.mobile_phone || a.office_phone || '',
+              email: a.email || a.office_email || '',
+              city: a.city || '',
+              image: a.photo || a.profile_image_url || a.image_url || '/avtar.jpg',
+              _id: a.kw_uid || a._id || kw_uid,
+              marketCenter: a.market_center_number || '',
+              kw_uid: a.kw_uid || kw_uid,
+              kw_id: a.kw_uid || kw_uid
+            };
+            setAgent(mapped);
+            if (mapped.image) setImgSrc(mapped.image);
+
+            // Fetch properties via backend by-agent endpoint
+            try {
+              const byAgentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/properties/by-agent/${encodeURIComponent(kw_uid)}`);
+              if (byAgentRes.ok) {
+                const byAgentData = await byAgentRes.json();
+                const props = (byAgentData?.properties?.data) || byAgentData?.properties || [];
+                setAgentProperties(props);
+                setProperties(props);
+              } else {
+                console.warn('by-agent returned non-ok, clearing properties');
+                setAgentProperties([]);
+                setProperties([]);
+              }
+            } catch (err) {
+              console.error('Error fetching properties by-agent:', err);
+              setAgentProperties([]);
+              setProperties([]);
+            }
+
+            setError(null);
+          } else {
+            setAgent(null);
+            setAgentProperties([]);
+            setProperties([]);
+            setError('Agent not found.');
+          }
+        } else {
+          setAgent(null);
+          setAgentProperties([]);
+          setProperties([]);
+          setError('Failed to load agent data.');
+        }
+      } catch (err) {
+        console.error('Error in fetchAgentByKwUid:', err);
+        setAgent(null);
+        setAgentProperties([]);
+        setProperties([]);
+        setError('Failed to load agent data.');
+      } finally {
+        setPropertiesLoading(false);
+        setLoading(false);
+      }
+    };
+
+    // Existing email-based flow (kept for backward compatibility)
     const fetchAgentFromPeopleData = async () => {
       if (!agentEmail) {
         setError('No agent email provided.');
@@ -296,21 +228,61 @@ const AgentProfile = () => {
             setImgSrc(image);
             // 2. Fetch agent properties by kw_uid
             if (kw_uid && kw_uid !== '-') {
-              const propRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=1000`);
-              if (propRes.ok) {
-                const propData = await propRes.json();
-                // Find agent by kw_uid
-                const agentWithProps = (propData.agentsWithProperties || []).find(a => String(a.kw_uid) === String(kw_uid));
-                if (agentWithProps) {
-                  setAgentProperties(agentWithProps.properties || []);
-                  setProperties(agentWithProps.properties || []);
+              try {
+                // Preferred: backend consolidated endpoint that returns paginated properties
+                const byAgentRes = await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/agents/properties/by-agent/${encodeURIComponent(kw_uid)}`
+                );
+
+                if (byAgentRes.ok) {
+                  const byAgentData = await byAgentRes.json();
+                  // Controller returns { success: true, properties: { data: [...] } }
+                  const props = (byAgentData?.properties?.data) || byAgentData?.properties || [];
+                  setAgentProperties(props);
+                  setProperties(props);
                 } else {
+                  // Fallback to older property-counts endpoint if by-agent fails
+                  console.warn('by-agent endpoint failed, falling back to property-counts');
+                  const propRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=1000`);
+                  if (propRes.ok) {
+                    const propData = await propRes.json();
+                    const agentWithProps = (propData.agentsWithProperties || []).find(a => String(a.kw_uid) === String(kw_uid));
+                    if (agentWithProps) {
+                      setAgentProperties(agentWithProps.properties || []);
+                      setProperties(agentWithProps.properties || []);
+                    } else {
+                      setAgentProperties([]);
+                      setProperties([]);
+                    }
+                  } else {
+                    setAgentProperties([]);
+                    setProperties([]);
+                  }
+                }
+              } catch (err) {
+                console.error('Error fetching by-agent properties:', err);
+                // On error, fallback
+                try {
+                  const propRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/kw/agents/property-counts?offset=0&limit=1000`);
+                  if (propRes.ok) {
+                    const propData = await propRes.json();
+                    const agentWithProps = (propData.agentsWithProperties || []).find(a => String(a.kw_uid) === String(kw_uid));
+                    if (agentWithProps) {
+                      setAgentProperties(agentWithProps.properties || []);
+                      setProperties(agentWithProps.properties || []);
+                    } else {
+                      setAgentProperties([]);
+                      setProperties([]);
+                    }
+                  } else {
+                    setAgentProperties([]);
+                    setProperties([]);
+                  }
+                } catch (fallbackErr) {
+                  console.error('Fallback property-counts also failed:', fallbackErr);
                   setAgentProperties([]);
                   setProperties([]);
                 }
-              } else {
-                setAgentProperties([]);
-                setProperties([]);
               }
             } else {
               setAgentProperties([]);
@@ -339,8 +311,13 @@ const AgentProfile = () => {
         setLoading(false);
       }
     };
-    fetchAgentFromPeopleData();
-  }, [agentEmail]);
+
+    if (agentKwUid) {
+      fetchAgentByKwUid(agentKwUid);
+    } else {
+      fetchAgentFromPeopleData();
+    }
+  }, [agentEmail, agentKwUid]);
   
   
     // Removed cache-based agent fetch effect
