@@ -18,7 +18,7 @@ router.get('/kw/orgs/:orgId/people', getKWPeopleByOrg);
 router.get('/kw/regions/:regionId/listings', getKWListingsByRegion);
 router.get('/kw/agents-only', getKWAgentsOnly); // Fast agents endpoint
 router.get('/kw/people-data', getKWPeopleData); // Separate people endpoint
-// router.get('/kw/agent-counts', getAgentCounts); // Get counts from Jeddah and Jasmin organizations
+router.get('/kw/agent-counts', getAgentCounts); // Get counts from Jeddah and Jasmin organizations
 // Get all properties by agent (for /:kw_uid/properties/all)
 router.get('/:kw_uid/properties/all', getALLPropertiesByAgent);
 // NEW: Properties by specific agent
