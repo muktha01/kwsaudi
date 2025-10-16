@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/kwline.png" type="image/png"/></head>
+        <link rel="icon" href="/kw.png" type="image/png"/></head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} language-transition`}
       >
