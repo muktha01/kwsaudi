@@ -38,9 +38,6 @@ dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 
 const app = express();
 
-// Add this line to fix proxy issues
-app.set('trust proxy', 1); // Trust first proxy (nginx)
-
 // Production middleware
 app.use(compression()); // Compress responses
 app.use(helmet()); // Security headers
