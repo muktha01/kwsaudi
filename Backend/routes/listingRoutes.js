@@ -9,6 +9,10 @@ import upload  from '../middlewares/upload.js';
 
 const router = express.Router();
 
+// 🔥 FRONTEND LISTINGS - Root routes for properties
+router.get('/', getExternalListings);           // /api/listings
+router.get('/listings', getExternalListings);   // /api/listings/listings
+router.get('/all', getExternalListings);        // /api/listings/all
 
 // New development listing (collection) route
 // router.get('/property/newdevelopment', getFilteredListings)

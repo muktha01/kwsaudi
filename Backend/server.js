@@ -129,6 +129,7 @@ app.get('/api/test', (req, res) => {
     status: 'success'
   });
 });
+
 // Apply rate limiting
 app.use('/api', limiter); // General API rate limiting
 
