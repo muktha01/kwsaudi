@@ -50,7 +50,6 @@ const limiter = rateLimit({
     error: 'Too many requests from this IP, please try again later.',
     retryAfter: '1 minute'
   },
-  trustProxy: 1, // Trust first proxy (nginx)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   // Remove the keyGenerator line - it causes IPv6 errors
@@ -64,7 +63,6 @@ const authLimiter = rateLimit({
     error: 'Too many authentication attempts, please try again later.',
     retryAfter: '10 minutes'
   },
-  trustProxy: 1, // Trust first proxy (nginx)
   skipSuccessfulRequests: true
 });
 
